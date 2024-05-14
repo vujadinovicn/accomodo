@@ -1,1 +1,96 @@
 package backward;
+
+import com.ftn.sbnz.model.models.Telefon;
+import com.ftn.sbnz.model.models.Man;
+import com.ftn.sbnz.model.models.Woman;
+import com.ftn.sbnz.model.models.Parent;
+import com.ftn.sbnz.model.models.Biljka;
+
+query isContainedIn(String x, String y)
+    Telefon(x, y;)
+    or
+    (Telefon(z, y;) and isContainedIn(x, z;))
+end
+
+rule "All Samsung S telefons"
+    when 
+        String( this == "go1" )
+        isContainedIn(name, "S serija"; )
+    then
+        System.out.println("Neca je" + name + "iz S serije");
+end
+
+rule "All Samsung S telefonsss"
+    when 
+        String( this == "go1" )
+    then
+        System.out.println("Neca je");
+end
+
+query isWoman (String x)
+    Woman(x;)
+end
+
+query isMan (String x)
+    Man(x;)
+end
+
+query isFather (String x, String y)
+    Man(x; )
+    Parent(x, y;)
+end
+
+rule "Someone is woman"
+    when 
+        String( this == "go1" )
+        isWoman(x;)
+    then
+        System.out.println(x);
+end
+
+
+rule "Someone is man"
+    when 
+        String( this == "go2" )
+        isMan(x;)
+    then
+        System.out.println(x);
+end
+
+rule "Someone is Father"
+    when 
+        String( this == "go3" )
+        isFather(x, y; )
+    then
+        System.out.println(x + ", " + y);
+end
+
+query isBrother (String x, String y)
+    Parent(z, x;) 
+    and 
+    Parent(z, y;)
+end
+
+query isUncle (String x, String y)
+    Parent(z, y; ) and isWoman(z;) and isBrother(x, z;)
+end
+
+rule "Someone is uncle"
+    when
+        String (this == "go3")
+        isBrother(x, y;)
+        eval(!x.equals(y))
+    then
+        System.out.println(x + ", " + y);
+end
+
+query jePodvrsta(String x, String y)
+    Biljka(x, y;)
+end
+
+rule "Nadjena vrsta bez pupoljka"
+    when
+        jePodvrsta(x, "Bez pupoljka"; )
+    then
+        System.out.println("Biljka: " + x + " je bez pupoljka");
+end

@@ -8,7 +8,7 @@ import org.kie.api.definition.type.Role;
 import org.kie.api.definition.type.Timestamp;
 
 @Role(Role.Type.EVENT)
-@Timestamp("executionTime")
+// @Timestamp("executionTime")
 @Expires("2h30m")
 public class TransactionEvent implements Serializable {
 
@@ -16,6 +16,7 @@ public class TransactionEvent implements Serializable {
     private Date executionTime;
     private Long customerId;
     private Double totalAmount;
+    private boolean duplicate;
 
     public TransactionEvent() {
         super();
@@ -26,9 +27,18 @@ public class TransactionEvent implements Serializable {
         this.executionTime = new Date();
         this.customerId = customerId;
         this.totalAmount = totalAmount;
+        this.duplicate = false;
     }
 
 
+
+    public boolean isDuplicate() {
+        return duplicate;
+    }
+
+    public void setDuplicate(boolean duplicate) {
+        this.duplicate = duplicate;
+    }
 
     public Date getExecutionTime() {
         return executionTime;
