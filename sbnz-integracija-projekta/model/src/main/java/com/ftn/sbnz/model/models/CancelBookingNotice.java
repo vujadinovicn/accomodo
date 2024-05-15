@@ -1,9 +1,20 @@
 package com.ftn.sbnz.model.models;
 
+import java.io.Serializable;
 import java.util.Date;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
-public class CancelBookingNotice {
+@Entity
+public class CancelBookingNotice implements Serializable {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private Date createdAt;
     @OneToOne()
     public Booking booking;
@@ -24,12 +35,22 @@ public class CancelBookingNotice {
     public Booking getBooking() {
         return booking;
     }
+
     public void setBooking(Booking booking) {
         this.booking = booking;
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     @Override
     public String toString() {
-        return "CancelBookingNotice [createdAt=" + createdAt + "]";
+        return "CancelBookingNotice [id=" + id + ", createdAt=" + createdAt + ", booking=" + booking + "]";
     }
+
 }
