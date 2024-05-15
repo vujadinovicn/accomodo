@@ -8,45 +8,38 @@ import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 
-import com.ftn.sbnz.model.models.Biljka;
-import com.ftn.sbnz.model.models.Man;
-import com.ftn.sbnz.model.models.Parent;
-import com.ftn.sbnz.model.models.Woman;
-import com.ftn.sbnz.model.models.Telefon;
-
-
 
 public class CEPConfigTest {
 
     @Test
     public void test() {
-        KieServices ks = KieServices.Factory.get();
-        KieContainer kContainer = ks.getKieClasspathContainer(); 
-        KieSession ksession = kContainer.newKieSession("bwKsession");
+        // KieServices ks = KieServices.Factory.get();
+        // KieContainer kContainer = ks.getKieClasspathContainer(); 
+        // KieSession ksession = kContainer.newKieSession("bwKsession");
 
-        ksession.insert(new Biljka("Golosemenice", "Biljka"));
-        ksession.insert(new Biljka("Skrivenosemenice", "Biljka"));
-        ksession.insert(new Biljka("Alge", "Golosemenice"));
-        ksession.insert(new Biljka("Kombu alga", "Alga"));
-        ksession.insert(new Biljka("Nori alga", "Alga"));
-        ksession.insert(new Biljka("Agar agar alga", "Alga"));
-        ksession.insert(new Biljka("Mahovine", "Golosemenice"));
-        ksession.insert(new Biljka("Plutajuća Riccia", "Mahovine"));
-        ksession.insert(new Biljka("Javanska mahovina", "Mahovine"));
-        ksession.insert(new Biljka("Paprati", "Golosemenice"));
-        ksession.insert(new Biljka("Dicksonia antarctica", "Paprati"));
-        ksession.insert(new Biljka("Blechnum nudum", "Paprati"));
-        ksession.insert(new Biljka("Sa pupoljkom", "Skrivenosemenice"));
-        ksession.insert(new Biljka("Ljiljan", "Sa pupoljkom"));
-        ksession.insert(new Biljka("Orhideja", "Sa pupoljkom"));
-        ksession.insert(new Biljka("Ruza", "Sa pupoljkom"));
-        ksession.insert(new Biljka("Bez pupoljka", "Skrivenosemenice"));
-        ksession.insert(new Biljka("Drvo zivota", "Bez pupoljka"));
-        ksession.insert(new Biljka("Asparagus", "Bez pupoljka"));
-        ksession.insert(new Biljka("Hrizantema", "Bez pupoljka"));
+        // ksession.insert(new Biljka("Golosemenice", "Biljka"));
+        // ksession.insert(new Biljka("Skrivenosemenice", "Biljka"));
+        // ksession.insert(new Biljka("Alge", "Golosemenice"));
+        // ksession.insert(new Biljka("Kombu alga", "Alga"));
+        // ksession.insert(new Biljka("Nori alga", "Alga"));
+        // ksession.insert(new Biljka("Agar agar alga", "Alga"));
+        // ksession.insert(new Biljka("Mahovine", "Golosemenice"));
+        // ksession.insert(new Biljka("Plutajuća Riccia", "Mahovine"));
+        // ksession.insert(new Biljka("Javanska mahovina", "Mahovine"));
+        // ksession.insert(new Biljka("Paprati", "Golosemenice"));
+        // ksession.insert(new Biljka("Dicksonia antarctica", "Paprati"));
+        // ksession.insert(new Biljka("Blechnum nudum", "Paprati"));
+        // ksession.insert(new Biljka("Sa pupoljkom", "Skrivenosemenice"));
+        // ksession.insert(new Biljka("Ljiljan", "Sa pupoljkom"));
+        // ksession.insert(new Biljka("Orhideja", "Sa pupoljkom"));
+        // ksession.insert(new Biljka("Ruza", "Sa pupoljkom"));
+        // ksession.insert(new Biljka("Bez pupoljka", "Skrivenosemenice"));
+        // ksession.insert(new Biljka("Drvo zivota", "Bez pupoljka"));
+        // ksession.insert(new Biljka("Asparagus", "Bez pupoljka"));
+        // ksession.insert(new Biljka("Hrizantema", "Bez pupoljka"));
 
-        int count = ksession.fireAllRules();
-        System.out.println(count);
+        // int count = ksession.fireAllRules();
+        // System.out.println(count);
         // ksession.insert(new Telefon("S serija", "Samsung"));
         // ksession.insert(new Telefon ("A serija", "Samsung"));
         // ksession.insert(new Telefon("Galaxy S10", "S serija"));

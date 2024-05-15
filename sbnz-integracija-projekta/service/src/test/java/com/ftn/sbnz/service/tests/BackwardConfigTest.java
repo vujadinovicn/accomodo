@@ -15,11 +15,6 @@ import org.kie.api.runtime.KieSession;
 import com.ftn.sbnz.model.events.Customer;
 import com.ftn.sbnz.model.events.TransactionEvent;
 import com.ftn.sbnz.model.events.UnsuccessfullLogin;
-import com.ftn.sbnz.model.models.Man;
-import com.ftn.sbnz.model.models.Parent;
-import com.ftn.sbnz.model.models.Woman;
-import com.ftn.sbnz.model.models.Telefon;
-import com.ftn.sbnz.model.events.UnsuccessfullLogin;
 
 
 
@@ -27,24 +22,24 @@ public class BackwardConfigTest {
 
     @Test
     public void test() {
-        KieServices ks = KieServices.Factory.get();
-        KieContainer kContainer = ks.getKieClasspathContainer(); 
-        KieSession ksession = kContainer.newKieSession("cepKsession");
-        SessionPseudoClock clock = ksession.getSessionClock();
+        // KieServices ks = KieServices.Factory.get();
+        // KieContainer kContainer = ks.getKieClasspathContainer(); 
+        // KieSession ksession = kContainer.newKieSession("cepKsession");
+        // SessionPseudoClock clock = ksession.getSessionClock();
         
-        UnsuccessfullLogin ul1 = new UnsuccessfullLogin((long)987654321, (long)3);
-        ksession.insert(ul1);
+        // UnsuccessfullLogin ul1 = new UnsuccessfullLogin((long)987654321, (long)3);
+        // ksession.insert(ul1);
         
-        UnsuccessfullLogin ul2 = new UnsuccessfullLogin((long)987654321, (long)3);
-        clock.advanceTime(1, TimeUnit.MINUTES);
-        ksession.insert(ul2);
+        // UnsuccessfullLogin ul2 = new UnsuccessfullLogin((long)987654321, (long)3);
+        // clock.advanceTime(1, TimeUnit.MINUTES);
+        // ksession.insert(ul2);
 
-        UnsuccessfullLogin ul3 = new UnsuccessfullLogin((long)987654321, (long)3);
-        clock.advanceTime(2, TimeUnit.MINUTES);
-        ksession.insert(ul3);
+        // UnsuccessfullLogin ul3 = new UnsuccessfullLogin((long)987654321, (long)3);
+        // clock.advanceTime(2, TimeUnit.MINUTES);
+        // ksession.insert(ul3);
 
-        long count = ksession.fireAllRules();
-        System.out.println(count);
+        // long count = ksession.fireAllRules();
+        // System.out.println(count);
         
         
         
