@@ -1,8 +1,23 @@
 package com.ftn.sbnz.model.models;
 
+import java.io.Serializable;
+
 import com.ftn.sbnz.model.enums.UserRole;
 
-public class User {
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+public class User implements Serializable {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String email;
     private String password;
     private String name;
@@ -17,6 +32,14 @@ public class User {
         this.lastname = lastname;
         this.role = role;
         this.isBlocked = false;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getEmail() {
@@ -69,8 +92,8 @@ public class User {
 
     @Override
     public String toString() {
-        return "User [email=" + email + ", password=" + password + ", name=" + name + ", lastname=" + lastname
-                + ", role=" + role + ", isBlocked=" + isBlocked + "]";
+        return "User [id=" + id + ", email=" + email + ", password=" + password + ", name=" + name + ", lastname="
+                + lastname + ", role=" + role + ", isBlocked=" + isBlocked + "]";
     }
 
 }
