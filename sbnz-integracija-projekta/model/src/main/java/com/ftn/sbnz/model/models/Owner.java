@@ -5,9 +5,9 @@ import java.util.Collection;
 
 import com.ftn.sbnz.model.enums.UserRole;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToMany;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
 
 @Entity
 public class Owner extends User {

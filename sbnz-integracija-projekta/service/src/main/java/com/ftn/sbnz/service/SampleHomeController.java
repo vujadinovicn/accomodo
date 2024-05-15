@@ -2,6 +2,7 @@ package com.ftn.sbnz.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.ftn.sbnz.model.models.Destination;
@@ -17,7 +18,7 @@ public class SampleHomeController {
 		this.destinationRepository = destinationRepository;
 	}
 
-	@RequestMapping("/")
+	@GetMapping("/pp")
 	public String index() {
 		Destination dest = new Destination("Kragujevac", "34000");
 		destinationRepository.save(dest);

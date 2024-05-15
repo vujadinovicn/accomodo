@@ -8,9 +8,9 @@ import com.ftn.sbnz.model.enums.TravelerAgeGroup;
 import com.ftn.sbnz.model.enums.TravelerLevel;
 import com.ftn.sbnz.model.enums.UserRole;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToMany;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
 
 @Entity
 public class Traveler extends User {
