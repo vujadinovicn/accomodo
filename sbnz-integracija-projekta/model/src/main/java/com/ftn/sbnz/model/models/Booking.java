@@ -28,6 +28,9 @@ public class Booking implements Serializable {
     @ManyToOne
     private Traveler traveler;
 
+    public Booking(){
+        
+    }
     public Booking(Date startDate, Date endDate, BookingStatus status, boolean isReservation, Date createdAt) {
         this.startDate = startDate;
         this.endDate = endDate;

@@ -1,91 +1,10 @@
 package cep;
+import com.ftn.sbnz.model.models.Booking;
 
-import com.ftn.sbnz.model.events.TransactionEvent;
-import com.ftn.sbnz.model.events.Customer;
-import com.ftn.sbnz.model.events.UnsuccessfullLogin;
-import com.ftn.sbnz.model.events.LoginEvent;
-
-declare UserBlockingEvent
-    @role(event)
-    @expires(15m)
-    userId: Long
-    ipAddress: Long
-end
-
-declare AlarmTriggered
-    @role(event)
-    @expires(1m)
-    userId: Long
-    reason: String
-end
-
-rule "Block user after 3 unsuccessfull logins"
+rule "Booking has happened"
     no-loop true
     when
-        $ul: UnsuccessfullLogin($uId : userId, $ip : ipAddress)
-        Number(intValue >= 1) from accumulate(
-            $ul2: UnsuccessfullLogin(
-                this != $ul,
-                userId == $uId,
-                ipAddress == $ip
-                ),
-            over window:time(5m), 
-            count($ul2)
-        )
-        not (UserBlockingEvent(userId == $userId, ipAddress == $ip))
+        $booking: Booking()
     then
-        insert(new UserBlockingEvent($userId, $ip));
-        insert(new AlarmTriggered($userId, "3 un. logins"));
-end
-
-rule "Alarm is triggered"
-    when
-        $alarm: AlarmTriggered($userId : userId, $reason: reason)
-    then
-        System.out.println("Note for admin. Alarm triggered: " + $reason);
-end
-
-rule "User not able to login after blocking"
-    when
-        $lE: LoginEvent($userId : userId, $ip: ipAdress)
-        UserBlockingEvent(userId == $userId, ipAddress == $ip)
-    then
-        System.out.println("Neuspesno");
-end
-
-
-// rule "Mark transaction as duplice if identical transactions"
-//     when
-//         $t1: TransactionEvent($c1: customerId, $am: totalAmount)
-//         $t2: TransactionEvent(
-//             this != $t1,
-//             this after[0s, 15s] $t1,
-//             customerId == $c1, 
-//             totalAmount == $am)
-//     then
-//         System.out.println("desilo sejeste");
-// end
-
-declare SuspiciousCustomerEvent
-    @role(event)
-    customerId: Long
-    reason: String
-end
-
-rule "two big trans"
-    no-loop true
-    when
-        $c1: Customer($cId : id, $acb: accountBalance)
-        $t1: TransactionEvent(customerId == $cId, totalAmount > 1000)
-        $t2: TransactionEvent(
-            this != $t1,
-            this after[0s, 90s] $t1,
-            customerId == $cId, 
-            totalAmount > 1000)
-    then
-        insert(new SuspiciousCustomerEvent($cId, "transcations"));
-        modify($c1){
-            setAccountBalance($acb*0.9);
-        }
-
+        System.out.println("Usao u booking");
 end

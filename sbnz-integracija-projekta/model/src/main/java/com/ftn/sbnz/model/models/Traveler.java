@@ -1,6 +1,5 @@
 package com.ftn.sbnz.model.models;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -23,6 +22,14 @@ public class Traveler extends User {
     private Collection<Listing> favoriteListings = new ArrayList<Listing>();
     @ManyToMany(cascade = {}, fetch = FetchType.LAZY)
     private Collection<Destination> favoriteDestinations = new ArrayList<Destination>();
+
+    public Traveler(String email, String password, String name, String lastname) {
+        super(email, password, name, lastname, UserRole.TRAVELER);
+        this.isIressponsible = false;
+        this.isMalicious = false;
+        this.ageGroup = TravelerAgeGroup.YOUNG_ADULT;
+        this.level = TravelerLevel.BRONZE;
+    }
 
     public Traveler(String email, String password, String name, String lastname, UserRole role, boolean isIressponsible,
             boolean isMalicious, TravelerAgeGroup ageGroup, TravelerLevel level) {
