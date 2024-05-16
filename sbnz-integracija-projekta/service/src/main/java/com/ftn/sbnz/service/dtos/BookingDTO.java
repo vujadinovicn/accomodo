@@ -1,13 +1,7 @@
 package com.ftn.sbnz.service.dtos;
 
 import java.time.LocalDateTime;
-import java.util.Date;
-
-import javax.persistence.ManyToOne;
-
 import com.ftn.sbnz.model.enums.BookingStatus;
-import com.ftn.sbnz.model.models.Listing;
-import com.ftn.sbnz.model.models.Traveler;
 
 public class BookingDTO {
     private LocalDateTime startDate;
@@ -26,7 +20,7 @@ public class BookingDTO {
         this.listingId = listingId;
         this.travelerId = travelerId;
     }
-    
+
     public LocalDateTime getStartDate() {
         return startDate;
     }

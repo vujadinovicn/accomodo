@@ -1,7 +1,7 @@
 package com.ftn.sbnz.model.models;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -16,13 +16,13 @@ public class BookingRejectionNotice implements Serializable {
     private Long id;
 
     private String reason;
-    private Date date;
+    private LocalDateTime date;
     @OneToOne()
     public Booking booking;
 
-    public BookingRejectionNotice(String reason, Date date, Booking booking) {
+    public BookingRejectionNotice(String reason, Booking booking) {
         this.reason = reason;
-        this.date = date;
+        this.date = LocalDateTime.now();
         this.booking = booking;
     }
 
@@ -42,11 +42,11 @@ public class BookingRejectionNotice implements Serializable {
         this.reason = reason;
     }
 
-    public Date getDate() {
+    public LocalDateTime getLocalDateTime() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setLocalDateTime(LocalDateTime date) {
         this.date = date;
     }
 

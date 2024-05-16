@@ -1,10 +1,46 @@
 package cep;
 import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.enums.BookingStatus;
+import com.ftn.sbnz.model.events.BookingAcceptedEvent;
+import com.ftn.sbnz.model.events.BookingDeniedEvent;
+
+declare BookingEvent
+    @role(event)
+    @expires(1m)
+    bookingId: Long
+end
+
 
 rule "Booking has happened"
     no-loop true
     when
-        $booking: Booking()
+        $booking: Booking($bookingId: id, status == BookingStatus.PENDING)
     then
-        System.out.println("Usao u booking");
+        insert(new BookingEvent($bookingId));
+        System.out.println("Nov booking je kreiran!");
+end
+
+rule "Send notification to owner after booking event"
+    no-loop true
+    when
+        $booking: Booking($bookingId: id, status == BookingStatus.PENDING)
+        $BookingEvent: BookingEvent(bookingId == $bookingId)
+    then
+        System.out.println("Posalji notifikaciju owneru!");
+end
+
+rule "Booking accepted by owner"
+    no-loop true
+    when
+        $bookingAcceptedEvent: BookingAcceptedEvent($bookingId: bookingId)
+    then
+        System.out.println("Posalji notifikaciju traveleru da je booking prihvacen!");
+end
+
+rule "Booking denied by owner"
+    no-loop true
+    when
+        $bookingDeniedEvent: BookingDeniedEvent($bookingId: bookingId, $reason: reason)
+    then
+        System.out.println("Posalji notifikaciju traveleru da je booking odbijen zbog: " + $reason);
 end
