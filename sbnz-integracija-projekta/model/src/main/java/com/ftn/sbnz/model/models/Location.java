@@ -21,6 +21,11 @@ public class Location implements Serializable {
     @ManyToOne
     private Destination destination;
 
+    public Location() 
+    {
+
+    }
+
     public Location(double lat, double lng, String address, Destination destination) {
         this.lat = lat;
         this.lng = lng;

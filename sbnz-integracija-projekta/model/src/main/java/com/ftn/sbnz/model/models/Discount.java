@@ -16,15 +16,13 @@ public class Discount implements Serializable {
     private Long id;
 
     private double amount;
-    private LocalDateTime validFrom;
     private LocalDateTime validTo;
 
     @ManyToOne
     private Listing listing;
 
-    public Discount(double amount, LocalDateTime validFrom, LocalDateTime validTo, Listing listing) {
+    public Discount(double amount, LocalDateTime validTo, Listing listing) {
         this.amount = amount;
-        this.validFrom = validFrom;
         this.validTo = validTo;
         this.listing = listing;
     }
@@ -45,14 +43,6 @@ public class Discount implements Serializable {
         this.amount = amount;
     }
 
-    public LocalDateTime getValidFrom() {
-        return validFrom;
-    }
-
-    public void setValidFrom(LocalDateTime validFrom) {
-        this.validFrom = validFrom;
-    }
-
     public LocalDateTime getValidTo() {
         return validTo;
     }
@@ -71,7 +61,7 @@ public class Discount implements Serializable {
 
     @Override
     public String toString() {
-        return "Discount [id=" + id + ", amount=" + amount + ", validFrom=" + validFrom + ", validTo=" + validTo
+        return "Discount [id=" + id + ", amount=" + amount + ", validTo=" + validTo
                 + ", listing=" + listing + "]";
     }
 

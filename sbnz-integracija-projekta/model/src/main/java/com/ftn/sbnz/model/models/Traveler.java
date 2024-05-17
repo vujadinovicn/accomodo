@@ -18,10 +18,12 @@ public class Traveler extends User {
     private TravelerAgeGroup ageGroup;
     private TravelerLevel level;
 
-    @ManyToMany(cascade = {}, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = {}, fetch = FetchType.EAGER)
     private Collection<Listing> favoriteListings = new ArrayList<Listing>();
     @ManyToMany(cascade = {}, fetch = FetchType.LAZY)
     private Collection<Destination> favoriteDestinations = new ArrayList<Destination>();
+
+    public Traveler() {super();}
 
     public Traveler(String email, String password, String name, String lastname) {
         super(email, password, name, lastname, UserRole.TRAVELER);
