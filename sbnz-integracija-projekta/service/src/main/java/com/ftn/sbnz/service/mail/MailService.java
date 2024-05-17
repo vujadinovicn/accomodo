@@ -1,0 +1,91 @@
+package com.ftn.sbnz.service.mail;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.ftn.sbnz.model.enums.EmailNotificationType;
+import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.events.DiscountEmailEvent;
+import com.sendgrid.Method;
+import com.sendgrid.Request;
+import com.sendgrid.Response;
+import com.sendgrid.SendGrid;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
+import com.sendgrid.helpers.mail.objects.Personalization;
+
+@Service
+public class MailService implements IMailService {
+	
+	@Autowired
+	SendGrid sendGrid;
+	
+	@Override
+	public void sendBookingEmail(BookingEmailEvent emailNotificationEvent) {
+		Email from = new Email("vujadinovic01@gmail.com", "Accomodo");
+		String subject = "Hello";
+		Email to = new Email(emailNotificationEvent.getEmailTo());
+		Content c = new Content("text/plain", "message");
+		Mail mail = new Mail(from, subject, to, c);
+		mail.setSubject(subject);
+		
+		Personalization personalization = new Personalization();
+	    personalization.addTo(to);
+
+		String status = "";
+		if (emailNotificationEvent.getType() == EmailNotificationType.BOOKING_ACCEPTED) 
+			status = "ACCEPTED";
+		else if (emailNotificationEvent.getType() == EmailNotificationType.BOOKING_DENIED) 
+			status = "DENIED";
+		String body = "Booking for " + emailNotificationEvent.getListingName() + " has been " + status + "!";
+
+	    personalization.addDynamicTemplateData("body", body);
+	    mail.addPersonalization(personalization);
+		mail.setTemplateId("");
+		
+		Request req = new Request();
+		try {
+			req.setMethod(Method.POST);
+			req.setEndpoint("mail/send");
+			req.setBody(mail.build());
+			Response res = this.sendGrid.api(req);
+			System.out.println(res.getStatusCode());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void sendDiscountEmail(DiscountEmailEvent emailNotificationEvent) {
+		Email from = new Email("vujadinovic01@gmail.com", "Accomodo");
+		String subject = "Hello";
+		Email to = new Email(emailNotificationEvent.getEmailTo());
+		Content c = new Content("text/plain", "message");
+		Mail mail = new Mail(from, subject, to, c);
+		mail.setSubject(subject);
+		
+		Personalization personalization = new Personalization();
+	    personalization.addTo(to);
+
+		String body = emailNotificationEvent.getDiscountDetails();
+		System.out.println(body);
+
+	    personalization.addDynamicTemplateData("body", body);
+	    mail.addPersonalization(personalization);
+		mail.setTemplateId("");
+		
+		Request req = new Request();
+		try {
+			req.setMethod(Method.POST);
+			req.setEndpoint("mail/send");
+			req.setBody(mail.build());
+			Response res = this.sendGrid.api(req);
+			System.out.println(res.getStatusCode());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+}
+

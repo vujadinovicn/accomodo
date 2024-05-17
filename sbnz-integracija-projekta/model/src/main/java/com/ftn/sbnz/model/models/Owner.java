@@ -16,9 +16,12 @@ public class Owner extends User {
     @ManyToMany(cascade = {}, fetch = FetchType.EAGER, mappedBy="owner")
     private Collection<Listing> favoriteListings = new ArrayList<Listing>();
 
-    public Owner(String email, String password, String name, String lastname, UserRole role, boolean isIrresponsible) {
-        super(email, password, name, lastname, role);
-        this.isIrresponsible = isIrresponsible;
+    public Owner(){
+        super();
+    }
+    public Owner(String email, String password, String name, String lastname) {
+        super(email, password, name, lastname, UserRole.OWNER);
+        this.isIrresponsible = false;
     }
 
     public boolean isIrresponsible() {

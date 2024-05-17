@@ -19,6 +19,9 @@ public class CancelBookingNotice implements Serializable {
     @OneToOne()
     public Booking booking;
 
+    public CancelBookingNotice(){
+        
+    }
     public CancelBookingNotice(Date date, Booking booking) {
         this.createdAt = date;
         this.booking = booking;

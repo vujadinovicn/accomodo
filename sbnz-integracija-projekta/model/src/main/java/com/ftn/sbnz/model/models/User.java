@@ -1,9 +1,8 @@
 package com.ftn.sbnz.model.models;
 
-import java.io.Serializable;
-
 import com.ftn.sbnz.model.enums.UserRole;
 
+import javax.persistence.Table;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -11,9 +10,11 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 
+@Table(name = "users")
+
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-public class User implements Serializable {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,6 +25,9 @@ public class User implements Serializable {
     private String lastname;
     private UserRole role;
     private boolean isBlocked;
+
+    public User() {
+    }
 
     public User(String email, String password, String name, String lastname, UserRole role) {
         this.email = email;

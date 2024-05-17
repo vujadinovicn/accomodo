@@ -1,91 +1,91 @@
 package cep;
+import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.models.Traveler;
+import com.ftn.sbnz.model.models.Discount;
+import com.ftn.sbnz.model.enums.BookingStatus;
+import com.ftn.sbnz.model.enums.EmailNotificationType;
+import com.ftn.sbnz.model.events.BookingAcceptedEvent;
+import com.ftn.sbnz.model.events.BookingDeniedEvent;
+import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.BookingEvent;
+import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.events.DiscountEmailEvent;
 
-import com.ftn.sbnz.model.events.TransactionEvent;
-import com.ftn.sbnz.model.events.Customer;
-import com.ftn.sbnz.model.events.UnsuccessfullLogin;
-import com.ftn.sbnz.model.events.LoginEvent;
-
-declare UserBlockingEvent
-    @role(event)
-    @expires(15m)
-    userId: Long
-    ipAddress: Long
-end
-
-declare AlarmTriggered
-    @role(event)
-    @expires(1m)
-    userId: Long
-    reason: String
-end
-
-rule "Block user after 3 unsuccessfull logins"
-    no-loop true
-    when
-        $ul: UnsuccessfullLogin($uId : userId, $ip : ipAddress)
-        Number(intValue >= 1) from accumulate(
-            $ul2: UnsuccessfullLogin(
-                this != $ul,
-                userId == $uId,
-                ipAddress == $ip
-                ),
-            over window:time(5m), 
-            count($ul2)
-        )
-        not (UserBlockingEvent(userId == $userId, ipAddress == $ip))
-    then
-        insert(new UserBlockingEvent($userId, $ip));
-        insert(new AlarmTriggered($userId, "3 un. logins"));
-end
-
-rule "Alarm is triggered"
-    when
-        $alarm: AlarmTriggered($userId : userId, $reason: reason)
-    then
-        System.out.println("Note for admin. Alarm triggered: " + $reason);
-end
-
-rule "User not able to login after blocking"
-    when
-        $lE: LoginEvent($userId : userId, $ip: ipAdress)
-        UserBlockingEvent(userId == $userId, ipAddress == $ip)
-    then
-        System.out.println("Neuspesno");
-end
-
-
-// rule "Mark transaction as duplice if identical transactions"
+// rule "Booking has happened"
+//     no-loop true
 //     when
-//         $t1: TransactionEvent($c1: customerId, $am: totalAmount)
-//         $t2: TransactionEvent(
-//             this != $t1,
-//             this after[0s, 15s] $t1,
-//             customerId == $c1, 
-//             totalAmount == $am)
+//         $booking: Booking($bookingId: id, status == BookingStatus.PENDING)
+//         not BookingAcceptedEvent(bookingId == $bookingId)
+//         not BookingDeniedEvent(bookingId == $bookingId)
 //     then
-//         System.out.println("desilo sejeste");
+//         insert(new BookingEvent($bookingId));
+//         System.out.println("Nov booking je kreiran!");
 // end
 
-declare SuspiciousCustomerEvent
-    @role(event)
-    customerId: Long
-    reason: String
-end
-
-rule "two big trans"
+rule "Send notification to owner after booking event"
     no-loop true
     when
-        $c1: Customer($cId : id, $acb: accountBalance)
-        $t1: TransactionEvent(customerId == $cId, totalAmount > 1000)
-        $t2: TransactionEvent(
-            this != $t1,
-            this after[0s, 90s] $t1,
-            customerId == $cId, 
-            totalAmount > 1000)
+        $BookingEvent: BookingEvent($bookingId: bookingId)
+        not BookingAcceptedEvent(bookingId == $bookingId)
+        not BookingDeniedEvent(bookingId == $bookingId)
     then
-        insert(new SuspiciousCustomerEvent($cId, "transcations"));
-        modify($c1){
-            setAccountBalance($acb*0.9);
-        }
+        insert(new BookingEmailEvent(null, null, EmailNotificationType.BOOKING_CREATED));
+        System.out.println("Posalji notifikaciju owneru!");
+end
 
+rule "Booking accepted by owner"
+    no-loop true
+    when
+        $bookingAcceptedEvent: BookingAcceptedEvent($bookingId: bookingId)
+        $booking: Booking(id == $bookingId, 
+            status == BookingStatus.PENDING,
+            $listing: listing,
+            $traveler: traveler
+        )
+    then
+        modify($booking){
+            setStatus(BookingStatus.ACCEPTED)
+        }
+        insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_ACCEPTED));
+        System.out.println("Posalji notifikaciju traveleru da je booking prihvacen!");
+end
+
+rule "Booking denied by owner"
+    no-loop true
+    when
+        $bookingDeniedEvent: BookingDeniedEvent($bookingId: bookingId, $reason: reason)
+        $booking: Booking(id == $bookingId, 
+            status == BookingStatus.PENDING,
+            $listing: listing,
+            $traveler: traveler
+        )
+    then
+        modify($booking){
+            setStatus(BookingStatus.DENIED)
+        }
+        insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
+        System.out.println("Posalji notifikaciju traveleru da je booking odbijen zbog: " + $reason);
+end
+
+rule "Add listing to favorite listings on view"
+when
+    $event: ListingViewedEvent($traveler: traveler, $listing: listing)
+    not (Traveler(favoriteListings contains $listing) from $traveler)
+then
+    modify($traveler) {
+        getFavoriteListings().add($listing)
+    }
+    System.out.println("Listing " + $listing.getTitle() + " added to favorites for traveler " + $traveler.getEmail());
+end
+
+rule "Notify traveler on favorite listing price drop"
+when
+    $discount: Discount($listing: listing)
+    Traveler($traveler: this, favoriteListings contains $listing)
+    // Traveler($traveler: this, id==1)
+then
+    String notificationMessage = "You're in luck! The booking you were checking out, " + $listing.getTitle() + ", is available at an even better price! Hurry to see the new offer, it ends " + $discount.getValidTo();
+    // sendNotification($traveler, notificationMessage);
+    System.out.println("Discount notification sent to traveler " + $traveler.getEmail() + " for listing " + $listing.getTitle());
+    insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
 end
