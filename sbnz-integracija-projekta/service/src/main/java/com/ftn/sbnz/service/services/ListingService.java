@@ -1,6 +1,9 @@
 package com.ftn.sbnz.service.services;
 
 
+import java.util.Collection;
+
+import org.drools.core.ClassObjectFilter;
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -8,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.ftn.sbnz.model.enums.UserRole;
+import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Listing;
@@ -15,6 +19,7 @@ import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.model.models.User;
 import com.ftn.sbnz.service.dtos.AddDiscountDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
+import com.ftn.sbnz.service.mail.IMailService;
 import com.ftn.sbnz.service.repositories.DiscountRepository;
 import com.ftn.sbnz.service.repositories.ListingRepository;
 import com.ftn.sbnz.service.repositories.ListingViewedEventRepository;
@@ -37,6 +42,8 @@ public class ListingService implements IListingService{
 	private TravelerRepository allTravelers;
 	@Autowired
 	private DiscountRepository allDiscounts;
+	@Autowired
+    private IMailService mailService;
 
     @Override
 	public Listing getById(GetListingDTO dto) {
@@ -84,6 +91,14 @@ public class ListingService implements IListingService{
 		kieSession.insert(traveler);
 		int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
+
+		Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
+        for (Object event : newEvents) {
+            if (event instanceof DiscountEmailEvent) {
+                DiscountEmailEvent emailEvent = (DiscountEmailEvent) event;
+                mailService.sendDiscountEmail(emailEvent);
+            }
+        }
 	}
 
 	@Override

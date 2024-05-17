@@ -68,8 +68,8 @@ public class MailService implements IMailService {
 		Personalization personalization = new Personalization();
 	    personalization.addTo(to);
 
-		String body = "Booking for " + emailNotificationEvent.getListingName() + 
-			" has discount of " + emailNotificationEvent.getDiscountDetails() + "!";
+		String body = emailNotificationEvent.getDiscountDetails();
+		System.out.println(body);
 
 	    personalization.addDynamicTemplateData("body", body);
 	    mail.addPersonalization(personalization);
