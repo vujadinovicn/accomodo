@@ -60,6 +60,7 @@ public class Booking implements Serializable {
     }
 
     public void setStatus(BookingStatus status) {
+        System.out.println(this.id);
         this.status = status;
     }
 

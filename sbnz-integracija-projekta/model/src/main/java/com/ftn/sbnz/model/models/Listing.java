@@ -24,6 +24,7 @@ public class Listing implements Serializable {
     @ManyToOne(cascade = {})
     private Location location;
 
+    public Listing(){}
     public Listing(String title, String description, double price, double rating, Owner owner) {
         this.title = title;
         this.description = description;

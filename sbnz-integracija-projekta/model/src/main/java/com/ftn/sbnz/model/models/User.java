@@ -26,6 +26,8 @@ public class User {
     private UserRole role;
     private boolean isBlocked;
 
+    public User(){}
+    
     public User(String email, String password, String name, String lastname, UserRole role) {
         this.email = email;
         this.password = password;
