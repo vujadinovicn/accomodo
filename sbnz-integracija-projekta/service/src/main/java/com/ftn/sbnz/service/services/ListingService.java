@@ -1,6 +1,5 @@
 package com.ftn.sbnz.service.services;
 
-import java.util.Optional;
 
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +11,6 @@ import com.ftn.sbnz.model.enums.UserRole;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Listing;
-import com.ftn.sbnz.model.models.Owner;
 import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.model.models.User;
 import com.ftn.sbnz.service.dtos.AddDiscountDTO;
@@ -86,5 +84,11 @@ public class ListingService implements IListingService{
 		kieSession.insert(traveler);
 		int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
+	}
+
+	@Override
+	public Listing findById(long id) {
+		Listing listing = allListings.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing does not exist!"));
+		return listing;
 	}
 }

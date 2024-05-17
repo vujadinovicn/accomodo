@@ -23,8 +23,9 @@ public class Traveler extends User {
     @ManyToMany(cascade = {}, fetch = FetchType.LAZY)
     private Collection<Destination> favoriteDestinations = new ArrayList<Destination>();
 
-    public Traveler() {super();}
-
+    public Traveler(){
+        super();
+    }
     public Traveler(String email, String password, String name, String lastname) {
         super(email, password, name, lastname, UserRole.TRAVELER);
         this.isIressponsible = false;

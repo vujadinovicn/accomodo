@@ -3,32 +3,32 @@ import com.ftn.sbnz.model.models.Booking;
 import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.enums.BookingStatus;
+import com.ftn.sbnz.model.enums.EmailNotificationType;
 import com.ftn.sbnz.model.events.BookingAcceptedEvent;
 import com.ftn.sbnz.model.events.BookingDeniedEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.BookingEvent;
+import com.ftn.sbnz.model.events.BookingEmailEvent;
 
-declare BookingEvent
-    @role(event)
-    @expires(1m)
-    bookingId: Long
-end
-
-
-rule "Booking has happened"
-    no-loop true
-    when
-        $booking: Booking($bookingId: id, status == BookingStatus.PENDING)
-    then
-        insert(new BookingEvent($bookingId));
-        System.out.println("Nov booking je kreiran!");
-end
+// rule "Booking has happened"
+//     no-loop true
+//     when
+//         $booking: Booking($bookingId: id, status == BookingStatus.PENDING)
+//         not BookingAcceptedEvent(bookingId == $bookingId)
+//         not BookingDeniedEvent(bookingId == $bookingId)
+//     then
+//         insert(new BookingEvent($bookingId));
+//         System.out.println("Nov booking je kreiran!");
+// end
 
 rule "Send notification to owner after booking event"
     no-loop true
     when
-        $booking: Booking($bookingId: id, status == BookingStatus.PENDING)
-        $BookingEvent: BookingEvent(bookingId == $bookingId)
+        $BookingEvent: BookingEvent($bookingId: bookingId)
+        not BookingAcceptedEvent(bookingId == $bookingId)
+        not BookingDeniedEvent(bookingId == $bookingId)
     then
+        insert(new BookingEmailEvent(null, null, EmailNotificationType.BOOKING_CREATED));
         System.out.println("Posalji notifikaciju owneru!");
 end
 
@@ -36,7 +36,16 @@ rule "Booking accepted by owner"
     no-loop true
     when
         $bookingAcceptedEvent: BookingAcceptedEvent($bookingId: bookingId)
+        $booking: Booking(id == $bookingId, 
+            status == BookingStatus.PENDING,
+            $listing: listing,
+            $traveler: traveler
+        )
     then
+        modify($booking){
+            setStatus(BookingStatus.ACCEPTED)
+        }
+        insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_ACCEPTED));
         System.out.println("Posalji notifikaciju traveleru da je booking prihvacen!");
 end
 
@@ -44,7 +53,16 @@ rule "Booking denied by owner"
     no-loop true
     when
         $bookingDeniedEvent: BookingDeniedEvent($bookingId: bookingId, $reason: reason)
+        $booking: Booking(id == $bookingId, 
+            status == BookingStatus.PENDING,
+            $listing: listing,
+            $traveler: traveler
+        )
     then
+        modify($booking){
+            setStatus(BookingStatus.DENIED)
+        }
+        insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
         System.out.println("Posalji notifikaciju traveleru da je booking odbijen zbog: " + $reason);
 end
 

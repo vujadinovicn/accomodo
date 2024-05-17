@@ -38,8 +38,6 @@ public class User {
         this.isBlocked = false;
     }
 
-    
-
     public Long getId() {
         return id;
     }

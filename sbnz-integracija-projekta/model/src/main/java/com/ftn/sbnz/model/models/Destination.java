@@ -16,10 +16,7 @@ public class Destination implements Serializable {
     private String name;
     private String postalCode;
 
-    public Destination()
-    {
-        
-    }
+    public Destination(){}
 
     public Destination(String name, String postalCode) {
         this.name = name;
