@@ -73,7 +73,7 @@ public class MailService implements IMailService {
 
 	    personalization.addDynamicTemplateData("body", body);
 	    mail.addPersonalization(personalization);
-		mail.setTemplateId("");
+		mail.setTemplateId("d");
 		
 		Request req = new Request();
 		try {

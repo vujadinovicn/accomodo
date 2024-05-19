@@ -1,6 +1,7 @@
 package com.ftn.sbnz.service.services;
 
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 import org.drools.core.ClassObjectFilter;
@@ -15,14 +16,17 @@ import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Review;
 import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.model.models.User;
 import com.ftn.sbnz.service.dtos.AddDiscountDTO;
+import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.mail.IMailService;
 import com.ftn.sbnz.service.repositories.DiscountRepository;
 import com.ftn.sbnz.service.repositories.ListingRepository;
 import com.ftn.sbnz.service.repositories.ListingViewedEventRepository;
+import com.ftn.sbnz.service.repositories.ReviewRepository;
 import com.ftn.sbnz.service.repositories.TravelerRepository;
 import com.ftn.sbnz.service.repositories.UserRepository;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
@@ -42,6 +46,8 @@ public class ListingService implements IListingService{
 	private TravelerRepository allTravelers;
 	@Autowired
 	private DiscountRepository allDiscounts;
+	@Autowired
+	private ReviewRepository allReviews;
 	@Autowired
     private IMailService mailService;
 
@@ -105,5 +111,25 @@ public class ListingService implements IListingService{
 	public Listing findById(long id) {
 		Listing listing = allListings.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing does not exist!"));
 		return listing;
+	}
+
+	@Override
+	public void addReview(AddReviewDTO dto) {
+		Listing listing = findById(dto.getListingId());
+		Traveler traveler = allTravelers.findById(dto.getTravelerId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User does not exist!"));
+		
+		LocalDateTime timestamp = LocalDateTime.now();
+		Review review = new Review(dto.getRating(), dto.getComment(), timestamp, listing, traveler);
+
+		allReviews.save(review);
+		allReviews.flush();
+
+		kieSession.insert(review);
+		kieSession.insert(traveler);
+		int n = kieSession.fireAllRules();
+        System.out.println("Number of rules fired: " + n);
+
+		allTravelers.save(traveler);
+		allTravelers.flush();
 	}
 }

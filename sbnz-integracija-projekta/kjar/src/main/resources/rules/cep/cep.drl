@@ -2,6 +2,7 @@ package cep;
 import com.ftn.sbnz.model.models.Booking;
 import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.model.models.Discount;
+import com.ftn.sbnz.model.models.Review;
 import com.ftn.sbnz.model.enums.BookingStatus;
 import com.ftn.sbnz.model.enums.EmailNotificationType;
 import com.ftn.sbnz.model.events.BookingAcceptedEvent;
@@ -10,6 +11,12 @@ import com.ftn.sbnz.model.events.ListingViewedEvent;
 import com.ftn.sbnz.model.events.BookingEvent;
 import com.ftn.sbnz.model.events.BookingEmailEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
+import com.ftn.sbnz.model.events.NegativeReviewEvent;
+
+declare MaliciousTravelerEvent
+    @role(event)
+    travelerId: Long
+end 
 
 // rule "Booking has happened"
 //     no-loop true
@@ -88,4 +95,40 @@ then
     // sendNotification($traveler, notificationMessage);
     System.out.println("Discount notification sent to traveler " + $traveler.getEmail() + " for listing " + $listing.getTitle());
     insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
+end
+
+rule "Traveler gave negative review"
+when
+    $review: Review(rating < 5)
+    not NegativeReviewEvent(review == $review)
+then
+    insert(new NegativeReviewEvent($review));
+end
+
+rule "Assign malicious user flag"
+no-loop true
+when
+    $traveler: Traveler(isMalicious() == false)
+    $totalReviews: Number(intValue > 5) from accumulate(
+        $review: Review(traveler.id == $traveler.id),
+        count($review)
+    )
+    Number(intValue > (0.8 * $totalReviews.intValue())) from accumulate(
+        $negreview: NegativeReviewEvent(review.traveler.id == $traveler.id) over window:time(90d),
+        count($negreview)
+    )
+then
+    modify($traveler) {
+        setMalicious(true)
+    }
+    System.out.println("Traveler " + $traveler.getEmail() + " has been flagged as a malicious traveler.");
+end
+
+rule "Malicious traveler gave another negative review"
+no-loop true
+when
+    NegativeReviewEvent($traveler: review.traveler)
+    eval($traveler.isMalicious())
+then
+    System.out.println("Malicious traveler is on it again! Alert the admin to double chech.");
 end

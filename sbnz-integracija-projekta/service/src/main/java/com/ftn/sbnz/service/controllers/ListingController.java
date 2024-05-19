@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ftn.sbnz.service.dtos.AddDiscountDTO;
+import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 
@@ -31,5 +32,10 @@ public class ListingController {
     @RequestMapping(path = "/discount", method = RequestMethod.POST)
 	public void addDiscount(@RequestBody AddDiscountDTO dto) {
         this.listingService.addDiscount(dto);
+	}
+
+    @RequestMapping(path = "/review", method = RequestMethod.POST)
+	public void addDiscount(@RequestBody AddReviewDTO dto) {
+        this.listingService.addReview(dto);
 	}
 }
