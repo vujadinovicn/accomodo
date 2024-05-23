@@ -2,6 +2,7 @@ package com.ftn.sbnz.model.models;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 
 import com.ftn.sbnz.model.enums.TravelerAgeGroup;
 import com.ftn.sbnz.model.enums.TravelerLevel;
@@ -17,6 +18,7 @@ public class Traveler extends User {
     private boolean isMalicious;
     private TravelerAgeGroup ageGroup;
     private TravelerLevel level;
+    private Date dateOfIrresponsible;
 
     @ManyToMany(cascade = {}, fetch = FetchType.EAGER)
     private Collection<Listing> favoriteListings = new ArrayList<Listing>();
@@ -92,10 +94,16 @@ public class Traveler extends User {
         this.favoriteDestinations = favoriteDestinations;
     }
 
+    public Date getDateOfIrresponsible() {
+        return dateOfIrresponsible;
+    }
+    public void setDateOfIrresponsible(Date dateOfIrresponsible) {
+        this.dateOfIrresponsible = dateOfIrresponsible;
+    }
+
     @Override
     public String toString() {
         return "Traveler [isIressponsible=" + isIressponsible + ", isMalicious=" + isMalicious + ", ageGroup="
                 + ageGroup + ", level=" + level + "]";
     }
-
 }

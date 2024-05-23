@@ -12,6 +12,9 @@ import com.ftn.sbnz.model.events.BookingEvent;
 import com.ftn.sbnz.model.events.BookingEmailEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.NegativeReviewEvent;
+import com.ftn.sbnz.model.events.ReservationCanceledEvent;
+
+import java.util.Date;
 
 declare MaliciousTravelerEvent
     @role(event)
@@ -124,6 +127,7 @@ then
     System.out.println("Traveler " + $traveler.getEmail() + " has been flagged as a malicious traveler.");
 end
 
+
 rule "Malicious traveler gave another negative review"
 no-loop true
 when
@@ -131,4 +135,56 @@ when
     eval($traveler.isMalicious())
 then
     System.out.println("Malicious traveler is on it again! Alert the admin to double chech.");
+end
+
+salience 10
+rule "Delete cancelation event if there is already one"
+no-loop true
+when
+    $event: ReservationCanceledEvent($bookingId: booking.id)
+    ReservationCanceledEvent(booking.id == $bookingId, this != $event)
+then
+    delete($event)
+    System.out.println("You can't cancel already canceled booking!");
+end
+
+rule "Cancel booking by traveler"
+no-loop true
+when
+    ReservationCanceledEvent($canceledBooking: booking)
+    $booking: Booking(this == $canceledBooking, (status == BookingStatus.ACCEPTED || status == BookingStatus.PENDING))
+then
+    modify($booking){
+        setStatus(BookingStatus.CANCELED)
+    }
+    System.out.println("Traveler canceled the booking!");
+end
+
+rule "Flag irresponsible traveler"
+no-loop true
+when
+    $traveler: Traveler(isIressponsible() == false)
+    Number(intValue >= 2) from accumulate(
+        $event: ReservationCanceledEvent(booking.traveler.id == $traveler.id) over window:time(15s),
+        count($event)
+    )
+then
+    modify($traveler){
+        setIressponsible(true);
+    }
+     modify($traveler){
+        setDateOfIrresponsible(new Date());
+    }
+    System.out.println("User has been flagged as an irresponsible traveler!");
+end
+
+rule "Notify admin after irresponsible canceled more bookings"
+when
+    $traveler: Traveler(isIressponsible() == true, $dateOfIrresponsable: dateOfIrresponsible)
+    Number(intValue >= 2) from accumulate(
+        $event: ReservationCanceledEvent(booking.traveler.id == $traveler.id, this after[5s] $dateOfIrresponsable),
+        count($event)
+    )
+then
+    System.out.println("Administrator notified about irresponsible traveler's additional cancellation.");
 end

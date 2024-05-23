@@ -40,4 +40,10 @@ public class BookingController {
 		System.out.println("Odbijen booking (controller)!");
         this.bookingService.denyBooking(dto);
 	}
+
+	@RequestMapping(path = "/cancel", method = RequestMethod.PUT, produces = "application/json")
+	public void cancelBookingByTraveler(@RequestParam Long bookingId) {
+		System.out.println("Otkazan booking (controller)!");
+        this.bookingService.cancelBookingByTraveler(bookingId);
+	}
 }

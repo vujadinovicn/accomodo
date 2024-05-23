@@ -13,4 +13,6 @@ public interface IBookingService {
     public void acceptBooking(Long id);
 
     public void denyBooking(BookingRejectionNoticeDTO dto);
+
+    public void cancelBookingByTraveler(Long bookingId);
 }
