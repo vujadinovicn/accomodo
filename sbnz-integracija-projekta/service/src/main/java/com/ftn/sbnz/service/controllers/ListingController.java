@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ftn.sbnz.service.dtos.AddDiscountDTO;
 import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
+import com.ftn.sbnz.service.dtos.ListingDTO;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 
 @RestController
@@ -19,6 +20,11 @@ public class ListingController {
 
 	public ListingController(IListingService listingService) {
         this.listingService = listingService;
+	}
+
+	@RequestMapping(method = RequestMethod.POST)
+	public void addListing(@RequestBody ListingDTO dto) {
+        this.listingService.addListing(dto);
 	}
 
 	@RequestMapping(method = RequestMethod.GET)

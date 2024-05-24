@@ -13,6 +13,7 @@ import com.ftn.sbnz.model.events.BookingEmailEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.NegativeReviewEvent;
 import com.ftn.sbnz.model.events.ReservationCanceledEvent;
+import com.ftn.sbnz.model.events.AddedListingEvent;
 
 import java.util.Date;
 
@@ -45,17 +46,6 @@ rule "Send notification to owner after booking event"
 end
 
 
-rule "Handle overlapping bookings if there is more than 7 days for one of bookings"
-no-loop true
-when
-    $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
-    $booking1: Booking(id == $id1)
-    $booking2: Booking(id == $id2, $startDate2: startDate, $startDate2 after[7d] dateNow)
-    then
-        System.out.println("Notify user to cancel one of the bookings!");
-end
-
-
 rule "Booking accepted by owner"
     no-loop true
     when
@@ -73,9 +63,6 @@ rule "Booking accepted by owner"
         System.out.println("Posalji notifikaciju traveleru da je booking prihvacen!");
 end
 
-// =========================================
-// OVERLAPPED BOOKINGS - CEP
-
 rule "Booking denied by owner"
     no-loop true
     when
@@ -92,6 +79,10 @@ rule "Booking denied by owner"
         insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
         System.out.println("Posalji notifikaciju traveleru da je booking odbijen zbog: " + $reason);
 end
+
+
+// =========================================
+// OVERLAPPED BOOKINGS - CEP
 
 rule "Detect overlapping bookings"
 no-loop true
@@ -128,35 +119,80 @@ when
         modify($booking2){
             setStatus(BookingStatus.DENIED)
         }
+        // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
         System.out.println("Booking with id: " + $id2 + " has been DENIED!");
+end
+
+rule "Handle overlapping bookings if there is more than 7 days for one of bookings"
+no-loop true
+when
+    $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
+    $booking1: Booking(id == $id1)
+    $booking2: Booking(id == $id2, $startDate2: startDate, $startDate2 after[7d] dateNow)
+    then
+        // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.RESCHEDULE));
+        System.out.println("Send notification to traveler for potential overlap!");
+end
+
+// =========================================
+// FAVORITE LOCATIONS - FORWARD
+rule "Add location to favorite locations on view"
+no-loop true
+when
+    $event: ListingViewedEvent($traveler: traveler, $destination: listing.location.destination)
+    not ((Traveler(favoriteDestinations contains $destination) from $traveler))
+    $totalViews: Number(intValue >= 2) from accumulate(
+        $viewEvent: ListingViewedEvent(
+            this != $event,
+            traveler.id == $traveler.id,
+            listing.location.destination.id == $destination.id
+        ) over window:time(3d),
+        count($viewEvent)
+    )
+then
+    modify($traveler) {
+        getFavoriteDestinations().add($destination)
+    }
+    System.out.println("Destination " + $destination.getName() + " added to favorites for traveler " + $traveler.getEmail());
+end
+
+rule "Send notification to traveler when listing with favorite location is added"
+no-loop true
+when
+    $event: AddedListingEvent($listing: listing)
+    Traveler($traveler: this, favoriteDestinations contains $listing.location.destination)
+then
+    String notificationMessage = "New listing, " + $listing.getTitle() + ", has arrived in one on of your favorite destinations!";
+    insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
+    System.out.println("New listing notification sent to traveler " + $traveler.getEmail() + " for " + $listing.getTitle());
 end
 
 // =========================================
 // FAVORITE LISTINGS - FORWARD
 
-rule "Add listing to favorite listings on view"
-when
-    $event: ListingViewedEvent($traveler: traveler, $listing: listing)
-    not (Traveler(favoriteListings contains $listing) from $traveler)
-then
-    modify($traveler) {
-        getFavoriteListings().add($listing)
-    }
-    System.out.println("Listing " + $listing.getTitle() + " added to favorites for traveler " + $traveler.getEmail());
-end
+// rule "Add listing to favorite listings on view"
+// when
+//     $event: ListingViewedEvent($traveler: traveler, $listing: listing)
+//     not (Traveler(favoriteListings contains $listing) from $traveler)
+// then
+//     modify($traveler) {
+//         getFavoriteListings().add($listing)
+//     }
+//     System.out.println("Listing " + $listing.getTitle() + " added to favorites for traveler " + $traveler.getEmail());
+// end
 
 
-rule "Notify traveler on favorite listing price drop"
-when
-    $discount: Discount($listing: listing)
-    Traveler($traveler: this, favoriteListings contains $listing)
-    // Traveler($traveler: this, id==1)
-then
-    String notificationMessage = "You're in luck! The booking you were checking out, " + $listing.getTitle() + ", is available at an even better price! Hurry to see the new offer, it ends " + $discount.getValidTo();
-    // sendNotification($traveler, notificationMessage);
-    System.out.println("Discount notification sent to traveler " + $traveler.getEmail() + " for listing " + $listing.getTitle());
-    insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
-end
+// rule "Notify traveler on favorite listing price drop"
+// when
+//     $discount: Discount($listing: listing)
+//     Traveler($traveler: this, favoriteListings contains $listing)
+//     // Traveler($traveler: this, id==1)
+// then
+//     String notificationMessage = "You're in luck! The booking you were checking out, " + $listing.getTitle() + ", is available at an even better price! Hurry to see the new offer, it ends " + $discount.getValidTo();
+//     // sendNotification($traveler, notificationMessage);
+//     System.out.println("Discount notification sent to traveler " + $traveler.getEmail() + " for listing " + $listing.getTitle());
+//     insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
+// end
 
 // =========================================
 // NEGATIVE REVIEWS AND MALICIOUS USER - CEP
@@ -254,5 +290,6 @@ when
         count($event)
     )
 then
+    // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
     System.out.println("Administrator notified about irresponsible traveler's additional cancellation!");
 end

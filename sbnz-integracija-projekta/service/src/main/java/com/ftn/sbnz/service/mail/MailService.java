@@ -25,7 +25,8 @@ public class MailService implements IMailService {
 	public void sendBookingEmail(BookingEmailEvent emailNotificationEvent) {
 		Email from = new Email("vujadinovic01@gmail.com", "Accomodo");
 		String subject = "Hello";
-		Email to = new Email(emailNotificationEvent.getEmailTo());
+		String toRecieve = emailNotificationEvent.getEmailTo();
+		Email to = new Email(toRecieve);
 		Content c = new Content("text/plain", "message");
 		Mail mail = new Mail(from, subject, to, c);
 		mail.setSubject(subject);
@@ -34,12 +35,17 @@ public class MailService implements IMailService {
 	    personalization.addTo(to);
 
 		String status = "";
-		if (emailNotificationEvent.getType() == EmailNotificationType.BOOKING_ACCEPTED) 
-			status = "ACCEPTED";
-		else if (emailNotificationEvent.getType() == EmailNotificationType.BOOKING_DENIED) 
-			status = "DENIED";
-		String body = "Booking for " + emailNotificationEvent.getListingName() + " has been " + status + "!";
-
+		String body = "";
+		if (emailNotificationEvent.getType() == EmailNotificationType.BOOKING_RESCHEDULE) 
+			body = "Booking for " + emailNotificationEvent.getListingName() + " should be canceled because of overlap!";
+		else {
+			if (emailNotificationEvent.getType() == EmailNotificationType.BOOKING_ACCEPTED) 
+				status = "ACCEPTED";
+			else if (emailNotificationEvent.getType() == EmailNotificationType.BOOKING_DENIED) 
+				status = "DENIED";
+			body = "Booking for " + emailNotificationEvent.getListingName() + " has been " + status + "!";
+		}
+		
 	    personalization.addDynamicTemplateData("body", body);
 	    mail.addPersonalization(personalization);
 		mail.setTemplateId("");
@@ -60,7 +66,8 @@ public class MailService implements IMailService {
 	public void sendDiscountEmail(DiscountEmailEvent emailNotificationEvent) {
 		Email from = new Email("vujadinovic01@gmail.com", "Accomodo");
 		String subject = "Hello";
-		Email to = new Email(emailNotificationEvent.getEmailTo());
+		String toRecieve = emailNotificationEvent.getEmailTo();
+		Email to = new Email(toRecieve);
 		Content c = new Content("text/plain", "message");
 		Mail mail = new Mail(from, subject, to, c);
 		mail.setSubject(subject);

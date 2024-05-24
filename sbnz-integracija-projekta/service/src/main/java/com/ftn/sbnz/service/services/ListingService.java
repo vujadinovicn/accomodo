@@ -12,20 +12,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.ftn.sbnz.model.enums.UserRole;
+import com.ftn.sbnz.model.events.AddedListingEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Location;
+import com.ftn.sbnz.model.models.Owner;
 import com.ftn.sbnz.model.models.Review;
 import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.model.models.User;
 import com.ftn.sbnz.service.dtos.AddDiscountDTO;
 import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
+import com.ftn.sbnz.service.dtos.ListingDTO;
 import com.ftn.sbnz.service.mail.IMailService;
 import com.ftn.sbnz.service.repositories.DiscountRepository;
 import com.ftn.sbnz.service.repositories.ListingRepository;
 import com.ftn.sbnz.service.repositories.ListingViewedEventRepository;
+import com.ftn.sbnz.service.repositories.LocationRepository;
+import com.ftn.sbnz.service.repositories.OwnerRepository;
 import com.ftn.sbnz.service.repositories.ReviewRepository;
 import com.ftn.sbnz.service.repositories.TravelerRepository;
 import com.ftn.sbnz.service.repositories.UserRepository;
@@ -48,6 +54,10 @@ public class ListingService implements IListingService{
 	private DiscountRepository allDiscounts;
 	@Autowired
 	private ReviewRepository allReviews;
+	@Autowired
+    private OwnerRepository allOwners;
+	@Autowired
+    private LocationRepository allLocations;
 	@Autowired
     private IMailService mailService;
 
@@ -72,6 +82,13 @@ public class ListingService implements IListingService{
         allViewedListings.flush();
 		
 		kieSession.insert(viewedEvent);
+		// for (Object object : kieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
+        //     Traveler t = (Traveler) object;
+        //     if (t.getId() == traveler.getId()) {
+        //    		kieSession.delete(kieSession.getFactHandle(t));
+        //         break;
+        //     }
+        // }
 		kieSession.insert(traveler);
         int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
@@ -83,6 +100,36 @@ public class ListingService implements IListingService{
 			allTravelers.flush();
 		}
 	}
+
+	@Override
+	public void addListing(ListingDTO dto) {
+		Location location = allLocations.findById(dto.getLocationId()).get();
+		Owner owner = allOwners.findById(dto.getOwnerId()).get();
+		
+		Listing listing = new Listing(dto.getTitle(), dto.getDescription(), dto.getPrice(), 0, owner);
+		listing.setLocation(location);
+
+		allListings.save(listing);
+		allLocations.save(location);
+		allListings.flush();
+		allLocations.flush();
+
+		AddedListingEvent addedListingEvent = new AddedListingEvent(listing);
+		kieSession.insert(addedListingEvent);
+		kieSession.insert(allTravelers.findById(1L).get());
+
+		int n = kieSession.fireAllRules();
+        System.out.println("Number of rules fired: " + n);
+
+		Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
+        for (Object event : newEvents) {
+            if (event instanceof DiscountEmailEvent) {
+                DiscountEmailEvent emailEvent = (DiscountEmailEvent) event;
+                mailService.sendDiscountEmail(emailEvent);
+            }
+        }
+	}
+
 
 	@Override
 	public void addDiscount(AddDiscountDTO dto) {
@@ -126,6 +173,7 @@ public class ListingService implements IListingService{
 
 		kieSession.insert(review);
 		kieSession.insert(traveler);
+
 		int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 

@@ -176,20 +176,21 @@ public class BookingService implements IBookingService{
             kieSession.delete(kieSession.getFactHandle(travelerInMemory));
         }
         kieSession.insert(booking.getTraveler());
+        kieSession.setGlobal("dateNow", new Date());
 
         int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired AFTER CANCELATION: " + n);
 
-        // Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(BookingEmailEvent.class));
-        // for (Object event : newEvents) {
-        //     if (event instanceof BookingEmailEvent) {
-        //         BookingEmailEvent emailEvent = (BookingEmailEvent) event;
-        //         if (emailEvent.getType() == EmailNotificationType.BOOKING_DENIED){
-        //             mailService.sendBookingEmail(emailEvent);
-        //             System.out.println("Email has been sent!");
-        //         }
-        //     }
-        // }
+        Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(BookingEmailEvent.class));
+        for (Object event : newEvents) {
+            if (event instanceof BookingEmailEvent) {
+                BookingEmailEvent emailEvent = (BookingEmailEvent) event;
+                if (emailEvent.getType() == EmailNotificationType.BOOKING_RESCHEDULE){
+                    mailService.sendBookingEmail(emailEvent);
+                    System.out.println("Email has been sent!");
+                }
+            }
+        }
 
         allBookings.save(booking);
         allBookings.flush();
