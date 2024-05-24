@@ -106,6 +106,7 @@ public class BookingService implements IBookingService{
         BookingAcceptedEvent baevent = new BookingAcceptedEvent(id);
         kieSession.insert(baevent);
         kieSession.insert(booking);
+        kieSession.setGlobal("dateNow", new Date());
         int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired AFTER ACCEPTENCE: " + n);
 

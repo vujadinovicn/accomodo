@@ -1,7 +1,7 @@
 package com.ftn.sbnz.model.models;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 import com.ftn.sbnz.model.enums.BookingStatus;
 
@@ -17,11 +17,11 @@ public class Booking implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private Date startDate;
+    private Date endDate;
     private BookingStatus status;
     private boolean isReservation;
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     @ManyToOne
     private Listing listing;
@@ -31,27 +31,27 @@ public class Booking implements Serializable {
     public Booking(){
         this.status = BookingStatus.PENDING;
     }
-    public Booking(LocalDateTime startDate, LocalDateTime endDate, BookingStatus status, boolean isReservation) {
+    public Booking(Date startDate, Date endDate, BookingStatus status, boolean isReservation) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.status = status;
         this.isReservation = isReservation;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = new Date();
     }
 
-    public LocalDateTime getStartDate() {
+    public Date getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(LocalDateTime startDate) {
+    public void setStartDate(Date startDate) {
         this.startDate = startDate;
     }
 
-    public LocalDateTime getEndDate() {
+    public Date getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(LocalDateTime endDate) {
+    public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
 
@@ -72,11 +72,11 @@ public class Booking implements Serializable {
         this.isReservation = isReservation;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 
