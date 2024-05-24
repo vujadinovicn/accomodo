@@ -1,17 +1,17 @@
 package com.ftn.sbnz.service.dtos;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import com.ftn.sbnz.model.enums.BookingStatus;
 
 public class BookingDTO {
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private Date startDate;
+    private Date endDate;
     private BookingStatus status;
     private boolean isReservation;
     private Long listingId;
     private Long travelerId;
 
-    public BookingDTO(LocalDateTime startDate, LocalDateTime endDate, BookingStatus status, boolean isReservation,
+    public BookingDTO(Date startDate, Date endDate, BookingStatus status, boolean isReservation,
             Long listingId, Long travelerId) {
         this.startDate = startDate;
         this.endDate = endDate;
@@ -21,16 +21,16 @@ public class BookingDTO {
         this.travelerId = travelerId;
     }
 
-    public LocalDateTime getStartDate() {
+    public Date getStartDate() {
         return startDate;
     }
-    public void setStartDate(LocalDateTime startDate) {
+    public void setStartDate(Date startDate) {
         this.startDate = startDate;
     }
-    public LocalDateTime getEndDate() {
+    public Date getEndDate() {
         return endDate;
     }
-    public void setEndDate(LocalDateTime endDate) {
+    public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
     public BookingStatus getStatus() {

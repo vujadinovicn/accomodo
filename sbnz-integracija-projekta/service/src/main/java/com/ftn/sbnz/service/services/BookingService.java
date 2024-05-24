@@ -2,6 +2,7 @@ package com.ftn.sbnz.service.services;
 
 import java.util.Optional;
 import java.util.Collection;
+import java.util.Date;
 
 import org.drools.core.ClassObjectFilter;
 import org.kie.api.runtime.KieSession;
@@ -15,7 +16,7 @@ import com.ftn.sbnz.model.enums.EmailNotificationType;
 import com.ftn.sbnz.model.events.BookingAcceptedEvent;
 import com.ftn.sbnz.model.events.BookingDeniedEvent;
 import com.ftn.sbnz.model.events.BookingEvent;
-import com.ftn.sbnz.model.events.DiscountEmailEvent;
+import com.ftn.sbnz.model.events.ReservationCanceledEvent;
 import com.ftn.sbnz.model.events.BookingEmailEvent;
 import com.ftn.sbnz.model.models.Booking;
 import com.ftn.sbnz.model.models.BookingRejectionNotice;
@@ -23,10 +24,10 @@ import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.service.dtos.BookingDTO;
 import com.ftn.sbnz.service.dtos.BookingRejectionNoticeDTO;
-import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.mail.IMailService;
 import com.ftn.sbnz.service.repositories.BookingRejectionNoticeRepository;
 import com.ftn.sbnz.service.repositories.BookingRepository;
+import com.ftn.sbnz.service.repositories.TravelerRepository;
 import com.ftn.sbnz.service.services.interfaces.IBookingService;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 import com.ftn.sbnz.service.services.interfaces.ITravelerService;
@@ -39,6 +40,9 @@ public class BookingService implements IBookingService{
 
     @Autowired
     private BookingRepository allBookings;
+
+    @Autowired
+    private TravelerRepository allTravelers;
 
     @Autowired
     private BookingRejectionNoticeRepository allRejectionNotices;
@@ -102,6 +106,7 @@ public class BookingService implements IBookingService{
         BookingAcceptedEvent baevent = new BookingAcceptedEvent(id);
         kieSession.insert(baevent);
         kieSession.insert(booking);
+        kieSession.setGlobal("dateNow", new Date());
         int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired AFTER ACCEPTENCE: " + n);
 
@@ -147,10 +152,50 @@ public class BookingService implements IBookingService{
             }
         }
 
-        
+        allBookings.save(booking);
+        allBookings.flush();
+    }
+
+    @Override
+    public void cancelBookingByTraveler(Long bookingId) {
+        Booking booking = getById(bookingId);
+
+        ReservationCanceledEvent rCanceledEvent = new ReservationCanceledEvent(booking, new Date());
+        kieSession.insert(rCanceledEvent);
+        kieSession.insert(booking);
+
+        Traveler travelerInMemory = null;
+        for (Object object : kieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
+            Traveler traveler = (Traveler) object;
+            if (traveler.getId() == booking.getTraveler().getId()) {
+                travelerInMemory = traveler;
+                break;
+            }
+        }
+        if (travelerInMemory != null) {
+            kieSession.delete(kieSession.getFactHandle(travelerInMemory));
+        }
+        kieSession.insert(booking.getTraveler());
+        kieSession.setGlobal("dateNow", new Date());
+
+        int n = kieSession.fireAllRules();
+        System.out.println("Number of rules fired AFTER CANCELATION: " + n);
+
+        Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(BookingEmailEvent.class));
+        for (Object event : newEvents) {
+            if (event instanceof BookingEmailEvent) {
+                BookingEmailEvent emailEvent = (BookingEmailEvent) event;
+                if (emailEvent.getType() == EmailNotificationType.BOOKING_RESCHEDULE){
+                    mailService.sendBookingEmail(emailEvent);
+                    System.out.println("Email has been sent!");
+                }
+            }
+        }
 
         allBookings.save(booking);
         allBookings.flush();
+
+        allTravelers.flush();
     }
 
 }
