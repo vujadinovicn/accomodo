@@ -33,6 +33,10 @@
             </mat-form-field>
         </form>
         <button class="conf-button" mat-raised-button (click)="register()">Register</button>
+        <p class="">
+            <br>
+            Already have an account? <a id="register-ref" [routerLink]="['/login']">Login!</a>
+        </p>
     </div>
     <div id="img-container">
         <img src="../../assets/signUp.svg">
