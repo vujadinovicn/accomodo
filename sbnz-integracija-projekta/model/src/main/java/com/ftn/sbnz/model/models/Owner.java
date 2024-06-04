@@ -1,5 +1,6 @@
 package com.ftn.sbnz.model.models;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -19,8 +20,8 @@ public class Owner extends User {
     public Owner(){
         super();
     }
-    public Owner(String email, String password, String name, String lastname) {
-        super(email, password, name, lastname, UserRole.OWNER);
+    public Owner(String email, String password, String name, String lastname, LocalDateTime dateOfBirth) {
+        super(email, password, name, lastname, UserRole.OWNER, dateOfBirth);
         this.isIrresponsible = false;
     }
 

@@ -1,5 +1,6 @@
 package com.ftn.sbnz.model.models;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -28,8 +29,8 @@ public class Traveler extends User {
     public Traveler(){
         super();
     }
-    public Traveler(String email, String password, String name, String lastname) {
-        super(email, password, name, lastname, UserRole.TRAVELER);
+    public Traveler(String email, String password, String name, String lastname, LocalDateTime dateOfBirth) {
+        super(email, password, name, lastname, UserRole.TRAVELER, dateOfBirth);
         this.isIressponsible = false;
         this.isMalicious = false;
         this.ageGroup = TravelerAgeGroup.YOUNG_ADULT;
@@ -37,8 +38,8 @@ public class Traveler extends User {
     }
 
     public Traveler(String email, String password, String name, String lastname, UserRole role, boolean isIressponsible,
-            boolean isMalicious, TravelerAgeGroup ageGroup, TravelerLevel level) {
-        super(email, password, name, lastname, role);
+            boolean isMalicious, TravelerAgeGroup ageGroup, TravelerLevel level, LocalDateTime dateOfBirth) {
+        super(email, password, name, lastname, role, dateOfBirth);
 
         this.isIressponsible = isIressponsible;
         this.isMalicious = isMalicious;
