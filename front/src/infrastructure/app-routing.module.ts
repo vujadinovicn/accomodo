@@ -17,8 +17,8 @@ const routes: Routes = [
   {path: 'registerAdmin', component: RegisterAdminComponent},
   {path: 'property-details', component: PropertyDetailsComponent},
   {path: 'device-details', component: DeviceDetailsComponent},
-  {path: '**', component: LoginComponent},
-  {path: '*', component: LoginComponent}
+  {path: '**', component: HomepageComponent},
+  {path: '*', component: HomepageComponent}
   
 ];
 

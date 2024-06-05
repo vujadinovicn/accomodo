@@ -26,10 +26,10 @@ export class AddPropertyDialogComponent implements OnInit {
 
   addPropertyForm = new FormGroup({
     name: new FormControl('', [Validators.required]),
-    area: new FormControl('', [Validators.required]),
-    numberOfFloors: new FormControl('', [Validators.required]),
-    cityAndCountry: new FormControl('', [Validators.required]),
+    price: new FormControl('', [Validators.required]),
+    description: new FormControl('', [Validators.required]),
     address: new FormControl('', [Validators.required]),
+    cityAndCountry: new FormControl('', [Validators.required]),
   })
 
 
@@ -112,7 +112,7 @@ export class AddPropertyDialogComponent implements OnInit {
 
   addProperty() {
     console.log(this.addPropertyForm.value?.cityAndCountry!);
-    if (this.addPropertyForm.valid && this.filePath != "" && this.selectedMarkerPosition) {
+    if (this.addPropertyForm.valid && this.selectedMarkerPosition) {
       console.log(this.selectedMarkerPosition)
       let address: AddressDTO = {
         cityId: (this.addPropertyForm.value.cityAndCountry! as unknown as LocationDTO).cityId,
@@ -123,8 +123,9 @@ export class AddPropertyDialogComponent implements OnInit {
 
       let dto: PropertyDTO = {
         name: this.addPropertyForm.value.name!,
-        area: +this.addPropertyForm.value.area!,
-        numOfFloors: +this.addPropertyForm.value.numberOfFloors!,
+        area: 0,
+        numOfFloors: 0,
+        // numOfFloors: +this.addPropertyForm.value.numberOfFloors!,
         image: this.filePath,
         address: address
       }
@@ -145,6 +146,14 @@ export class AddPropertyDialogComponent implements OnInit {
     }
   }
 
+  selectionChanged(event: any) {
+    console.log("event" + event);
+  }
+
+  close() {
+    this.dialogRef.close();
+  }
+
   onFileSelect(event: any) {
     event.preventDefault();
 
@@ -158,13 +167,4 @@ export class AddPropertyDialogComponent implements OnInit {
       }
     }
   }
-
-  selectionChanged(event: any) {
-    console.log("event" + event);
-  }
-
-  close() {
-    this.dialogRef.close();
-  }
-
 }

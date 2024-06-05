@@ -3,8 +3,8 @@
 <div class="homepage-container">
     <div class="title-container">
         <div class="title-topper">
-            <p class="title">Properties</p>
-            <button *ngIf="loggedUser.role == 'USER'" class="conf-button add-prop-btn back-light-blue" (click)="openAddPropertyDialog()"><i class="fa fa-circle-plus"></i>Request a new property</button>
+            <p class="title">Listings</p>
+            <button *ngIf="role == 'ROLE_OWNER'" class="conf-button add-prop-btn back-light-blue" (click)="openAddPropertyDialog()"><i class="fa fa-circle-plus"></i>Create new listing</button>
         </div>
         <hr>
     </div>

@@ -19,6 +19,8 @@ export class HomepageComponent implements OnInit {
   count = 0;
 
   loggedUser: any = {};
+  role: any = {};
+
 
   constructor(private dialog: MatDialog, private propertyService: PropertyService, 
     private authService: AuthService, private snackBar: MatSnackBar,
@@ -26,21 +28,18 @@ export class HomepageComponent implements OnInit {
     private propertyDetailsService: PropertyDetailsService) { }
 
   ngOnInit(): void {
-    // this.authService.getUser().subscribe({
-    //   next: (value) => {
-    //     if (value) {
-    //       this.loggedUser = value;
-    //     }
-    //   },
-    //   error: (err) => {
-    //     console.log(err);
-    //   },
-    // })
+    // this.loadItems();
 
-    this.loadItems();
+    let loggedUser = this.authService.getUser();
+    // this.name = loggedUser? loggedUser.name: "";
+    this.role = this.authService.getRole();
+    // this.loggedUser = loggedUser;
+    console.log("eee");
+    // console.log(this.loggedUser.role)
   }
 
   loadItems(): void {
+    console.log("idi u kurac")
     this.propertyService.getPaginatedProperties(this.currentPage, this.pageSize).subscribe({
       next: (value) => {
         console.log(value)

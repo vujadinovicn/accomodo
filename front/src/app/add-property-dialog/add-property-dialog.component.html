@@ -3,19 +3,39 @@
         <i class="fa fa-plus"></i>
     </div>
     <div class="title-container">
-        <p class="title light-blue">Add a new property</p>
+        <p class="title light-blue">Add a new listing</p>
         <hr>
     </div>
     <form id="add-property-form" [formGroup]="addPropertyForm" (ngSubmit)="addProperty()">
         <div class="form-section">
             <p class="subtitle">Basic info:</p>
             <mat-form-field >
-                <mat-label>Name</mat-label>
+                <mat-label>Title</mat-label>
                 <input matInput type="text" name="name" formControlName="name" />
                 <mat-error *ngIf="addPropertyForm.get('name')?.errors?.['required']">entering name is required</mat-error>
                 <mat-error *ngIf="addPropertyForm.get('name')?.errors?.['nameError'] && !addPropertyForm.get('name')?.errors?.['required']">name should be 1-100 characters long</mat-error>
             </mat-form-field>
-            <div class="area-and-floors">
+            <mat-form-field>
+                <mat-label>Price (EUR) </mat-label>
+                <input matInput type="number" name="price" formControlName="price" />
+                <mat-error *ngIf="addPropertyForm.get('price')?.errors?.['required']">entering price is required</mat-error>
+                <mat-error *ngIf="addPropertyForm.get('price')?.errors?.['invalidPrice'] && !addPropertyForm.get('price')?.errors?.['required']">price should be 0-1000 m2</mat-error>
+            </mat-form-field>
+            <mat-form-field >
+                <mat-label>Description</mat-label>
+                <textarea matInput type="text" name="name" formControlName="name" rows="3" cols="30"></textarea>
+                <!-- <mat-error *ngIf="addPropertyForm.get('description')?.errors?.['required']">entering description is required</mat-error> -->
+                <!-- <mat-error *ngIf="addPropertyForm.get('name')?.errors?.['nameError'] && !addPropertyForm.get('name')?.errors?.['required']">name should be 1-100 characters long</mat-error> -->
+            </mat-form-field>
+            <button class="upload-btn" type="button" (click)="imageInput.click()">
+                Upload property image
+            </button>
+            <div class="img-container">
+                <img *ngIf="filePath" [src]="filePath" alt="Selected Image" class="selected-image" />
+            </div>
+            <input #imageInput type="file" (change)="onFileSelect($event)" style="display: none">
+                <p>{{ file['name'] }}</p>
+            <!-- <div class="price-and-floors">
                 <mat-form-field>
                     <mat-label>Area</mat-label>
                     <input matInput type="number" name="area" formControlName="area" />
@@ -28,15 +48,7 @@
                     <mat-error *ngIf="addPropertyForm.get('numberOfFloors')?.errors?.['required']">entering number of floors is required</mat-error>
                     <mat-error *ngIf="addPropertyForm.get('numberOfFloors')?.errors?.['invalidFloors'] && !addPropertyForm.get('numberOfFloors')?.errors?.['required']">property can have 1-200 floors</mat-error>
                 </mat-form-field>
-            </div>
-            <button class="upload-btn" type="button" (click)="imageInput.click()">
-                Upload property image
-            </button>
-            <div class="img-container">
-                <img *ngIf="filePath" [src]="filePath" alt="Selected Image" class="selected-image" />
-            </div>
-            <input #imageInput type="file" (change)="onFileSelect($event)" style="display: none">
-                <p>{{ file['name'] }}</p>
+            </div> -->
         </div>
         <div class="form-section">
             <p class="subtitle">Address info:</p>

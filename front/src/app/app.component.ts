@@ -10,7 +10,6 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class AppComponent {
 
-
   title = "La De Smart";
   loggedIn: boolean = false; 
   sideVisible: Boolean = false;
@@ -18,20 +17,18 @@ export class AppComponent {
   private destroy$: Subject<void> = new Subject<void>();
   
   constructor(private navbarService: NavbarService, private authService: AuthService) {
-    this.navbarService.getSideVisible().subscribe(value => {
-      this.sideVisible = value;
-    })
-    this.authService.recieveLoggedIn().subscribe({
-      next: (value) => {
-        this.loggedIn = value;
-        if (!this.loggedIn) {
-          this.loggedIn = this.authService.getUserFromStorage() == null? false: true;
-        }
-      },
-      error: (err) => {
-        console.log("Error getting current logged in information.")
-      },
-    })
+      this.authService.recieveLoggedIn().subscribe({
+        next: (value) => {
+          this.loggedIn = value;
+          if (!this.loggedIn) {
+            this.loggedIn = this.authService.getUserFromStorage() == null? false: true;
+          }
+          console.log(this.loggedIn)
+        },
+        error: (err) => {
+          console.log("Error getting current logged in information.")
+        },
+      })
   }
 
   @HostListener('window:resize', ['$event'])

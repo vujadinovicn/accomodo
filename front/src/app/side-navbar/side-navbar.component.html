@@ -21,15 +21,11 @@
     </div>
     <div (click)="changeUrl('/home')" class="nav-item" [routerLink]="['/home']" [ngClass]="url == '/home' ? 'selected-option': ''">
         <i class="fa-solid fa-home" style="cursor: pointer"></i>
-        <p>Properties</p>
+        <p>Listings</p>
     </div>
-    <div (click)="changeUrl('/registerAdmin')" class="nav-item" [routerLink]="['/registerAdmin']" [ngClass]="url == '/registerAdmin' ? 'selected-option': ''">
+    <div (click)="changeUrl('/registerAdmin')" class="nav-item" *ngIf="role == 'ROLE_ADMIN'" [routerLink]="['/registerAdmin']" [ngClass]="url == '/registerAdmin' ? 'selected-option': ''">
         <i class="fa-solid fa-home" style="cursor: pointer"></i>
         <p>Register admin</p>
-    </div>
-    <div (click)="changeUrl('/city-stats')" class="nav-item" *ngIf="loggedUser.role == 'ADMIN' || loggedUser.role == 'SUPERADMIN'" [routerLink]="['/city-stats']" [ngClass]="url == '/city-stats' ? 'selected-option': ''">
-        <i class="fa-solid fa-home" style="cursor: pointer"></i>
-        <p>City power stats</p>
     </div>
     <!-- <div class="nav-item" [routerLink]="['/xyz']" [ngClass]="url == '/xyz' ? 'selected-option': ''">
         <i class="fa-solid fa-home" style="cursor: pointer"></i>

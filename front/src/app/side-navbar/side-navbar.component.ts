@@ -25,9 +25,11 @@ export class SideNavbarComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.handleSmallScreens();
     let loggedUser = this.authService.getUser();
-    this.name = loggedUser? loggedUser.name: "";
+    // this.name = loggedUser? loggedUser.name: "";
     this.role = this.authService.getRole();
+    console.log(this.role)
     this.loggedUser = loggedUser;
+    console.log(this.loggedUser);
   }
 
   handleSmallScreens(): void {

@@ -84,8 +84,8 @@ export class LoginComponent implements OnInit {
           this.authService.setUser();
           let user = this.authService.getUser();
           console.log(this.authService.getUser());
-
-          //this.router.navigate(['all-certificates']);
+          this.authService.setLoggedIn(true);
+          this.router.navigate(['home']);
   }
 
   activate(){
