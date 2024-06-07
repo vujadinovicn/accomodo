@@ -20,6 +20,8 @@ import com.ftn.sbnz.model.events.AddedListingEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
 import com.ftn.sbnz.model.models.Destination;
+import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
+import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.Location;
@@ -255,4 +257,36 @@ public class ListingService implements IListingService{
 	}
 
 	
+	public Review getReview(long listingId, long travelerId) {
+		Review review = allReviews.findByTravelerIdAndListingId(travelerId, listingId).orNull();
+
+		return review;
+	}
+
+	@Override
+	public List<Listing> getListingRecommendations(Long id) {
+		Traveler traveler = allTravelers.findById(id).orElseThrow();
+
+		FetchListingRecomendationEvent event = new FetchListingRecomendationEvent(traveler, LocalDateTime.now());		
+		
+		cepKieSession.insert(event);
+		// kieSession.insert(traveler);
+        cepKieSession.setGlobal("listingService", this); 
+
+        int n = cepKieSession.fireAllRules();
+        System.out.println("Number of rules fired: " + n);
+
+        Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(AccommodationRecommendationResult.class));
+        for (Object obj : newEvents) {
+            if (obj instanceof AccommodationRecommendationResult) {
+                AccommodationRecommendationResult result = (AccommodationRecommendationResult) obj;
+                for (Listing listing: result.getListings()) {
+                    System.out.println(listing);
+                }
+                return result.getListings();
+            }
+        }
+
+        return new ArrayList<>();
+	}
 }

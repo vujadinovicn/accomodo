@@ -4,6 +4,7 @@ package com.ftn.sbnz.service.services.interfaces;
 import java.util.List;
 
 import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Review;
 import com.ftn.sbnz.service.dtos.AddDiscountDTO;
 import com.ftn.sbnz.service.dtos.AddListingDTO;
 import com.ftn.sbnz.service.dtos.AddReviewDTO;
@@ -18,4 +19,7 @@ public interface IListingService {
     public void addReview(AddReviewDTO dto);
     public void backward();
     public List<AddListingDTO> getListingsForOwner();
+    Review getReview(long listingId, long travelerId);
+    public List<Listing> getListingRecommendations(Long id);
+    
 }

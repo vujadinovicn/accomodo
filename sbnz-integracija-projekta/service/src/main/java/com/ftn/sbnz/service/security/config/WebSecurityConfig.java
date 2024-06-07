@@ -79,6 +79,7 @@ public class WebSecurityConfig {
         http.exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint);
 
     	http.authorizeRequests()
+			.requestMatchers(myRequestMatcher("/api/**")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/user/login")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/user")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/oauth/callback")).permitAll()

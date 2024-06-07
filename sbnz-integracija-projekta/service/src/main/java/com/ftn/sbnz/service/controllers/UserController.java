@@ -40,6 +40,7 @@ public class UserController {
 	
 	@Autowired
 	private AuthenticationManager authenticationManager;
+
     
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE) 
 	public ResponseEntity<?> login(@Valid @RequestBody CredentialsDTO credentials) {
@@ -65,4 +66,6 @@ public class UserController {
 		
 		return new ResponseEntity<TokenDTO>(new TokenDTO(jwt, jwt), HttpStatus.OK);
 	}
+
+	
 }

@@ -1,8 +1,23 @@
 package cep;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 import com.ftn.sbnz.model.models.Booking;
 import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Review;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.DestinationFlag;
+import com.ftn.sbnz.model.models.TagFlag;
+import com.ftn.sbnz.model.models.Tag;
+import com.ftn.sbnz.model.models.AccommodationPoints;
+import com.ftn.sbnz.model.models.AccommodationRecommendation;
+import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
 import com.ftn.sbnz.model.enums.BookingStatus;
 import com.ftn.sbnz.model.enums.EmailNotificationType;
 import com.ftn.sbnz.model.events.BookingAcceptedEvent;
@@ -18,15 +33,25 @@ import com.ftn.sbnz.model.models.LocationBackward;
 import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.Owner;
 import com.ftn.sbnz.model.models.Destination;
+import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
+
+import org.kie.api.runtime.rule.QueryResults;
+import org.kie.api.runtime.rule.QueryResultsRow;
+
+import com.ftn.sbnz.service.services.interfaces.IListingService;
+
 import java.util.Date;
 
 global java.util.Date dateNow;
 global String backwardLocation;
 
+global IListingService listingService;
+
 declare MaliciousTravelerEvent
     @role(event)
     travelerId: Long
 end 
+
 
 declare OverlappedBookingsEvent
     @role(event)
@@ -34,6 +59,12 @@ declare OverlappedBookingsEvent
     firstBookingId: Long
     secondBookingId: Long
 end 
+
+declare RecommendTrendingAccommodationEvent
+    @role(event)
+    @expires(1m)
+    loginTimestamp: LocalDateTime
+end
 
 // =========================================
 // BOOKING RULES - FORWARD
@@ -174,29 +205,29 @@ end
 // =========================================
 // FAVORITE LISTINGS - FORWARD
 
-// rule "Add listing to favorite listings on view"
-// when
-//     $event: ListingViewedEvent($traveler: traveler, $listing: listing)
-//     not (Traveler(favoriteListings contains $listing) from $traveler)
-// then
-//     modify($traveler) {
-//         getFavoriteListings().add($listing)
-//     }
-//     System.out.println("Listing " + $listing.getTitle() + " added to favorites for traveler " + $traveler.getEmail());
-// end
+rule "Add listing to favorite listings on view"
+when
+    $event: ListingViewedEvent($traveler: traveler, $listing: listing)
+    not (Traveler(favoriteListings contains $listing) from $traveler)
+then
+    modify($traveler) {
+        getFavoriteListings().add($listing)
+    }
+    System.out.println("Listing " + $listing.getTitle() + " added to favorites for traveler " + $traveler.getEmail());
+end
 
 
-// rule "Notify traveler on favorite listing price drop"
-// when
-//     $discount: Discount($listing: listing)
-//     Traveler($traveler: this, favoriteListings contains $listing)
-//     // Traveler($traveler: this, id==1)
-// then
-//     String notificationMessage = "You're in luck! The booking you were checking out, " + $listing.getTitle() + ", is available at an even better price! Hurry to see the new offer, it ends " + $discount.getValidTo();
-//     // sendNotification($traveler, notificationMessage);
-//     System.out.println("Discount notification sent to traveler " + $traveler.getEmail() + " for listing " + $listing.getTitle());
-//     insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
-// end
+rule "Notify traveler on favorite listing price drop"
+when
+    $discount: Discount($listing: listing)
+    Traveler($traveler: this, favoriteListings contains $listing)
+    // Traveler($traveler: this, id==1)
+then
+    String notificationMessage = "You're in luck! The booking you were checking out, " + $listing.getTitle() + ", is available at an even better price! Hurry to see the new offer, it ends " + $discount.getValidTo();
+    // sendNotification($traveler, notificationMessage);
+    System.out.println("Discount notification sent to traveler " + $traveler.getEmail() + " for listing " + $listing.getTitle());
+    insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
+end
 
 // =========================================
 // NEGATIVE REVIEWS AND MALICIOUS USER - CEP
@@ -236,7 +267,7 @@ when
     NegativeReviewEvent($traveler: review.traveler)
     eval($traveler.isMalicious())
 then
-    System.out.println("Malicious traveler is on it again! Alert the admin to double chech.");
+    System.out.println("Malicious traveler is on it again! Alert the admin to double check.");
 end
 
 // =========================================
@@ -421,25 +452,325 @@ query "Top Travelers"
     )
 end
 
+// =========================================
+// RECOMMEND LISTINGS TO TRAVELER - COMPLEX FORWARD
 
-// query "Most Popular Beers"
-//     $beer: Beer()
-//     $count: Number() from accumulate (
-//         UserBeerLogger(beer == $beer),
-//         count(1)
-//     )
+// query "listingsForTraveler" (Traveler $traveler)
+//     $listing : Listing() from $traveler.favoriteListings
+//     or
+//     $booking : Booking(traveler == $traveler)
+//     $listing : Listing() from $booking.listing
 // end
 
+rule "Extract destination flag"
+when
+    $event: FetchListingRecomendationEvent($traveler: traveler)
+    $favoriteListings: List() from collect (Listing() from $traveler.favoriteListings)
+    $previousBookings: List() from collect (Booking(traveler == $traveler))
+then
+    Map<Long, List<Double>> destinationRatings = new HashMap<>();
+    Map<Long, Integer> destinationCounts = new HashMap<>();
 
-// query "EarnedForOwnerAllTime" (Long ownerId)
-//     // booking: Booking($destinationId: listing.location.destination.id)
-//     destinations: Map() from accumulate(
-//         Booking($destinationId : listing.location.destination.id),
-//         collectList($destinationId).size() by $destinationId
-//         )
-//     // destinationName : String()
-//     // $count : Number() from accumulate(
-//         // $booking : Booking(listing.location.destination.id==$destinationId, listing.location.destination.name == $destinationName),
-//         // count($booking)
-//     // )/
-// end
+    for (Object obj : $favoriteListings) {
+        Listing listing = (Listing) obj;
+        Long destinationId = listing.getLocation().getDestination().getId();
+
+        //dobaci ocenu za taj listing koju je ostavio korisnik
+        double rating = listing.getRating();
+        Review review = listingService.getReview(listing.getId(), $traveler.getId());
+        System.out.println(review);
+        if (review != null) {
+            rating = review.getRating();
+        } 
+
+        destinationRatings.putIfAbsent(destinationId, new ArrayList<>());
+        destinationRatings.get(destinationId).add(rating);
+
+        destinationCounts.put(destinationId, destinationCounts.getOrDefault(destinationId, 0) + 1);
+    }
+
+    for (Object obj : $previousBookings) {
+        Booking booking = (Booking) obj;
+        Listing listing = booking.getListing();
+        if ($favoriteListings.contains(listing)) {
+            continue; 
+        }
+        Long destinationId = listing.getLocation().getDestination().getId();
+
+        double rating = listing.getRating();
+        Review review = listingService.getReview(listing.getId(), $traveler.getId());
+        if (review != null) {
+            rating = review.getRating();
+        } 
+        destinationRatings.putIfAbsent(destinationId, new ArrayList<>());
+        destinationRatings.get(destinationId).add(rating);
+
+        destinationCounts.put(destinationId, destinationCounts.getOrDefault(destinationId, 0) + 1);
+    }
+
+
+    int countDest = 0;
+    for (Map.Entry<Long, List<Double>> entry : destinationRatings.entrySet()) {
+        Long destinationId = entry.getKey();
+        List<Double> ratings = entry.getValue();
+        double averageRating = ratings.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        int count = destinationCounts.get(destinationId);
+
+        DestinationFlag destinationFlag = new DestinationFlag(destinationId, averageRating, count, $event.getTimestamp());
+        insert(destinationFlag);
+        System.out.println(destinationFlag);
+        countDest += 1;
+
+        System.out.println("Created DestinationFlag for destination ID: " + destinationId);
+    }
+
+    System.out.println("Number of destination flags created: " + countDest);
+    
+end
+
+rule "Extract tag flag"
+when
+    $event: FetchListingRecomendationEvent($traveler: traveler)
+    $favoriteListings: List() from collect (Listing() from $traveler.favoriteListings)
+    $previousBookings: List() from collect (Booking(traveler == $traveler))
+then
+    Map<Long, List<Double>> tagRatings = new HashMap<>();
+    Map<Long, Integer> tagCounts = new HashMap<>();
+
+    for (Object obj : $favoriteListings) {
+        Listing listing = (Listing) obj;
+
+        double rating = listing.getRating();
+        Review review = listingService.getReview(listing.getId(), $traveler.getId());
+        System.out.println(review);
+        if (review != null) {
+            rating = review.getRating();
+        } 
+
+        for (Tag tag: listing.getTags()) {
+            Long tagId = tag.getId();
+
+            tagRatings.putIfAbsent(tagId, new ArrayList<>());
+            tagRatings.get(tagId).add(rating);
+
+            tagCounts.put(tagId, tagCounts.getOrDefault(tagId, 0) + 1);
+        }
+    }
+
+    for (Object obj : $previousBookings) {
+        Booking booking = (Booking) obj;
+        Listing listing = booking.getListing();
+        if ($favoriteListings.contains(listing)) {
+            continue; 
+        }
+
+        double rating = listing.getRating();
+        Review review = listingService.getReview(listing.getId(), $traveler.getId());
+        System.out.println(review);
+        if (review != null) {
+            rating = review.getRating();
+        } 
+
+        for (Tag tag: listing.getTags()) {
+            Long tagId = tag.getId();
+
+            tagRatings.putIfAbsent(tagId, new ArrayList<>());
+            tagRatings.get(tagId).add(rating);
+
+            tagCounts.put(tagId, tagCounts.getOrDefault(tagId, 0) + 1);
+        }
+    }
+
+
+    int countTag = 0;
+    for (Map.Entry<Long, List<Double>> entry : tagRatings.entrySet()) {
+        Long tagId = entry.getKey();
+        List<Double> ratings = entry.getValue();
+        double averageRating = ratings.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        int count = tagCounts.get(tagId);
+
+        TagFlag tagFlag = new TagFlag(tagId, averageRating, count, $event.getTimestamp());
+        insert(tagFlag);
+        System.out.println(tagFlag);
+        countTag += 1;
+
+        System.out.println("Created TagFlag for tag ID: " + tagId);
+    }
+
+    System.out.println("Number of tag flags created: " + countTag);
+    
+end
+
+rule "Reward visited destinations"
+salience 10
+when
+    $listing : Listing($destinationId : location.destination.id, $rating : rating > 7)
+    $flag : DestinationFlag(destinationId == $destinationId, $timestamp: loginTimestamp)
+then
+    insert(new AccommodationPoints($listing, 10, $timestamp));
+    System.out.println("Rewarded visited destination for listing with id " + $listing.getId());
+end
+
+rule "Reward frequent destinations"
+salience 10
+when
+    $listing : Listing($destinationId : location.destination.id)
+    $flag : DestinationFlag(destinationId == $destinationId, $count : count > 3, $timestamp: loginTimestamp)
+then
+    insert(new AccommodationPoints($listing, 5, $timestamp));
+    System.out.println("Rewarded frequent destination for listing with id " + $listing.getId());
+end
+
+rule "Penalize nonvisited destinations"
+salience 10
+when
+    $event: FetchListingRecomendationEvent($timestamp: timestamp)
+    $listing : Listing($destinationId : location.destination.id)
+    not DestinationFlag(destinationId == $destinationId, $timestamp == loginTimestamp)
+then
+    insert(new AccommodationPoints($listing, -5, $timestamp)); 
+    System.out.println("Penalized nonvisited destination for listing with id " + $listing.getId());
+end
+
+rule "Penalize poorly rated destinations"
+salience 10
+when
+    $listing : Listing($destinationId : location.destination.id)
+    $flag : DestinationFlag(destinationId == $destinationId, averageRating < 7, $timestamp: loginTimestamp)
+then
+    insert(new AccommodationPoints($listing, -10, $timestamp));
+    System.out.println("Penalized poorly rated destination for listing with id " + $listing.getId());
+end
+
+rule "Reward desireble tags"
+salience 10
+when
+    $listing : Listing($listingId : id, $tags : tags)
+    $tag : Tag() from $tags
+    $flag : TagFlag(tagId == $tag.id, averageRating > 7, $timestamp: loginTimestamp)
+then
+    insert(new AccommodationPoints($listing, 10, $timestamp)); 
+    System.out.println("Rewarded desireble tag for listing with id " + $listing.getId());
+end
+
+rule "Reward frequent tags"
+salience 10
+when
+    $listing : Listing($listingId : id, $tags : tags)
+    $tag : Tag() from $tags
+    $flag : TagFlag(tagId == $tag.id, $count : count > 3, $timestamp: loginTimestamp)
+then
+    insert(new AccommodationPoints($listing, 5, $timestamp));
+    System.out.println("Rewarded frequent tag for listing with id " + $listing.getId());
+end
+
+rule "Penalize nondesireble tags"
+salience 10
+when
+    $event: FetchListingRecomendationEvent($timestamp: timestamp)
+    $listing : Listing($listingId : id, $tags : tags)
+    $tag : Tag() from $tags
+    not TagFlag(tagId == $tag.id, $timestamp == loginTimestamp)
+then
+    insert(new AccommodationPoints($listing, -5, $timestamp));
+    System.out.println("Penalized poorly rated tag for listing with id " + $listing.getId());
+end
+
+rule "Penalize badly rated tags"
+salience 10
+when
+    $listing : Listing($listingId : id, $tags : tags)
+    $tag : Tag() from $tags
+    $flag : TagFlag(tagId == $tag.id, averageRating < 7, $timestamp: loginTimestamp)
+then
+    insert(new AccommodationPoints($listing, -10, $timestamp));
+    System.out.println("Penalized poorly rated tag for listing with id " + $listing.getId());
+end
+
+rule "Penalize already booked listings"
+salience 10
+when
+    $event: FetchListingRecomendationEvent($traveler: traveler, $timestamp: timestamp)
+    $booking: Booking(traveler == $traveler)
+then
+    insert(new AccommodationPoints($booking.getListing(), -5, $timestamp));
+    System.out.println("Penalized already booked listing with id " + $booking.getListing().getId());
+end
+
+rule "Accumulate points for listing"
+salience 5
+when
+    $event: FetchListingRecomendationEvent($timestamp: timestamp)
+    $listing : Listing($listingId : id)
+    $points : Number(doubleValue : doubleValue) from accumulate(
+        $point : AccommodationPoints(listing.id == $listingId, loginTimestamp == $timestamp),
+        sum($point.getValue())
+    )
+then
+    insert(new AccommodationRecommendation($listing, doubleValue, $timestamp));
+    System.out.println("Inserted " + doubleValue + " sum points for listing with id " + $listingId);
+end
+
+rule "Rank and display top 10 listings"
+salience 1
+when
+    $event: FetchListingRecomendationEvent($timestamp: timestamp)
+    accumulate(
+        $rec : AccommodationRecommendation($timestamp == loginTimestamp, value > 0),
+        $top10 : collectList($rec)
+    )
+then
+    delete($event);
+
+    if ($top10.size() == 0) {
+        System.out.println("No good recommendations found based on preference, returning trending.");
+        insert(new RecommendTrendingAccommodationEvent($timestamp));
+    } else {
+        List<AccommodationRecommendation> mutableTop10 = new ArrayList<>($top10);
+        Collections.sort(mutableTop10, (a, b) -> Double.compare(b.getValue(), a.getValue()));
+        List<AccommodationRecommendation> top10 = mutableTop10.subList(0, Math.min(10, mutableTop10.size()));
+
+        List<Listing> top10Listings = top10.stream()
+                                               .map(AccommodationRecommendation::getListing)
+                                               .collect(Collectors.toList());
+       
+        System.out.println("Recommended " + top10.size() + " listings.");
+
+        insert(new AccommodationRecommendationResult(top10Listings, $timestamp));
+       
+    }
+    
+end
+
+query "TopRatedListings"
+    $listing : Listing()
+    $rating : Double() from accumulate (
+        $review : Review(listing.id == $listing.id),
+        average($review.getRating())
+    )
+end
+
+rule "Find trending listings"
+salience 1
+when
+    $event: RecommendTrendingAccommodationEvent($timestamp: loginTimestamp)
+then
+    List<Listing> topRatedListings = new ArrayList<>();
+    QueryResults results = kcontext.getKieRuntime().getQueryResults("TopRatedListings");
+    for (QueryResultsRow row : results) {
+        Listing listing = (Listing) row.get("$listing");
+        topRatedListings.add(listing);
+    }
+
+    topRatedListings.sort((a, b) -> Double.compare(b.getRating(), a.getRating()));
+    topRatedListings = topRatedListings.subList(0, Math.min(10, topRatedListings.size()));
+
+    System.out.println("Recommended " + topRatedListings.size() + " trending listings.");
+
+    insert(new AccommodationRecommendationResult(topRatedListings, $timestamp));
+    delete($event);
+end
+
+// =========================================
+// REVIEW LISTING - CEP
+

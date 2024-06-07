@@ -10,7 +10,7 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class AppComponent {
 
-  title = "La De Smart";
+  title = "Accomodo";
   loggedIn: boolean = false; 
   sideVisible: Boolean = false;
   smallScreen: boolean = window.innerWidth < 900;

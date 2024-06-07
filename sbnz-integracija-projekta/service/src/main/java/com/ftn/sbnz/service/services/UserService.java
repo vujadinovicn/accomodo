@@ -1,7 +1,13 @@
 package com.ftn.sbnz.service.services;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
+import org.drools.core.ClassObjectFilter;
+import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -12,8 +18,14 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.ftn.sbnz.service.repositories.TravelerRepository;
 import com.ftn.sbnz.service.repositories.UserRepository;
+import com.ftn.sbnz.service.services.interfaces.IListingService;
 import com.ftn.sbnz.service.services.interfaces.IUserService;
+import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
+import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.model.models.User;
 
 @Service
@@ -21,6 +33,15 @@ public class UserService implements IUserService, UserDetailsService{
 
     @Autowired
     private UserRepository allUsers;
+
+    @Autowired
+    private TravelerRepository allTravelers;
+
+    // @Autowired
+    // private IListingService listingService;
+    
+	@Autowired
+    private KieSession kieSession;
     
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -43,6 +64,32 @@ public class UserService implements IUserService, UserDetailsService{
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         System.out.println(auth.getName());
 		return allUsers.findByEmail(auth.getName()).orElse(null);
+    }
+
+    public List<Listing> addTravelerLoggedInEvent(User user) {
+        Traveler traveler = allTravelers.findById(user.getId()).get();
+
+		FetchListingRecomendationEvent event = new FetchListingRecomendationEvent(traveler, LocalDateTime.now());		
+		
+		// kieSession.insert(event);
+		// // kieSession.insert(traveler);
+        // kieSession.setGlobal("listingService", listingService); 
+
+        int n = kieSession.fireAllRules();
+        System.out.println("Number of rules fired: " + n);
+
+        Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(AccommodationRecommendationResult.class));
+        for (Object obj : newEvents) {
+            if (obj instanceof AccommodationRecommendationResult) {
+                AccommodationRecommendationResult result = (AccommodationRecommendationResult) obj;
+                for (Listing listing: result.getListings()) {
+                    System.out.println(listing);
+                }
+                return result.getListings();
+            }
+        }
+
+        return new ArrayList<>();
 	}
     
 }
