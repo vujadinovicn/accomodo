@@ -10,6 +10,8 @@ import org.drools.core.ClassObjectFilter;
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,8 +22,6 @@ import com.ftn.sbnz.service.repositories.TravelerRepository;
 import com.ftn.sbnz.service.repositories.UserRepository;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 import com.ftn.sbnz.service.services.interfaces.IUserService;
-import com.ftn.sbnz.model.enums.EmailNotificationType;
-import com.ftn.sbnz.model.events.BookingEmailEvent;
 import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
 import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
 import com.ftn.sbnz.model.models.Listing;
@@ -37,8 +37,8 @@ public class UserService implements IUserService, UserDetailsService{
     @Autowired
     private TravelerRepository allTravelers;
 
-    @Autowired
-    private IListingService listingService;
+    // @Autowired
+    // private IListingService listingService;
     
 	@Autowired
     private KieSession kieSession;
@@ -60,14 +60,20 @@ public class UserService implements IUserService, UserDetailsService{
     }
 
     @Override
+	public User getCurrentUser() {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println(auth.getName());
+		return allUsers.findByEmail(auth.getName()).orElse(null);
+    }
+
     public List<Listing> addTravelerLoggedInEvent(User user) {
         Traveler traveler = allTravelers.findById(user.getId()).get();
 
 		FetchListingRecomendationEvent event = new FetchListingRecomendationEvent(traveler, LocalDateTime.now());		
 		
-		kieSession.insert(event);
-		// kieSession.insert(traveler);
-        kieSession.setGlobal("listingService", listingService); 
+		// kieSession.insert(event);
+		// // kieSession.insert(traveler);
+        // kieSession.setGlobal("listingService", listingService); 
 
         int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);

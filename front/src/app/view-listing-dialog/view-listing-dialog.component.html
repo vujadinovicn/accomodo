@@ -1,0 +1,69 @@
+<div>
+    <!-- <app-property-card [property]="property" [enableClick]="true" (click)="openPropertyDetails(i)" (rejectionCompleted)="processRejection($event)"></app-property-card>
+    <p>{{ property.title }}</p> -->
+    <div>
+        <h1 style="text-align: center;" [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{ listing.title }}</h1>
+    </div>
+    <div class="basic-container" style="padding: 0;" id="card-container" [ngClass]="{'transition': enableClick}">
+        <div style=" display: flex;">
+            
+        <div style="width: 50%;" [ngClass]="enableClick ? 'image-container' : 'image-container-details'">
+            <img src="../../assets/logIn.svg" style="width: 100%; height: 100%; border-radius: 20px 0px 0px 20px; object-fit: cover;"/>
+        </div>
+    
+        <div id="info-container" style="padding-top: 15px;">
+            <div>
+                <i [ngClass]="enableClick ? 'fa-solid fa-location-dot red' : 'custom-font fa-solid fa-location-dot red'" ></i>
+                <span [ngClass]="enableClick ? 'black' : 'custom-font black'">Location: <span style="font-weight: 600 !important;">{{ listing.location.address }}</span></span>
+            </div>
+            <div>
+                <i [ngClass]="enableClick ? 'fa-solid fa-earth-americas green' : 'custom-font fa-solid fa-earth-americas green'" ></i>
+                <span [ngClass]="enableClick ? 'black' : 'custom-font black'">City: <span style="font-weight: 600 !important;">{{ listing.destination.name }}</span></span>
+            </div>
+            <div>
+                <i [ngClass]="enableClick ? 'fa-solid fa-money-bill' : 'custom-font fa-solid fa-money-bill'" ></i>
+                <span [ngClass]="enableClick ? 'black' : 'custom-font black'">Price: <span style="font-weight: 600 !important;">{{ listing.price }} Euro</span></span>
+    
+            </div>
+            <div>
+                <i [ngClass]="enableClick ? 'fa-solid fa-layer-group blue' : 'custom-font fa-solid fa-layer-group blue'" ></i>
+                <span [ngClass]="enableClick ? 'black' : 'custom-font black'">Description: <span style="font-weight: 600 !important;">{{ listing.description }}</span></span>
+            </div>
+            
+            <div *ngIf="this.role=='ROLE_OWNER'">
+            <hr style="border: 2px solid #D9D9D9;">
+            <div>
+                <h3 style="text-align: center; margin-bottom: 0;" [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">Interested?</h3>
+                <h4 style="text-align: center; margin-bottom: 0; margin-top: 0;" [ngClass]="enableClick ? 'orange' : 'h2-bigger-font orange'">Book it!</h4>
+            </div>
+
+            <form id="add-property-form" [formGroup]="bookingForm">
+                <div class="form-section" style="display: flex;
+                vertical-align: middle;
+                justify-content: space-between;
+                align-items: baseline">
+                    <mat-form-field style="margin-bottom: 20px;">
+                        <mat-label>Choose a start date</mat-label>
+                        <input matInput [matDatepicker]="picker1" formControlName="startDate">
+                        <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
+                        <mat-datepicker-toggle matIconSuffix [for]="picker1"></mat-datepicker-toggle>
+                        <mat-datepicker #picker1></mat-datepicker>
+                    </mat-form-field>
+                    <mat-form-field style="margin-bottom: 20px;">
+                        <mat-label>Choose a end date</mat-label>
+                        <input matInput [matDatepicker]="picker2" formControlName="endDate">
+                        <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
+                        <mat-datepicker-toggle matIconSuffix [for]="picker2"></mat-datepicker-toggle>
+                        <mat-datepicker #picker2></mat-datepicker>
+                    </mat-form-field>
+                </div>
+                <div id="send-request-btn-container" style="text-align: center; float: right;">
+                    <button id="send-request-btns" style="margin-right: 10px;" class="conf-button" type="submit" mat-raised-button (click)="book(false)">Reserve</button>
+                    <button id="send-request-btn" class="conf-button back-light-blue" type="submit" mat-raised-button (click)="book(true)">Book</button>
+                </div>
+            </form>
+            </div>
+            </div>
+        
+        </div>
+    </div>

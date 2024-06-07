@@ -5,10 +5,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.drools.core.ClassObjectFilter;
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,20 +19,25 @@ import com.ftn.sbnz.model.enums.UserRole;
 import com.ftn.sbnz.model.events.AddedListingEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.models.Destination;
 import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
 import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.Location;
+import com.ftn.sbnz.model.models.LocationBackward;
 import com.ftn.sbnz.model.models.Owner;
 import com.ftn.sbnz.model.models.Review;
 import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.model.models.User;
 import com.ftn.sbnz.service.dtos.AddDiscountDTO;
+import com.ftn.sbnz.service.dtos.AddListingDTO;
 import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
-import com.ftn.sbnz.service.dtos.ListingDTO;
+import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
+import com.ftn.sbnz.service.dtos.ListingLocationDTO;
 import com.ftn.sbnz.service.mail.IMailService;
+import com.ftn.sbnz.service.repositories.DestinationRepository;
 import com.ftn.sbnz.service.repositories.DiscountRepository;
 import com.ftn.sbnz.service.repositories.ListingRepository;
 import com.ftn.sbnz.service.repositories.ListingViewedEventRepository;
@@ -39,7 +46,9 @@ import com.ftn.sbnz.service.repositories.OwnerRepository;
 import com.ftn.sbnz.service.repositories.ReviewRepository;
 import com.ftn.sbnz.service.repositories.TravelerRepository;
 import com.ftn.sbnz.service.repositories.UserRepository;
+import com.ftn.sbnz.service.services.interfaces.IGoogleMapsService;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
+import com.ftn.sbnz.service.services.interfaces.IUserService;
 
 @Service
 public class ListingService implements IListingService{
@@ -49,7 +58,11 @@ public class ListingService implements IListingService{
 	@Autowired
     private UserRepository allUsers;
 	@Autowired
-    private KieSession kieSession;
+	@Qualifier("cepSession")
+    private KieSession cepKieSession;
+	// @Autowired
+    // @Qualifier("backwardSession") // Specify the bean name here
+    // private KieSession bwKieSession;
 	@Autowired
 	private ListingViewedEventRepository allViewedListings;
 	@Autowired
@@ -63,7 +76,13 @@ public class ListingService implements IListingService{
 	@Autowired
     private LocationRepository allLocations;
 	@Autowired
+    private DestinationRepository allDestinations;
+	@Autowired
     private IMailService mailService;
+	@Autowired
+	private IGoogleMapsService googleMapsService;
+	@Autowired
+	private IUserService userService;
 
     @Override
 	public Listing getById(GetListingDTO dto) {
@@ -85,16 +104,16 @@ public class ListingService implements IListingService{
 		allViewedListings.save(viewedEvent);
         allViewedListings.flush();
 		
-		kieSession.insert(viewedEvent);
-		// for (Object object : kieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
+		cepKieSession.insert(viewedEvent);
+		// for (Object object : cepKieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
         //     Traveler t = (Traveler) object;
         //     if (t.getId() == traveler.getId()) {
-        //    		kieSession.delete(kieSession.getFactHandle(t));
+        //    		cepKieSession.delete(cepKieSession.getFactHandle(t));
         //         break;
         //     }
         // }
-		kieSession.insert(traveler);
-        int n = kieSession.fireAllRules();
+		cepKieSession.insert(traveler);
+        int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
 		System.out.println(traveler.getFavoriteListings().size());
@@ -106,26 +125,45 @@ public class ListingService implements IListingService{
 	}
 
 	@Override
-	public void addListing(ListingDTO dto) {
-		Location location = allLocations.findById(dto.getLocationId()).get();
-		Owner owner = allOwners.findById(dto.getOwnerId()).get();
+	public void addListing(AddListingDTO dto) {
+		System.out.println("nemanjaaaa");
+		Destination destination = new Destination(dto.getDestination().getName(), "21000");
+		Location location = new Location(dto.getLocation().getLat(), dto.getLocation().getLng(),
+								dto.getLocation().getAddress(), destination);
+		// Owner owner = allOwners.findById(userService.getCurrentUser().getId()).get();
+		Owner owner = allOwners.findById(2L).get();
 		
 		Listing listing = new Listing(dto.getTitle(), dto.getDescription(), dto.getPrice(), 0, owner);
 		listing.setLocation(location);
 
 		allListings.save(listing);
 		allLocations.save(location);
+		allDestinations.save(destination);
 		allListings.flush();
 		allLocations.flush();
+		allDestinations.flush();
 
 		AddedListingEvent addedListingEvent = new AddedListingEvent(listing);
-		kieSession.insert(addedListingEvent);
-		kieSession.insert(allTravelers.findById(1L).get());
+		cepKieSession.insert(addedListingEvent);
+		cepKieSession.insert(listing);
+		cepKieSession.insert(allTravelers.findById(1L).get());
 
-		int n = kieSession.fireAllRules();
+		Map<String, String> hierarchy = this.googleMapsService.reverseGeocode(dto.getLocation().getLat(), dto.getLocation().getLng());
+		String state = hierarchy.get("state");
+		String county = hierarchy.get("county");
+		String city = hierarchy.get("city");
+		String street = hierarchy.get("street");
+		String streetNo = hierarchy.get("streetno");
+
+		cepKieSession.insert( new LocationBackward(county, state));
+		cepKieSession.insert( new LocationBackward(city, county));
+		cepKieSession.insert( new LocationBackward(street, city));
+		cepKieSession.insert( new LocationBackward(streetNo, street));
+
+		int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
-		Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
+		Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
         for (Object event : newEvents) {
             if (event instanceof DiscountEmailEvent) {
                 DiscountEmailEvent emailEvent = (DiscountEmailEvent) event;
@@ -144,12 +182,12 @@ public class ListingService implements IListingService{
 		allDiscounts.save(discount);
 		allDiscounts.flush();
 
-		kieSession.insert(discount);
-		kieSession.insert(traveler);
-		int n = kieSession.fireAllRules();
+		cepKieSession.insert(discount);
+		cepKieSession.insert(traveler);
+		int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
-		Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
+		Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
         for (Object event : newEvents) {
             if (event instanceof DiscountEmailEvent) {
                 DiscountEmailEvent emailEvent = (DiscountEmailEvent) event;
@@ -175,10 +213,10 @@ public class ListingService implements IListingService{
 		allReviews.save(review);
 		allReviews.flush();
 
-		kieSession.insert(review);
-		kieSession.insert(traveler);
+		cepKieSession.insert(review);
+		cepKieSession.insert(traveler);
 
-		int n = kieSession.fireAllRules();
+		int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
 		allTravelers.save(traveler);
@@ -186,6 +224,39 @@ public class ListingService implements IListingService{
 	}
 
 	@Override
+	public void backward(){
+		// cepKieSession.insert( new LocationBackward("Vojvodina", "Serbia") );
+		// cepKieSession.insert( new LocationBackward("Južnobački okrug", "Vojvodina") );
+		// cepKieSession.insert( new LocationBackward("Novi Sad", "Južnobački okrug") );
+		// cepKieSession.insert( new LocationBackward("Zmaj Ognjena Vuka", "Novi Sad") );
+		// cepKieSession.insert( new LocationBackward("Vojvodina", "Serbia") );
+		// cepKieSession.insert( new LocationBackward("Južnobački okrug", "Vojvodina") );
+		// cepKieSession.insert( new LocationBackward("Novi Sad", "Južnobački okrug") );
+		// cepKieSession.insert( new LocationBackward("Jirecekova", "Novi Sad") );
+
+		cepKieSession.setGlobal("backwardLocation", "Serbia");
+		cepKieSession.insert( "go4" );
+		cepKieSession.fireAllRules();
+		System.out.println("---");
+	}
+
+	@Override
+	public List<AddListingDTO> getListingsForOwner() {
+		List<AddListingDTO> dtos = new ArrayList<>();
+		System.out.println(userService.getCurrentUser());
+		// List<Listing> listings = allListings.findAllByOwnerId(userService.getCurrentUser().getId());
+		List<Listing> listings = allListings.findAllByOwnerId(2L);
+		for (int i = 0; i < listings.size(); i ++){
+			ListingDestinationDTO destinationDto = new ListingDestinationDTO(listings.get(i).getLocation().getDestination().getName());
+			ListingLocationDTO locationDto = new ListingLocationDTO(listings.get(i).getLocation().getLat(), listings.get(i).getLocation().getLng(), listings.get(i).getLocation().getAddress());
+			AddListingDTO dto = new AddListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
+					 destinationDto, locationDto, "");
+			dtos.add(dto);
+		}
+		return dtos;
+	}
+
+	
 	public Review getReview(long listingId, long travelerId) {
 		Review review = allReviews.findByTravelerIdAndListingId(travelerId, listingId).orNull();
 
@@ -198,14 +269,14 @@ public class ListingService implements IListingService{
 
 		FetchListingRecomendationEvent event = new FetchListingRecomendationEvent(traveler, LocalDateTime.now());		
 		
-		kieSession.insert(event);
+		cepKieSession.insert(event);
 		// kieSession.insert(traveler);
-        kieSession.setGlobal("listingService", this); 
+        cepKieSession.setGlobal("listingService", this); 
 
-        int n = kieSession.fireAllRules();
+        int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
-        Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(AccommodationRecommendationResult.class));
+        Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(AccommodationRecommendationResult.class));
         for (Object obj : newEvents) {
             if (obj instanceof AccommodationRecommendationResult) {
                 AccommodationRecommendationResult result = (AccommodationRecommendationResult) obj;

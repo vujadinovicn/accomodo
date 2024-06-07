@@ -22,15 +22,14 @@ import { AddPropertyDialogComponent } from './add-property-dialog/add-property-d
 import { HomepageComponent } from './homepage/homepage.component';
 import { LoginComponent } from './login/login.component';
 import { SideNavbarComponent } from './side-navbar/side-navbar.component';
-import { AddDeviceDialogComponent } from './add-device-dialog/add-device-dialog.component';
 import { MapComponent } from './map/map.component';
-import { PropertyCardComponent } from './property-card/property-card.component';
 
 
 import { RegisterComponent } from './register/register.component';
-import { RegisterAdminComponent } from './register-admin/register-admin.component';
-import { PropertyDetailsComponent } from './property-details/property-details.component';
-import { DeviceDetailsComponent } from './device-details/device-details.component';
+import { ReportsComponent } from './reports/reports.component';
+import { BookingsComponent } from './bookings/bookings.component';
+import { DenyBookingComponent } from './deny-booking-dialog/deny-booking-dialog.component';
+import { ViewListingDialogComponent } from './view-listing-dialog/view-listing-dialog.component';
 
 @NgModule({
   declarations: [
@@ -40,12 +39,11 @@ import { DeviceDetailsComponent } from './device-details/device-details.componen
     AddPropertyDialogComponent,
     HomepageComponent,
     SideNavbarComponent,
-    AddDeviceDialogComponent,
-    PropertyCardComponent,
     MapComponent,
-    PropertyCardComponent,
-    RegisterAdminComponent,
-    PropertyDetailsComponent,
+    ReportsComponent,
+    BookingsComponent,
+    DenyBookingComponent,
+    ViewListingDialogComponent
   ],
   imports: [
     BrowserModule,

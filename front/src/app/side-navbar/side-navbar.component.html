@@ -23,6 +23,14 @@
         <i class="fa-solid fa-home" style="cursor: pointer"></i>
         <p>Listings</p>
     </div>
+    <div (click)="changeUrl('/bookings')" class="nav-item" [routerLink]="['/bookings']" [ngClass]="url == '/bookings' ? 'selected-option': ''">
+        <i class="fa-solid fa-home" style="cursor: pointer"></i>
+        <p>Bookings</p>
+    </div>
+    <div (click)="changeUrl('/reports')" class="nav-item" [routerLink]="['/reports']" [ngClass]="url == '/reports' ? 'selected-option': ''">
+        <i class="fa-solid fa-home" style="cursor: pointer"></i>
+        <p>Reports</p>
+    </div>
     <div (click)="changeUrl('/registerAdmin')" class="nav-item" *ngIf="role == 'ROLE_ADMIN'" [routerLink]="['/registerAdmin']" [ngClass]="url == '/registerAdmin' ? 'selected-option': ''">
         <i class="fa-solid fa-home" style="cursor: pointer"></i>
         <p>Register admin</p>

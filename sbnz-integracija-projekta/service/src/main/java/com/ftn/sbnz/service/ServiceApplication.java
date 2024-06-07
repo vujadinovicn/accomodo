@@ -3,6 +3,7 @@ package com.ftn.sbnz.service;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
@@ -33,9 +34,16 @@ public class ServiceApplication  {
 
 	@Bean
 	@DependsOn({ "kieContainer" })
+	// @Primary
 	public KieSession cepSession(@Autowired KieContainer kieContainer) {
 		return kieContainer.newKieSession("cepKsession"); 
 	}
+
+	// @Bean
+	// @DependsOn({ "kieContainer" })
+	// public KieSession backwardSession(@Autowired KieContainer kieContainer) {
+	// 	return kieContainer.newKieSession("bwKsession"); 
+	// }
 	
 	/*
 	 * KieServices ks = KieServices.Factory.get(); KieContainer kContainer =

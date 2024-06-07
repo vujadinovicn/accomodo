@@ -1,5 +1,5 @@
 import { LatLng, MapService } from './../../services/map.service';
-import { AddressDTO, PropertyDTO, PropertyService } from './../../services/property.service';
+import { AddressDTO, ListingDTO, ListingDestinationDTO, ListingLocationDTO, PropertyService } from './../../services/property.service';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -9,6 +9,7 @@ import { NgxDropdownConfig } from 'ngx-select-dropdown';
 import { Observable, map, startWith } from 'rxjs';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { LocationDTO, LocationService } from 'src/services/location.service';
+import { AuthService } from 'src/services/auth.service';
 
 @Component({
   selector: 'app-add-property-dialog',
@@ -17,9 +18,13 @@ import { LocationDTO, LocationService } from 'src/services/location.service';
 })
 export class AddPropertyDialogComponent implements OnInit {
 
+  lat: number = 0;
+  lng: number = 0;
   filePath: string = "";
   file: File = {} as File;
   selectedMarkerPosition: LatLng = {} as LatLng;
+  loggedUser: any = {};
+  role: any = {};
 
   options: LocationDTO[] = [];
   filteredOptions: Observable<LocationDTO[]> = new Observable();
@@ -40,11 +45,17 @@ export class AddPropertyDialogComponent implements OnInit {
     private propertyService: PropertyService,
     private locationService: LocationService,
     private mapService: MapService,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
+    this.loggedUser = this.authService.getUser();
+    this.role = this.authService.getRole();
+    // console.log("eee");
+
     this.locationService.getAll().subscribe({
         next: (value) => {
+          // this.options = ['Novi Sad, Serbia', 'Belgrade, Serbia']
             this.options = value;
             this.filteredOptions = this.addPropertyForm.get('cityAndCountry')!.valueChanges.pipe(
                 startWith(''),
@@ -80,16 +91,21 @@ export class AddPropertyDialogComponent implements OnInit {
 
   onEnterKeyPressed() {
     if (this.addPropertyForm.value.address && this.addPropertyForm.value.cityAndCountry) {
-      let tokens = (this.addPropertyForm.value.cityAndCountry as unknown as LocationDTO).location.trim().split(", ")
+      // console.log(this.addPropertyForm.value.cityAndCountry)
+      // let tokens = (this.addPropertyForm.value.cityAndCountry as unknown as LocationDTO).location.trim().split(", ")
+      let tokens = this.addPropertyForm.value.cityAndCountry.trim().split(", ");
       this.mapService.decodeAddress(this.addPropertyForm.value.address, tokens[0], tokens[1]).subscribe({
         next: (value) => {
           this.selectedMarkerPosition = value;
+          this.lat = this.selectedMarkerPosition.lat;
+          this.lng = this.selectedMarkerPosition.lng;
+          console.log(this.lat);
         },
         error: (err) => {
           console.log(err);
         },
       })
-      this.selectedMarkerPosition
+      // this.selectedMarkerPosition
     }
   }
 
@@ -112,26 +128,33 @@ export class AddPropertyDialogComponent implements OnInit {
 
   addProperty() {
     console.log(this.addPropertyForm.value?.cityAndCountry!);
-    if (this.addPropertyForm.valid && this.selectedMarkerPosition) {
+    if (this.selectedMarkerPosition) {
       console.log(this.selectedMarkerPosition)
-      let address: AddressDTO = {
-        cityId: (this.addPropertyForm.value.cityAndCountry! as unknown as LocationDTO).cityId,
-        lat: this.selectedMarkerPosition.lat,
-        lng: this.selectedMarkerPosition.lng,
-        name: this.addPropertyForm.value.address!
+      let location: ListingLocationDTO = {
+        // cityId: (this.addPropertyForm.value.cityAndCountry! as unknown as LocationDTO).cityId,
+        lat: this.lat,
+        lng: this.lng,
+        address: this.addPropertyForm.value.address!
       }
 
-      let dto: PropertyDTO = {
-        name: this.addPropertyForm.value.name!,
-        area: 0,
-        numOfFloors: 0,
-        // numOfFloors: +this.addPropertyForm.value.numberOfFloors!,
+      let destination: ListingDestinationDTO = {
+        name: this.addPropertyForm.value.cityAndCountry!
+      }
+
+      let dto: ListingDTO = {
+        id: 0,
+        title: this.addPropertyForm.value.name!,
+        price: +this.addPropertyForm.value.price!,
+        description: this.addPropertyForm.value.description!,
+        destination: destination,
         image: this.filePath,
-        address: address
+        location: location
       }
 
       console.log(this.filePath)
-      this.propertyService.addProperty(dto).subscribe({
+      console.log(dto);
+      console.log(this.loggedUser);
+      this.propertyService.addListing(destination).subscribe({
         next: (value) => {
           this.snackBar.open("Property request sent.", "", {
           duration: 2700, panelClass: ['snack-bar-success']

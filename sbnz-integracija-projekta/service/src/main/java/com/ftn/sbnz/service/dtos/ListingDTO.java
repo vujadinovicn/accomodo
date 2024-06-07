@@ -1,13 +1,15 @@
 package com.ftn.sbnz.service.dtos;
 
 public class ListingDTO {
+    private Long id;
     private String title;
     private String description;
     private double price;
     private Long ownerId;
     private Long locationId;
 
-    public ListingDTO(String title, String description, double price, Long ownerId, Long locationId) {
+    public ListingDTO(Long id, String title, String description, double price, Long ownerId, Long locationId) {
+        this.id = id;
         this.title = title;
         this.description = description;
         this.price = price;
@@ -44,6 +46,14 @@ public class ListingDTO {
     }
     public void setLocationId(Long locationId) {
         this.locationId = locationId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     
