@@ -49,11 +49,11 @@ p {
 }
 
 .nav-item:hover {
-    background-color: rgb(73, 222, 182);
+    background-color: #1964a5;
 }
 
 .selected-option {
-    background-color: #06D6A0;
+    background-color: #2C87D7;
 }
 
 .nav-item i, svg {
@@ -110,7 +110,7 @@ p {
 .navbar-toggler > div {
     width: 33px;
     height: 3px;
-    background-color: #06D6A0;
+    background-color: #2C87D7;
     margin: 6px 0;
 }
 
@@ -230,7 +230,7 @@ nav {
 .navbar-toggler > div {
     width: 33px;
     height: 3px;
-    background-color: #06D6A0;
+    background-color: #2C87D7;
     margin: 6px 0;
 }
 
