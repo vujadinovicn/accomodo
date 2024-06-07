@@ -21,6 +21,8 @@ public class Discount implements Serializable {
     @ManyToOne
     private Listing listing;
 
+    public Discount() {}
+
     public Discount(double amount, LocalDateTime validTo, Listing listing) {
         this.amount = amount;
         this.validTo = validTo;

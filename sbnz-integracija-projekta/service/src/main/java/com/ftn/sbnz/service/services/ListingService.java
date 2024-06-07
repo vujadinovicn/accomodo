@@ -2,7 +2,9 @@ package com.ftn.sbnz.service.services;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.drools.core.ClassObjectFilter;
 import org.kie.api.runtime.KieSession;
@@ -15,6 +17,8 @@ import com.ftn.sbnz.model.enums.UserRole;
 import com.ftn.sbnz.model.events.AddedListingEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
+import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.Location;
@@ -179,5 +183,39 @@ public class ListingService implements IListingService{
 
 		allTravelers.save(traveler);
 		allTravelers.flush();
+	}
+
+	@Override
+	public Review getReview(long listingId, long travelerId) {
+		Review review = allReviews.findByTravelerIdAndListingId(travelerId, listingId).orNull();
+
+		return review;
+	}
+
+	@Override
+	public List<Listing> getListingRecommendations(Long id) {
+		Traveler traveler = allTravelers.findById(id).orElseThrow();
+
+		FetchListingRecomendationEvent event = new FetchListingRecomendationEvent(traveler, LocalDateTime.now());		
+		
+		kieSession.insert(event);
+		// kieSession.insert(traveler);
+        kieSession.setGlobal("listingService", this); 
+
+        int n = kieSession.fireAllRules();
+        System.out.println("Number of rules fired: " + n);
+
+        Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(AccommodationRecommendationResult.class));
+        for (Object obj : newEvents) {
+            if (obj instanceof AccommodationRecommendationResult) {
+                AccommodationRecommendationResult result = (AccommodationRecommendationResult) obj;
+                for (Listing listing: result.getListings()) {
+                    System.out.println(listing);
+                }
+                return result.getListings();
+            }
+        }
+
+        return new ArrayList<>();
 	}
 }
