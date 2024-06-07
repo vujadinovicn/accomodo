@@ -18,6 +18,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.ftn.sbnz.service.security.auth.RestAuthenticationEntryPoint;
 import com.ftn.sbnz.service.security.auth.TokenAuthenticationFilter;
@@ -86,6 +89,7 @@ public class WebSecurityConfig {
 			.requestMatchers(myRequestMatcher("api/certificate/validate-upload")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/user/rotatePassword")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/user/**")).permitAll()
+			.requestMatchers(myRequestMatcher("/api/**")).permitAll()
 			.anyRequest().authenticated().and()
 			.cors().and()
 			.addFilterBefore(new TokenAuthenticationFilter(tokenUtils,  userDetailsService(), tokenService), BasicAuthenticationFilter.class);
@@ -100,13 +104,13 @@ public class WebSecurityConfig {
         .contentSecurityPolicy("script-src 'self'");
         return http.build();
     }
+
            
     // metoda u kojoj se definisu putanje za igorisanje autentifikacije
     @Bean           
     public WebSecurityCustomizer webSecurityCustomizer() {     
     	// Dozvoljena POST metoda na ruti /auth/login, za svaki drugi tip HTTP metode greska je 401 Unauthorized
-    	return (web) -> web.ignoring().antMatchers(HttpMethod.POST, "/api/user/login").antMatchers(HttpMethod.POST, "/api/user").
-		antMatchers(HttpMethod.POST, "/api/register");	
+    	return (web) -> web.ignoring().antMatchers(HttpMethod.POST, "/api/user/login").antMatchers(HttpMethod.POST, "/api/user");
     }
 
 	private RequestMatcher myRequestMatcher(String endpoint) {

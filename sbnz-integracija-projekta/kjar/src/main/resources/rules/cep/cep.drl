@@ -14,10 +14,14 @@ import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.NegativeReviewEvent;
 import com.ftn.sbnz.model.events.ReservationCanceledEvent;
 import com.ftn.sbnz.model.events.AddedListingEvent;
-
+import com.ftn.sbnz.model.models.LocationBackward;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Owner;
+import com.ftn.sbnz.model.models.Destination;
 import java.util.Date;
 
 global java.util.Date dateNow;
+global String backwardLocation;
 
 declare MaliciousTravelerEvent
     @role(event)
@@ -293,3 +297,149 @@ then
     // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
     System.out.println("Administrator notified about irresponsible traveler's additional cancellation!");
 end
+
+
+query isContainedIn( String x, String y )
+  LocationBackward( x, y; )
+  or
+  ( LocationBackward( z, y; ) and isContainedIn( x, z; ) )
+end
+
+rule "go4"
+when
+    String( this == "go4" )
+    $listing: Listing($location: location.address)
+    isContainedIn(thing, backwardLocation; )
+then
+    System.out.println( "Place " + thing + " is in " + backwardLocation );
+end
+
+// query isContainedIn( String x, String y, boolean alreadyMatched )
+//   LocationBackward( x, y; )
+//   or
+//   ( LocationBackward( z, y; ) and not(alreadyMatched == true) and isContainedIn(x, z, true; ) )
+// end
+
+// rule "go4"
+// when
+//     String( this == "go4" )
+//     isContainedIn(thing, "Serbia", alreadyMatched; )
+// then
+//     System.out.println( "Place " + thing + " is in Serbia" );
+// end
+
+query "Top Destinations For Owner" (Long ownerId)
+    $destination: Destination()
+    $count: Number() from accumulate (
+        Booking(listing.location.destination.name == $destination.name, listing.owner.id == ownerId),
+        count(1)
+    )
+end
+
+query "Top Destinations For Traveler" (Long travelerId)
+    $destination: Destination()
+    $count: Number() from accumulate (
+        Booking(listing.location.destination.name == $destination.name, traveler.id == travelerId),
+        count(1)
+    )
+end
+
+// add for bookingstatus == accepted
+query "Earned By Owner" (Long ownerId)
+    $spentAllTime: Number() from accumulate (
+        $booking: Booking($listing : listing, listing.owner.id == ownerId),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spent7days: Number() from accumulate (
+        $booking: Booking($listing : listing, listing.owner.id == ownerId),
+        // over window:time(7d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spentMonth: Number() from accumulate (
+        $booking: Booking($listing : listing, listing.owner.id == ownerId),
+        // over window:time(30d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spentSixMonths: Number() from accumulate (
+        $booking: Booking($listing : listing, listing.owner.id== ownerId),
+        // over window:time(180d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spentYear: Number() from accumulate (
+        $booking: Booking($listing : listing, listing.owner.id == ownerId),
+        // over window:time(365d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+end
+
+query "Spent For Traveler" (Long travelerId)
+    $spentAllTime: Number() from accumulate (
+        $booking: Booking(traveler.id == travelerId, $listing : listing),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spent7days: Number() from accumulate (
+        $booking: Booking(traveler.id == travelerId, $listing : listing),
+        // over window:time(7d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spentMonth: Number() from accumulate (
+        $booking: Booking(traveler.id == travelerId, $listing : listing),
+        // over window:time(30d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spentSixMonths: Number() from accumulate (
+        $booking: Booking(traveler.id == travelerId, $listing : listing),
+        // over window:time(180d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spentYear: Number() from accumulate (
+        $booking: Booking(traveler.id == travelerId, $listing : listing),
+        // over window:time(365d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+end
+
+function int daysBetween(java.util.Date startDate, java.util.Date endDate) {
+    java.time.LocalDate startLocalDate = startDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+    java.time.LocalDate endLocalDate = endDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+    return (int) java.time.temporal.ChronoUnit.DAYS.between(startLocalDate, endLocalDate);
+}
+
+query "Top Owners"
+    $owner: Owner()
+    $count: Number() from accumulate (
+        Booking(listing.owner.id == $owner.id),
+        count(1)
+    )
+end
+
+query "Top Travelers"
+    $traveler: Traveler()
+    $count: Number() from accumulate (
+        Booking(traveler.id == $traveler.id),
+        count(1)
+    )
+end
+
+
+// query "Most Popular Beers"
+//     $beer: Beer()
+//     $count: Number() from accumulate (
+//         UserBeerLogger(beer == $beer),
+//         count(1)
+//     )
+// end
+
+
+// query "EarnedForOwnerAllTime" (Long ownerId)
+//     // booking: Booking($destinationId: listing.location.destination.id)
+//     destinations: Map() from accumulate(
+//         Booking($destinationId : listing.location.destination.id),
+//         collectList($destinationId).size() by $destinationId
+//         )
+//     // destinationName : String()
+//     // $count : Number() from accumulate(
+//         // $booking : Booking(listing.location.destination.id==$destinationId, listing.location.destination.name == $destinationName),
+//         // count($booking)
+//     // )/
+// end

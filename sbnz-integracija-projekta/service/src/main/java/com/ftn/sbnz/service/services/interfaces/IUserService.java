@@ -5,5 +5,7 @@ import com.ftn.sbnz.model.models.User;
 public interface IUserService {
 
     User getUserByEmail(String email);
+
+    public User getCurrentUser();
     
 }

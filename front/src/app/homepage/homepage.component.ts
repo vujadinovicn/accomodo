@@ -1,4 +1,4 @@
-import { PropertyDTO, PropertyService, ReturnedPropertyDTO } from './../../services/property.service';
+import { ListingDTO, PropertyDTO, PropertyService, ReturnedPropertyDTO } from './../../services/property.service';
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AddPropertyDialogComponent } from '../add-property-dialog/add-property-dialog.component';
@@ -6,6 +6,7 @@ import { AuthService } from 'src/services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { PropertyDetailsService } from 'src/services/property-details.service';
+import { ViewListingDialogComponent } from '../view-listing-dialog/view-listing-dialog.component';
 
 @Component({
   selector: 'app-homepage',
@@ -13,8 +14,9 @@ import { PropertyDetailsService } from 'src/services/property-details.service';
   styleUrls: ['./homepage.component.css']
 })
 export class HomepageComponent implements OnInit {
-  properties: ReturnedPropertyDTO[] = [];
+  properties: ListingDTO[] = [];
   currentPage = 1;
+  enableClick: boolean =true;
   pageSize = 4;
   count = 0;
 
@@ -28,7 +30,7 @@ export class HomepageComponent implements OnInit {
     private propertyDetailsService: PropertyDetailsService) { }
 
   ngOnInit(): void {
-    // this.loadItems();
+    this.loadItems();
 
     let loggedUser = this.authService.getUser();
     // this.name = loggedUser? loggedUser.name: "";
@@ -39,34 +41,32 @@ export class HomepageComponent implements OnInit {
   }
 
   loadItems(): void {
-    console.log("idi u kurac")
-    this.propertyService.getPaginatedProperties(this.currentPage, this.pageSize).subscribe({
+    console.log("idi u kurac");
+
+    // this.propertyService.getPaginatedProperties(this.currentPage, this.pageSize).subscribe({
+    //   next: (value) => {
+    //     console.log(value)
+    //     this.currentPage = value.pageIndex;
+    //     this.count = value.count;
+    //     this.properties = value.items;
+    //   }, 
+    //   error: (err) => {
+    //     console.log(err);
+    //   }
+    // });
+
+    this.propertyService.getListingsForOwner().subscribe({
       next: (value) => {
-        console.log(value)
-        this.currentPage = value.pageIndex;
-        this.count = value.count;
-        this.properties = value.items;
-      }, 
-      error: (err) => {
-        console.log(err);
-      }
-    });
-  }
-
-  processRejection(event: any) {
-    this.loadItems();
-    if (event) {
-      
-      this.snackBar.open("You have successfully rejected request!", "", {
-        duration: 2700, panelClass: ['snack-bar-success']
-     });
-      console.log("property rejected")
-    } 
-  }
-
-  onPageChange(event: any): void {
-    this.currentPage = event.pageIndex + 1;
-    this.loadItems();
+            console.log(value)
+            // this.currentPage = value.pageIndex;
+            // this.count = value.count;
+            this.properties = value;
+            console.log(this.properties[0]);
+          }, 
+          error: (err) => {
+            console.log(err);
+          }
+    })
   }
 
   openAddPropertyDialog() {
@@ -76,13 +76,13 @@ export class HomepageComponent implements OnInit {
       this.loadItems();
     });
   }
-  openPropertyDetails(index: number){
-    console.log(this.properties[index]);
-    //this.propertyDetailsService.setSelectedProperty(this.properties[index]);
-    this.router.navigate(['/property-details', {id: this.properties[index].id}])
-  }
+  
+  openListingDetails(index: any) {
+    const dialogRef = this.dialog.open(ViewListingDialogComponent, { data: { listing: this.properties[index] } });;
 
-  openChooseDeviceTypeDialog() {
+    dialogRef.afterClosed().subscribe((result) => {
+      // this.loadItems();
+    });
   }
 
 

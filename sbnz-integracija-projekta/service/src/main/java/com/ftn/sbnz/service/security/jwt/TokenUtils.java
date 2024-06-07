@@ -256,9 +256,9 @@ public class TokenUtils {
 	 * @return Informacija da li je token validan ili ne.
 	 */
 	public Boolean validateToken(String token, UserDetails userDetails) {
-		UserDetails user = (UserDetails) userDetails;
+		// UserDetails user = (UserDetails) userDetails;
 		final String username = getUsernameFromToken(token);
-		final Date created = getIssuedAtDateFromToken(token);
+		// final Date created = getIssuedAtDateFromToken(token);
 		
 		//TODO: need to add verification for password change, if user changed his password after token creation then it's invalid. Use method below
 		return (username != null

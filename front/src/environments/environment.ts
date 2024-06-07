@@ -7,9 +7,8 @@ export const environment = {
   // apiHost: 'http://localhost:5184/api',
   apiHost: 'http://localhost:4371/api',
   host: 'http://localhost:4371',
-  googleApiKey: ''
+  googleApiKey: 'AIzaSyCkFF5-_eE4PVjPJfxJhejrZxYCb6T2J50'
 };
-
 /*
  * For easier debugging in development mode, you can import the following file
  * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.

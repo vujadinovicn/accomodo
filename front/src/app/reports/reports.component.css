@@ -1,0 +1,5 @@
+.flex-container {
+    display: flex;
+    justify-content: space-between; /* Adjust this property as needed (space-between, space-around, etc.) */
+    align-items: flex-start; /* Adjust this property as needed (center, flex-end, etc.) */
+  }

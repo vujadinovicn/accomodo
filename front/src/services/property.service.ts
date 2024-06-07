@@ -1,5 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
@@ -9,9 +10,22 @@ export class PropertyService {
 
   constructor(private http: HttpClient) { }
 
-  addProperty(dto: PropertyDTO) {
+  addProperty(dto: any) {
     console.log(dto);
     return this.http.post<any>(environment.apiHost + "/property", dto, {withCredentials: true});
+  }
+
+  addListing(dto: any): Observable<any> {
+    console.log(dto);
+    return this.http.post<any>(environment.apiHost + "/listing/login", dto,  {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      })
+    });
+  }
+
+  getListingsForOwner() {
+    return this.http.get<any>(environment.apiHost + "/listing/owner");
   }
 
   getDetails(id: string) {
@@ -31,13 +45,17 @@ export class PropertyService {
   }
 }
 
-export interface PropertyDTO {
-  name: string,
-  area: number,
-  numOfFloors: number,
+export interface ListingDTO {
+  id: number,
+  title: string,
+  price: number,
+  description: string,
   image: string,
-  address: AddressDTO
+  location: ListingLocationDTO,
+  destination: ListingDestinationDTO
 }
+
+
 
 export interface ReturnedPropertyDTO {
   id: number,
@@ -54,6 +72,21 @@ export interface AddressDTO {
   cityId: number,
   lat: number,
   lng: number, 
+  name: string,
+  location: ListingLocationDTO,
+  destination: ListingDestinationDTO
+}
+
+export interface PropertyDTO{
+
+}
+export interface ListingLocationDTO {
+  lat: number,
+  lng: number, 
+  address: string
+}
+
+export interface ListingDestinationDTO {
   name: string
 }
 
@@ -71,6 +104,24 @@ export interface PageResultDTO {
   pageIndex: number,
   pageSize: number,
   items: any[]
+}
+
+export interface ReturnedListingDTO{
+  id: number,
+  title: string,
+  price: number,
+  description: string,
+  image: string,
+  location: ListingLocationDTO,
+  destination: ListingDestinationDTO
+  owner?: ReturnedOwnerDTO
+}
+
+export interface ReturnedOwnerDTO{
+  name: string,
+  lastname: string,
+  email: string, 
+  id: number,
 }
 
 export interface UserDTO {

@@ -3,23 +3,63 @@
 <div class="homepage-container">
     <div class="title-container">
         <div class="title-topper">
-            <p class="title">Listings</p>
+            <p class="title" *ngIf="role == 'ROLE_OWNER'">Your listings</p>
+            <p class="title" *ngIf="role == 'ROLE_TRAVELER'">Listings</p>
             <button *ngIf="role == 'ROLE_OWNER'" class="conf-button add-prop-btn back-light-blue" (click)="openAddPropertyDialog()"><i class="fa fa-circle-plus"></i>Create new listing</button>
         </div>
         <hr>
     </div>
     <div class="card-holder">
-        <div *ngFor="let property of properties; let i = index">
-            <app-property-card [property]="property" [enableClick]="true" (click)="openPropertyDetails(i)" (rejectionCompleted)="processRejection($event)"></app-property-card>
-            <!-- <p>{{ property.name }}</p> -->
+        <div *ngFor="let listing of properties; let i = index">
+            <!-- <app-property-card [property]="property" [enableClick]="true" (click)="openPropertyDetails(i)" (rejectionCompleted)="processRejection($event)"></app-property-card>
+            <p>{{ property.title }}</p> -->
+            <div class="basic-container" style="padding-bottom: 5px;" id="card-container" (click)="openListingDetails(i)" [ngClass]="{'transition': enableClick}">
+                <div [ngClass]="enableClick ? 'image-container' : 'image-container-details'">
+                    <img src="../../assets/logIn.svg" style="width: 80%; height: 100%; border-radius: 20px 0px 0px 20px; object-fit: cover;"/>
+                </div>
+            
+                <div id="info-container">
+                    <div>
+                        <div style="display: flex;
+                        flex-direction: row;
+                        justify-content: space-between;
+                        align-items: self-end">
+                            <h2  [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{ listing.title }}</h2>
+                        </div>
+                    <div>
+                        <i [ngClass]="enableClick ? 'fa-solid fa-location-dot red' : 'custom-font fa-solid fa-location-dot red'" ></i>
+                        <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.location.address }}</span>
+                    </div>
+                    <div>
+                        <i [ngClass]="enableClick ? 'fa-solid fa-earth-americas green' : 'custom-font fa-solid fa-earth-americas green'" ></i>
+                        <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.destination.name }}</span>
+                    </div>
+                    <div>
+                        <i [ngClass]="enableClick ? 'fa-solid fa-money-bill' : 'custom-font fa-solid fa-money-bill'" ></i>
+                        <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.price }} Euro</span>
+            
+                    </div>
+                    <!-- <div>
+                        <i [ngClass]="enableClick ? 'fa-solid fa-layer-group blue' : 'custom-font fa-solid fa-layer-group blue'" ></i>
+                        <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.description }}</span>
+                    </div> -->
+                    <!-- <div>
+                        <i [ngClass]="enableClick ? 'fa-solid fa-layer-group blue' : 'custom-font fa-solid fa-layer-group blue'" ></i>
+                        <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.owner?.name + " " + listing.owner?.lastname }}</span>
+                    </div> -->
+                    </div>
+                
+                </div>
+            </div>
+            
         </div> 
     </div>
-    <mat-paginator
+    <!-- <mat-paginator
       [length]="count" 
       [pageSize]="pageSize"
       [pageSizeOptions]="[4]"
       (page)="onPageChange($event)">
-    </mat-paginator>
+    </mat-paginator> -->
 </div>
 
 

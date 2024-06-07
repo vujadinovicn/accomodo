@@ -1,8 +1,10 @@
 package com.ftn.sbnz.service.services;
 
 import java.util.Optional;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import org.drools.core.ClassObjectFilter;
 import org.kie.api.runtime.KieSession;
@@ -24,6 +26,7 @@ import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.service.dtos.BookingDTO;
 import com.ftn.sbnz.service.dtos.BookingRejectionNoticeDTO;
+import com.ftn.sbnz.service.dtos.ReturnedBookingDTO;
 import com.ftn.sbnz.service.mail.IMailService;
 import com.ftn.sbnz.service.repositories.BookingRejectionNoticeRepository;
 import com.ftn.sbnz.service.repositories.BookingRepository;
@@ -80,6 +83,12 @@ public class BookingService implements IBookingService{
         Booking booking = new Booking(dto.getStartDate(), dto.getEndDate(), BookingStatus.PENDING, false);
         booking.setTraveler(traveler);
         booking.setListing(listing);
+        kieSession.insert(booking);
+        kieSession.insert(traveler);
+        kieSession.insert(booking.getListing().getOwner());
+        kieSession.insert(booking.getListing().getLocation().getDestination());
+        kieSession.setGlobal("dateNow", new Date());
+
         allBookings.save(booking);
         allBookings.flush();
 
@@ -196,6 +205,34 @@ public class BookingService implements IBookingService{
         allBookings.flush();
 
         allTravelers.flush();
+    }
+
+    @Override
+    public List<ReturnedBookingDTO> getByOwner() {
+        List<Booking> bookings = allBookings.findBookingsByOwnerId(2L);
+        List<ReturnedBookingDTO> dtos = new ArrayList<>();
+        for (Booking booking : bookings) {
+            String status = "";
+            BookingStatus bs = booking.getStatus();
+            if (bs == BookingStatus.ACCEPTED)
+                status = "ACCEPTED";
+            if (bs == BookingStatus.CANCELED)
+                status = "CANCELED";
+            if (bs == BookingStatus.DENIED)
+                status = "DENIED";
+            if (bs == BookingStatus.PENDING)
+                status = "PENDING";
+
+            ReturnedBookingDTO dto = new ReturnedBookingDTO(booking.getId(), booking.getTraveler().getId(),
+                            booking.getListing().getOwner().getId(),
+                        booking.getTraveler().getName() + " " + booking.getTraveler().getLastname(),
+                    booking.getListing().getOwner().getName() + " " + booking.getListing().getOwner().getLastname(),
+                booking.getListing().getTitle(), status, booking.getStartDate(), booking.getEndDate());
+            // (Long bookingId, Long travelerId, Long ownerId, String travelerName, String ownerName,
+            // String listingName, String status, Date startDate, Date endDate)
+            dtos.add(dto);
+        }
+        return dtos;
     }
 
 }
