@@ -47,6 +47,10 @@ export class PropertyService {
   getRecsForUser(id: number) {
     return this.http.get<any>(environment.apiHost + "/listing/recommendations?id=" + id);
   }
+
+  getAllListings() {
+    return this.http.get<any>(environment.apiHost + "/listing/all");
+  }
 }
 
 export interface ListingRecsDTO {
@@ -61,6 +65,17 @@ export interface ListingDTO {
   image: string,
   location: ListingLocationDTO,
   destination: ListingDestinationDTO
+}
+
+export interface ReturnedListingDTO {
+  id: number,
+  title: string,
+  price: number,
+  description: string,
+  image: string,
+  location: ListingLocationDTO,
+  destination: ListingDestinationDTO,
+  rating: number
 }
 
 export interface FullListingDTO {

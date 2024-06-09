@@ -28,7 +28,7 @@
                                 <h2  [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{ listing.title }}</h2>
                             </div>
                             <div id="stars">
-                                <ngx-star-rating [ngModel]="listing.rating" [disabled]="true"></ngx-star-rating> {{listing.rating}}
+                                <ngx-star-rating [ngModel]="listing.rating" [disabled]="true"></ngx-star-rating>
                             </div>
                         <div>
                             
@@ -79,7 +79,9 @@
                 <div [ngClass]="enableClick ? 'image-container' : 'image-container-details'">
                     <img src="../../assets/logIn.svg" style="width: 80%; height: 100%; border-radius: 20px 0px 0px 20px; object-fit: cover;"/>
                 </div>
-            
+                <div id="stars">
+                    <ngx-star-rating [ngModel]="listing.rating" [disabled]="true"></ngx-star-rating>
+                </div>
                 <div id="info-container">
                     <div>
                         <div style="display: flex;

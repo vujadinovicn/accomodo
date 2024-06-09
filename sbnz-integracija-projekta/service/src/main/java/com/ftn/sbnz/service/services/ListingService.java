@@ -38,6 +38,7 @@ import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
 import com.ftn.sbnz.service.dtos.ListingLocationDTO;
+import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
 import com.ftn.sbnz.service.mail.IMailService;
 import com.ftn.sbnz.service.repositories.DestinationRepository;
 import com.ftn.sbnz.service.repositories.DiscountRepository;
@@ -289,16 +290,16 @@ public class ListingService implements IListingService{
 	}
 
 	@Override
-	public List<AddListingDTO> getListingsForOwner() {
-		List<AddListingDTO> dtos = new ArrayList<>();
+	public List<ReturnedListingDTO> getListingsForOwner() {
+		List<ReturnedListingDTO> dtos = new ArrayList<>();
 		System.out.println(userService.getCurrentUser());
 		// List<Listing> listings = allListings.findAllByOwnerId(userService.getCurrentUser().getId());
 		List<Listing> listings = allListings.findAllByOwnerId(2L);
 		for (int i = 0; i < listings.size(); i ++){
 			ListingDestinationDTO destinationDto = new ListingDestinationDTO(listings.get(i).getLocation().getDestination().getName());
 			ListingLocationDTO locationDto = new ListingLocationDTO(listings.get(i).getLocation().getLat(), listings.get(i).getLocation().getLng(), listings.get(i).getLocation().getAddress());
-			AddListingDTO dto = new AddListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
-					 destinationDto, locationDto, "");
+			ReturnedListingDTO dto = new ReturnedListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
+					 destinationDto, locationDto, "", listings.get(i).getRating());
 			dtos.add(dto);
 		}
 		return dtos;
@@ -337,4 +338,20 @@ public class ListingService implements IListingService{
 
         return new ArrayList<>();
 	}
+
+	@Override
+	public List<ReturnedListingDTO> getAll() {
+		List<ReturnedListingDTO> dtos = new ArrayList<>();
+		List<Listing> listings = allListings.findAll();
+		for (int i = 0; i < listings.size(); i ++){
+			ListingDestinationDTO destinationDto = new ListingDestinationDTO(listings.get(i).getLocation().getDestination().getName());
+			ListingLocationDTO locationDto = new ListingLocationDTO(listings.get(i).getLocation().getLat(), listings.get(i).getLocation().getLng(), listings.get(i).getLocation().getAddress());
+			ReturnedListingDTO dto = new ReturnedListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
+					 destinationDto, locationDto, "", listings.get(i).getRating());
+			dtos.add(dto);
+		}
+		return dtos;
+	}
+
+	
 }

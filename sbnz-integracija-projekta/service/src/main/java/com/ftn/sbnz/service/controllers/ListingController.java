@@ -23,6 +23,7 @@ import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
 import com.ftn.sbnz.service.dtos.MessageDTO;
 import com.ftn.sbnz.service.dtos.RecommendedListingsDTO;
+import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 
 import jakarta.validation.Valid;
@@ -46,8 +47,13 @@ public class ListingController {
 	}
 
 	@GetMapping(value = "/owner")
-	public List<AddListingDTO> getListingsForOwner() {
+	public List<ReturnedListingDTO> getListingsForOwner() {
         return this.listingService.getListingsForOwner();
+	}
+
+	@GetMapping(value = "/all")
+	public List<ReturnedListingDTO> getListingsForTraveler() {
+        return this.listingService.getAll();
 	}
 
 	@RequestMapping(method = RequestMethod.GET)

@@ -1,4 +1,4 @@
-import { FullListingDTO, ListingDTO, ListingRecsDTO, PropertyDTO, PropertyService, ReturnedPropertyDTO } from './../../services/property.service';
+import { FullListingDTO, ListingDTO, ListingRecsDTO, PropertyDTO, PropertyService, ReturnedListingDTO, ReturnedPropertyDTO } from './../../services/property.service';
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AddPropertyDialogComponent } from '../add-property-dialog/add-property-dialog.component';
@@ -14,7 +14,7 @@ import { ViewListingDialogComponent } from '../view-listing-dialog/view-listing-
   styleUrls: ['./homepage.component.css']
 })
 export class HomepageComponent implements OnInit {
-  properties: ListingDTO[] = [];
+  properties: ReturnedListingDTO[] = [];
   recListings: FullListingDTO[] = [];
   currentPage = 1;
   enableClick: boolean =true;
@@ -71,20 +71,32 @@ export class HomepageComponent implements OnInit {
               console.log(err);
             }
       });
+
+      this.propertyService.getAllListings().subscribe({
+        next: (value) => {
+              console.log("dobijeno za sve" + JSON.stringify(value, null, 2));
+              this.properties = value;
+            }, 
+            error: (err) => {
+              console.log(err);
+            }
+      });
+    } else {
+
+      this.propertyService.getListingsForOwner().subscribe({
+        next: (value) => {
+              console.log(value)
+              // this.currentPage = value.pageIndex;
+              // this.count = value.count;
+              this.properties = value;
+              console.log(this.properties[0]);
+            }, 
+            error: (err) => {
+              console.log(err);
+            }
+      })
     }
 
-    this.propertyService.getListingsForOwner().subscribe({
-      next: (value) => {
-            console.log(value)
-            // this.currentPage = value.pageIndex;
-            // this.count = value.count;
-            this.properties = value;
-            console.log(this.properties[0]);
-          }, 
-          error: (err) => {
-            console.log(err);
-          }
-    })
   }
 
   openAddPropertyDialog() {
