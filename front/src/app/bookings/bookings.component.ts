@@ -20,7 +20,6 @@ export class BookingsComponent implements OnInit {
   role: any = {};
   loggedUserId: number = -1;
   enableClick: boolean = false;
-  status: string = "PENDING";
   selectedCar: string = "volvo";
   allBookings: ReturnedBookingsDTO[] = [];
 
@@ -56,6 +55,13 @@ export class BookingsComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       // this.rejectionCompleted.emit(true);
     });
+  }
+
+  canCancel(booking: any): boolean {
+    const now = new Date();
+    const startDate = new Date(booking.startDate);
+
+    return startDate > now;
   }
 
   acceptBooking(index: any){
@@ -94,7 +100,10 @@ export class BookingsComponent implements OnInit {
 
   onStatusChange(status: any){
     console.log(status)
-    this.bookings = this.allBookings.filter(item => item.status == status);
+    if (status == "ALL")
+      this.bookings = this.allBookings
+    else
+      this.bookings = this.allBookings.filter(item => item.status == status);
   }
 
   openDialog(index: any): void {

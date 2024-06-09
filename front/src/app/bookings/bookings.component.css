@@ -19,9 +19,6 @@
     width: 163px;
 }
 
-i {
-    margin-right: 4px;
-}
 
 ::ng-deep label.star {
     padding: 0 5px !important;
