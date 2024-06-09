@@ -36,11 +36,11 @@
                         align-items: self-end">
                             <h2  [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{booking.listingName}}</h2>
                         </div>
-                    <div *ngIf="role == 'ROLE_OWNER' || role == 'ROLE_ADMIN'" class="info-card">
+                    <div *ngIf="role == 'ROLE_OWNER' || role == 'ROLE_ADMIN'" class="info-card info-card-first">
                         <i [ngClass]="enableClick ? 'fa-solid fa-regular fa-user' : 'custom-font fa-regular fa-user green'" ></i>
                         <span [ngClass]="enableClick ? 'black' : 'custom-font black'" >Traveler: <span style="font-weight: 600 !important;">{{booking.travelerName}}</span></span>
                     </div>
-                    <div *ngIf="role == 'ROLE_TRAVELER'|| role == 'ROLE_ADMIN'" class="info-card">
+                    <div *ngIf="role == 'ROLE_TRAVELER'|| role == 'ROLE_ADMIN'" class="info-card info-card-first">
                         <i [ngClass]="enableClick ? 'fa-solid fa-regular fa-user' : 'custom-font fa-regular fa-user green'" ></i>
                         <span [ngClass]="enableClick ? 'black' : 'custom-font black'" >Owner: <span style="font-weight: 600 !important;">{{booking.ownerName}}</span></span>
                     </div>
