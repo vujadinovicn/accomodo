@@ -18,6 +18,14 @@ export class BookingService {
     return this.http.get<any>(environment.apiHost + "/booking/owner", options);
   }
 
+  public getByTraveler(id: number): Observable<any> {
+    const options: any = {
+      responseType: 'json',
+    //   withCredentials: true
+    };
+    return this.http.get<any>(environment.apiHost + "/booking/traveler?id=" + id, options);
+  }
+
   public denyBooking(dto: any): Observable<any> {
     const options: any = {
       responseType: 'json',
@@ -48,6 +56,13 @@ export class BookingService {
     //   withCredentials: true
     };
     return this.http.post<any>(environment.apiHost + "/booking", dto, options);
+  }
+
+  public reviewListing(dto: any): Observable<any> {
+    const options: any = {
+      // withCredentials: true
+    };
+    return this.http.post<any>(environment.apiHost + "/listing/review", dto, options);
   }
 
 }

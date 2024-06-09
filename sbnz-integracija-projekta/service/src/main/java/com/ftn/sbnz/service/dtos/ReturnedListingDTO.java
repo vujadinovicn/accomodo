@@ -1,6 +1,6 @@
 package com.ftn.sbnz.service.dtos;
 
-public class AddListingDTO {
+public class ReturnedListingDTO {
     private Long id;
     private String title;
     private double price;
@@ -8,20 +8,10 @@ public class AddListingDTO {
     private ListingDestinationDTO destination;
     private ListingLocationDTO location;
     private String image;
+    private double rating;
 
-    
-    public AddListingDTO(String title, double price, String description, ListingDestinationDTO destination,
-            ListingLocationDTO location, String image) {
-        this.title = title;
-        this.price = price;
-        this.description = description;
-        this.destination = destination;
-        this.location = location;
-        this.image = image;
-    }
-
-    public AddListingDTO(Long id, String title, double price, String description, ListingDestinationDTO destination,
-            ListingLocationDTO location, String image) {
+    public ReturnedListingDTO(Long id, String title, double price, String description,
+            ListingDestinationDTO destination, ListingLocationDTO location, String image, double rating) {
         this.id = id;
         this.title = title;
         this.price = price;
@@ -29,8 +19,8 @@ public class AddListingDTO {
         this.destination = destination;
         this.location = location;
         this.image = image;
+        this.rating = rating;
     }
-
 
     public String getTitle() {
         return title;
@@ -88,7 +78,12 @@ public class AddListingDTO {
         this.id = id;
     }
 
-   
+    public double getRating() {
+        return rating;
+    }
 
-    
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
+
 }

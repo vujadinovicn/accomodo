@@ -20,4 +20,6 @@ public interface IBookingService {
     public void cancelBookingByTraveler(Long bookingId);
 
     public List<ReturnedBookingDTO> getByOwner();
+
+    public List<ReturnedBookingDTO> getByTraveler(Long travelerId);
 }

@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.drools.core.ClassObjectFilter;
 import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.rule.FactHandle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import com.ftn.sbnz.model.events.ListingViewedEvent;
 import com.ftn.sbnz.model.models.Destination;
 import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
 import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
+import com.ftn.sbnz.model.models.Booking;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.Location;
@@ -36,6 +38,7 @@ import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
 import com.ftn.sbnz.service.dtos.ListingLocationDTO;
+import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
 import com.ftn.sbnz.service.mail.IMailService;
 import com.ftn.sbnz.service.repositories.DestinationRepository;
 import com.ftn.sbnz.service.repositories.DiscountRepository;
@@ -58,7 +61,6 @@ public class ListingService implements IListingService{
 	@Autowired
     private UserRepository allUsers;
 	@Autowired
-	@Qualifier("cepSession")
     private KieSession cepKieSession;
 	// @Autowired
     // @Qualifier("backwardSession") // Specify the bean name here
@@ -207,20 +209,67 @@ public class ListingService implements IListingService{
 		Listing listing = findById(dto.getListingId());
 		Traveler traveler = allTravelers.findById(dto.getTravelerId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User does not exist!"));
 		
+		if (allReviews.findByTravelerIdAndListingId(traveler.getId(), listing.getId()).orNull() != null) {
+			throw new RuntimeException("Traveler already reviewed this listing.");
+		}
+
+		if (dto.getRating() < 1 || dto.getRating() > 5) {
+			throw new RuntimeException("Wrong rating value. Rating must be between 1 and 5.");
+		}
+
 		LocalDateTime timestamp = LocalDateTime.now();
 		Review review = new Review(dto.getRating(), dto.getComment(), timestamp, listing, traveler);
+
+		updateListingRating(listing);
 
 		allReviews.save(review);
 		allReviews.flush();
 
 		cepKieSession.insert(review);
-		cepKieSession.insert(traveler);
 
 		int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
+		//TODO: sta sa ovim
+		// traveler = (Traveler) cepKieSession.getObject(cepKieSession.getFactHandle(traveler));
 		allTravelers.save(traveler);
 		allTravelers.flush();
+	}
+
+	private void updateListingRating(Listing listing) {
+		System.out.println("Inside");
+		List<Review> reviews = allReviews.findAllByListingId(listing.getId());
+
+		Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(Listing.class));
+        for (Object event : newEvents) {
+            if (event instanceof Listing) {
+                Listing listingSess = (Listing) event;
+                if (listingSess.getId() == listing.getId()) {
+					listing = listingSess;
+					break;
+				}
+            }
+        }
+		cepKieSession.delete(cepKieSession.getFactHandle(listing));
+
+		System.out.println("Fetched");
+		if (reviews.size() > 0) {
+			double averageRating = reviews.stream()
+										.mapToDouble(Review::getRating)
+										.average()
+										.orElse(0.0);  
+			listing.setRating(averageRating);
+		} else {
+			listing.setRating(0);
+		}
+
+		System.out.println("Updated v1");
+
+		cepKieSession.insert(listing);
+		System.out.println("Updated");
+		
+		allListings.save(listing);
+		allListings.flush();
 	}
 
 	@Override
@@ -241,16 +290,16 @@ public class ListingService implements IListingService{
 	}
 
 	@Override
-	public List<AddListingDTO> getListingsForOwner() {
-		List<AddListingDTO> dtos = new ArrayList<>();
+	public List<ReturnedListingDTO> getListingsForOwner() {
+		List<ReturnedListingDTO> dtos = new ArrayList<>();
 		System.out.println(userService.getCurrentUser());
 		// List<Listing> listings = allListings.findAllByOwnerId(userService.getCurrentUser().getId());
 		List<Listing> listings = allListings.findAllByOwnerId(2L);
 		for (int i = 0; i < listings.size(); i ++){
 			ListingDestinationDTO destinationDto = new ListingDestinationDTO(listings.get(i).getLocation().getDestination().getName());
 			ListingLocationDTO locationDto = new ListingLocationDTO(listings.get(i).getLocation().getLat(), listings.get(i).getLocation().getLng(), listings.get(i).getLocation().getAddress());
-			AddListingDTO dto = new AddListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
-					 destinationDto, locationDto, "");
+			ReturnedListingDTO dto = new ReturnedListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
+					 destinationDto, locationDto, "", listings.get(i).getRating());
 			dtos.add(dto);
 		}
 		return dtos;
@@ -289,4 +338,20 @@ public class ListingService implements IListingService{
 
         return new ArrayList<>();
 	}
+
+	@Override
+	public List<ReturnedListingDTO> getAll() {
+		List<ReturnedListingDTO> dtos = new ArrayList<>();
+		List<Listing> listings = allListings.findAll();
+		for (int i = 0; i < listings.size(); i ++){
+			ListingDestinationDTO destinationDto = new ListingDestinationDTO(listings.get(i).getLocation().getDestination().getName());
+			ListingLocationDTO locationDto = new ListingLocationDTO(listings.get(i).getLocation().getLat(), listings.get(i).getLocation().getLng(), listings.get(i).getLocation().getAddress());
+			ReturnedListingDTO dto = new ReturnedListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
+					 destinationDto, locationDto, "", listings.get(i).getRating());
+			dtos.add(dto);
+		}
+		return dtos;
+	}
+
+	
 }

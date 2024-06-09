@@ -21,7 +21,9 @@ import com.ftn.sbnz.service.dtos.AddListingDTO;
 import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
+import com.ftn.sbnz.service.dtos.MessageDTO;
 import com.ftn.sbnz.service.dtos.RecommendedListingsDTO;
+import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 
 import jakarta.validation.Valid;
@@ -45,8 +47,13 @@ public class ListingController {
 	}
 
 	@GetMapping(value = "/owner")
-	public List<AddListingDTO> getListingsForOwner() {
+	public List<ReturnedListingDTO> getListingsForOwner() {
         return this.listingService.getListingsForOwner();
+	}
+
+	@GetMapping(value = "/all")
+	public List<ReturnedListingDTO> getListingsForTraveler() {
+        return this.listingService.getAll();
 	}
 
 	@RequestMapping(method = RequestMethod.GET)
@@ -60,8 +67,14 @@ public class ListingController {
 	}
 
     @RequestMapping(path = "/review", method = RequestMethod.POST)
-	public void addDiscount(@RequestBody AddReviewDTO dto) {
-        this.listingService.addReview(dto);
+	public ResponseEntity<?> addReview(@RequestBody AddReviewDTO dto) {
+        System.out.println("REVIEWWWWWWWWWWWW: " + dto);
+		try {
+			this.listingService.addReview(dto);
+			return new ResponseEntity<MessageDTO>(new MessageDTO("Review added successfully."), HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+		}
 	}
 
 	@RequestMapping(path = "/backward", method = RequestMethod.GET)

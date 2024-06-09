@@ -1,0 +1,14 @@
+<div id="review-cont">
+    <h1 mat-dialog-title>Review the listing</h1>
+    <div mat-dialog-content>
+      <div id="stars-dialog">
+        <ngx-star-rating id="dstars" [(ngModel)]="data.rating" [disabled]="false"></ngx-star-rating>
+      </div>  
+      <p>Leave a comment:</p>
+      <input [(ngModel)]="data.comment" type="text" id="comment">
+    </div>
+    <div id="btns" mat-dialog-actions>
+      <button  class="conf-button add-prop-btn back-red" (click)="onNoClick()">Cancel</button>
+      <button  class="conf-button add-prop-btn back-green" (click)="onSaveClick()" >Save</button>
+    </div>
+</div>
