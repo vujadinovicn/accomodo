@@ -22,11 +22,12 @@
         <hr>
     </div>
     <div class="card-holder">
-        <div>
-            <div *ngFor="let booking of bookings; let i = index">
+        <div *ngIf="bookings.length == 0">
+           <p class="dark-gray">Oh! You haven't had any bookings with us yet. We're waiting for you!</p> 
+        </div>
                 <!-- <app-property-card [property]="property" [enableClick]="true" (click)="openPropertyDetails(i)" (rejectionCompleted)="processRejection($event)"></app-property-card>
             <p>{{ property.title }}</p> -->
-            <div class="basic-container" id="card-container" [ngClass]="{'transition': enableClick}">
+            <div *ngFor="let booking of bookings; let i = index"  class="basic-container" style="width: 300px;" id="card-container" [ngClass]="{'transition': enableClick}">
                 <div id="info-container" style="padding: 0; margin-bottom: 15px;">
                     <div>
                         <div style="display: flex;
@@ -35,19 +36,19 @@
                         align-items: self-end">
                             <h2  [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{booking.listingName}}</h2>
                         </div>
-                    <div *ngIf="role == 'ROLE_OWNER' || role == 'ROLE_ADMIN'">
+                    <div *ngIf="role == 'ROLE_OWNER' || role == 'ROLE_ADMIN'" class="info-card">
                         <i [ngClass]="enableClick ? 'fa-solid fa-regular fa-user' : 'custom-font fa-regular fa-user green'" ></i>
                         <span [ngClass]="enableClick ? 'black' : 'custom-font black'" >Traveler: <span style="font-weight: 600 !important;">{{booking.travelerName}}</span></span>
                     </div>
-                    <div *ngIf="role == 'ROLE_TRAVELER'|| role == 'ROLE_ADMIN'" >
+                    <div *ngIf="role == 'ROLE_TRAVELER'|| role == 'ROLE_ADMIN'" class="info-card">
                         <i [ngClass]="enableClick ? 'fa-solid fa-regular fa-user' : 'custom-font fa-regular fa-user green'" ></i>
-                        <span [ngClass]="enableClick ? 'black' : 'custom-font black'" >Owner<span style="font-weight: 600 !important;">{{booking.ownerName}}</span></span>
+                        <span [ngClass]="enableClick ? 'black' : 'custom-font black'" >Owner: <span style="font-weight: 600 !important;">{{booking.ownerName}}</span></span>
                     </div>
-                    <div>
+                    <div class="info-card">
                         <i [ngClass]="enableClick ? 'fa-regular fa-clock blue' : 'custom-font fa-regular fa-clock blue'" ></i>
                         <span [ngClass]="enableClick ? 'black' : 'custom-font black'" >Start date: <span style="font-weight: 600 !important;">{{ booking.startDate | date:'dd.MM.yyyy' }}</span></span>
                     </div>
-                    <div>
+                    <div class="info-card">
                         <i [ngClass]="enableClick ? 'fa-solid fa-clock blue' : 'custom-font fa-solid fa-clock blue'" ></i>
                         <span [ngClass]="enableClick ? 'black' : 'custom-font black'">End date: <span style="font-weight: 600 !important;">{{ booking.endDate | date:'dd.MM.yyyy' }}</span></span>
                     </div>
@@ -77,12 +78,14 @@
                         <button *ngIf="role == 'ROLE_OWNER'" style="margin-top: 10px !important; margin-bottom: 10px; width: 80px;" class="conf-button add-prop-btn back-red" (click)="denyBooking(i)">Deny</button>
                     </div>
                     <div *ngIf="role == 'ROLE_TRAVELER' && status == 'PENDING'" style="float: right; margin-left: 100px; margin-bottom: -20px;">
-                        <button style="margin-top: 10px !important; margin-bottom: 10px; width: 80px;" class="conf-button add-prop-btn back-red" (click)="cancelBooking(i)">Cancel</button>
+                        <button *ngIf="booking.reviewable" style="margin-top: 10px !important; margin-right: 5px;  margin-bottom: -5px; width: 80px;" class="conf-button add-prop-btn back-orange" (click)="openDialog(i)">Rate</button>
+                        <button style="margin-top: 10px !important; margin-bottom: -5px; width: 80px;" class="conf-button add-prop-btn back-red" (click)="cancelBooking(i)">Cancel</button>
+                        <div *ngIf="booking.reviewByTraveler" id="stars">
+                            <ngx-star-rating [ngModel]="booking.reviewByTraveler.rating" [disabled]="true"></ngx-star-rating> 
+                        </div>
                     </div>
-                </div>
             </div>
             </div>
-        </div> 
     </div>
 </div>
 

@@ -97,7 +97,11 @@ public class DataLoaderService {
 
         for (Booking booking : bookings) {
             kieSession.insert(booking);
+            System.out.println("BOOKINGS: " + booking.getTraveler().getId());
+
         }
+
+        System.out.println("BOOKINGS: " + bookings.size());
 
         for (Owner owner : owners) {
             kieSession.insert(owner);

@@ -4,6 +4,7 @@ import { AuthService } from 'src/services/auth.service';
 import { BookingService } from 'src/services/booking.service';
 import { DenyBookingComponent } from '../deny-booking-dialog/deny-booking-dialog.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ReviewDialogComponent } from '../review-dialog/review-dialog.component';
 
 @Component({
   selector: 'app-bookings',
@@ -17,6 +18,7 @@ export class BookingsComponent implements OnInit {
   ) { }
 
   role: any = {};
+  loggedUserId: number = -1;
   enableClick: boolean = false;
   status: string = "PENDING";
   selectedCar: string = "volvo";
@@ -26,11 +28,26 @@ export class BookingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.role = this.authService.getRole();
-    this.bookingService.getByOwner().subscribe(data => {
-      console.log(data);
-      this.bookings = data;
-      this.allBookings = data;
-    });
+    this.loggedUserId = this.authService.getId();
+
+    this.loadBookings();
+    
+  }
+
+  loadBookings() {
+    if (this.role == "ROLE_TRAVELER") {
+      this.bookingService.getByTraveler(this.loggedUserId).subscribe(data => {
+        console.log(data);
+        this.bookings = data;
+        this.allBookings = data;
+      });
+    } else {
+      this.bookingService.getByOwner().subscribe(data => {
+        console.log(data);
+        this.bookings = data;
+        this.allBookings = data;
+      });
+    }
   }
 
   denyBooking(index: any){
@@ -80,17 +97,46 @@ export class BookingsComponent implements OnInit {
     this.bookings = this.allBookings.filter(item => item.status == status);
   }
 
+  openDialog(index: any): void {
+    let booking = this.bookings[index];
+    let review: ReviewDTO = {
+      listingId: booking.listingId, travelerId: this.loggedUserId,
+      rating: 0,
+      comment: ''
+    };
+
+    const dialogRef = this.dialog.open(ReviewDialogComponent, {
+      width: '250px',
+      data: review
+    });
+
+    dialogRef.afterClosed().subscribe({next: (value) => {
+        this.loadBookings();
+    },})
+
+  }
+
 }
 
 export interface ReturnedBookingsDTO{
   bookingId: number,
   travelerId: number,
+  listingId: number,
   ownerId: number,
   travelerName: string,
   ownerName: string,
   listingName: string,
   status: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  reviewable: boolean,
+  reviewByTraveler: ReviewDTO,
+}
+
+export interface ReviewDTO {
+  listingId: number,
+  travelerId: number,
+  rating: number,
+  comment: string,
 
 }

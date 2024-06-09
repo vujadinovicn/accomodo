@@ -1,10 +1,72 @@
 <!-- <button class="conf-button add-prop-btn back-light-blue" (click)="openAddPropertyDialog()"><i class="fa fa-circle-plus"></i>Request a new property</button> -->
 <!-- <button class="conf-button add-prop-btn back-light-blue" (click)="openChooseDeviceTypeDialog()"><i class="fa fa-circle-plus"></i>Add new device</button> -->
 <div class="homepage-container">
+    
+    <div id="recs-container" *ngIf="role == 'ROLE_TRAVELER'">
+        <div class="title-container">
+            <div class="title-topper">
+                <p class="title" >Recommended for you</p>
+            </div>
+            <hr>
+        </div>
+        <div class="card-holder">
+            <div *ngFor="let listing of recListings; let i = index">
+                <!-- <app-property-card [property]="property" [enableClick]="true" (click)="openPropertyDetails(i)" (rejectionCompleted)="processRejection($event)"></app-property-card>
+                <p>{{ property.title }}</p> -->
+                <div class="basic-container" style="padding-bottom: 5px;" id="card-container" (click)="openListingDetails(i)" [ngClass]="{'transition': enableClick}">
+                    <div [ngClass]="enableClick ? 'image-container' : 'image-container-details'">
+                        <img src="../../assets/logIn.svg" style="width: 80%; height: 100%; border-radius: 20px 0px 0px 20px; object-fit: cover;"/>
+                    </div>
+                    
+                
+                    <div id="info-container">
+                        <div>
+                            <div style="display: flex;
+                            flex-direction: row;
+                            justify-content: space-between;
+                            align-items: self-end">
+                                <h2  [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{ listing.title }}</h2>
+                            </div>
+                            <div id="stars">
+                                <ngx-star-rating [ngModel]="listing.rating" [disabled]="true"></ngx-star-rating> {{listing.rating}}
+                            </div>
+                        <div>
+                            
+                            <i [ngClass]="enableClick ? 'fa-solid fa-location-dot red' : 'custom-font fa-solid fa-location-dot red'" ></i>
+                            <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.location.address }}</span>
+                        </div>
+                        <div>
+                            <i [ngClass]="enableClick ? 'fa-solid fa-earth-americas green' : 'custom-font fa-solid fa-earth-americas green'" ></i>
+                            <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.location.destination.name }}</span>
+                        </div>
+                        <div>
+                            <i [ngClass]="enableClick ? 'fa-solid fa-money-bill' : 'custom-font fa-solid fa-money-bill'" ></i>
+                            <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.price }} Euro</span>
+                
+                        </div>
+                        <!-- <button class="conf-button add-review-btn back-orange"><i class="fa fa-star" aria-hidden="true"></i>Leave a review</button> -->
+                        <!-- <div>
+                            <i [ngClass]="enableClick ? 'fa-solid fa-layer-group blue' : 'custom-font fa-solid fa-layer-group blue'" ></i>
+                            <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.description }}</span>
+                        </div> -->
+                        <!-- <div>
+                            <i [ngClass]="enableClick ? 'fa-solid fa-layer-group blue' : 'custom-font fa-solid fa-layer-group blue'" ></i>
+                            <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.owner?.name + " " + listing.owner?.lastname }}</span>
+                        </div> -->
+                        
+                        
+                    </div>
+
+                    
+                </div>
+                
+            </div> 
+        </div>
+    </div>
     <div class="title-container">
         <div class="title-topper">
             <p class="title" *ngIf="role == 'ROLE_OWNER'">Your listings</p>
-            <p class="title" *ngIf="role == 'ROLE_TRAVELER'">Listings</p>
+            <p class="title" *ngIf="role == 'ROLE_TRAVELER'">Browse all listings</p>
             <button *ngIf="role == 'ROLE_OWNER'" class="conf-button add-prop-btn back-light-blue" (click)="openAddPropertyDialog()"><i class="fa fa-circle-plus"></i>Create new listing</button>
         </div>
         <hr>
@@ -39,6 +101,9 @@
                         <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.price }} Euro</span>
             
                     </div>
+                    <!-- <div id="stars">
+                        <ngx-star-rating [ngModel]="listing.rating" [disabled]="true"></ngx-star-rating>
+                    </div> -->
                     <!-- <div>
                         <i [ngClass]="enableClick ? 'fa-solid fa-layer-group blue' : 'custom-font fa-solid fa-layer-group blue'" ></i>
                         <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.description }}</span>

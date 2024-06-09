@@ -1,5 +1,7 @@
 package cep;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
@@ -8,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.models.ReviewableListings;
 import com.ftn.sbnz.model.models.Traveler;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Review;
@@ -34,6 +37,7 @@ import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.Owner;
 import com.ftn.sbnz.model.models.Destination;
 import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
+import com.ftn.sbnz.model.events.CollectReviewableListingsEvent;
 
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
@@ -64,6 +68,13 @@ declare RecommendTrendingAccommodationEvent
     @role(event)
     @expires(1m)
     loginTimestamp: LocalDateTime
+end
+
+declare CheckPreviousReviewsEvent
+    @role(event)
+    @expires(1m)
+    travelerId: Long
+    listings: Set<Listing>
 end
 
 // =========================================
@@ -119,55 +130,55 @@ end
 // =========================================
 // OVERLAPPED BOOKINGS - CEP
 
-rule "Detect overlapping bookings"
-no-loop true
-when
-    $booking1: Booking($id1 : id, status == BookingStatus.ACCEPTED,
-        $locationId: listing.location.id,
-        $traveler1: traveler,
-        $startDate1: startDate,
-        $endDate1: endDate
-    )
-    $booking2: Booking(this != $booking1, $id2 : id, status == BookingStatus.ACCEPTED,
-        listing.location.id == $locationId,
-        $traveler2: traveler,
-        $startDate2: startDate,
-        $endDate2: endDate,
-        (
-            ($startDate2 after[5s] $startDate1 && $startDate2 before[5s] $endDate1) ||
-            ($endDate2 after[5s] $startDate1 && $endDate2 before[5s] $endDate1) 
-        )
-    )
-    not (OverlappedBookingsEvent(firstBookingId == $id1, secondBookingId == $id2))
-    then
-        insert(new OverlappedBookingsEvent($id1, $id2));
-        System.out.println("Bookings are overlapping!");
-end
+// rule "Detect overlapping bookings"
+// no-loop true
+// when
+//     $booking1: Booking($id1 : id, status == BookingStatus.ACCEPTED,
+//         $locationId: listing.location.id,
+//         $traveler1: traveler,
+//         $startDate1: startDate,
+//         $endDate1: endDate
+//     )
+//     $booking2: Booking(this != $booking1, $id2 : id, status == BookingStatus.ACCEPTED,
+//         listing.location.id == $locationId,
+//         $traveler2: traveler,
+//         $startDate2: startDate,
+//         $endDate2: endDate,
+//         (
+//             ($startDate2 after[5s] $startDate1 && $startDate2 before[5s] $endDate1) ||
+//             ($endDate2 after[5s] $startDate1 && $endDate2 before[5s] $endDate1) 
+//         )
+//     )
+//     not (OverlappedBookingsEvent(firstBookingId == $id1, secondBookingId == $id2))
+//     then
+//         insert(new OverlappedBookingsEvent($id1, $id2));
+//         System.out.println("Bookings are overlapping!");
+// end
 
-rule "Handle overlapping bookings if there is less than 7 days for one of bookings"
-no-loop true
-when
-    $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
-    $booking1: Booking(id == $id1)
-    $booking2: Booking(id == $id2, $startDate2: startDate, !($startDate2 after[7d] dateNow))
-    then
-        modify($booking2){
-            setStatus(BookingStatus.DENIED)
-        }
-        // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
-        System.out.println("Booking with id: " + $id2 + " has been DENIED!");
-end
+// rule "Handle overlapping bookings if there is less than 7 days for one of bookings"
+// no-loop true
+// when
+//     $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
+//     $booking1: Booking(id == $id1)
+//     $booking2: Booking(id == $id2, $startDate2: startDate, !($startDate2 after[7d] dateNow))
+//     then
+//         modify($booking2){
+//             setStatus(BookingStatus.DENIED)
+//         }
+//         // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
+//         System.out.println("Booking with id: " + $id2 + " has been DENIED!");
+// end
 
-rule "Handle overlapping bookings if there is more than 7 days for one of bookings"
-no-loop true
-when
-    $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
-    $booking1: Booking(id == $id1)
-    $booking2: Booking(id == $id2, $startDate2: startDate, $startDate2 after[7d] dateNow)
-    then
-        // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.RESCHEDULE));
-        System.out.println("Send notification to traveler for potential overlap!");
-end
+// rule "Handle overlapping bookings if there is more than 7 days for one of bookings"
+// no-loop true
+// when
+//     $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
+//     $booking1: Booking(id == $id1)
+//     $booking2: Booking(id == $id2, $startDate2: startDate, $startDate2 after[7d] dateNow)
+//     then
+//         // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.RESCHEDULE));
+//         System.out.println("Send notification to traveler for potential overlap!");
+// end
 
 // =========================================
 // FAVORITE LOCATIONS - FORWARD
@@ -234,8 +245,8 @@ end
 
 rule "Traveler gave negative review"
 when
-    $review: Review(rating < 5)
-    not NegativeReviewEvent(review == $review)
+    $review: Review(rating < 4)
+    not NegativeReviewEvent(review.id == $review.id)
 then
     insert(new NegativeReviewEvent($review));
 end
@@ -604,7 +615,7 @@ end
 rule "Reward visited destinations"
 salience 10
 when
-    $listing : Listing($destinationId : location.destination.id, $rating : rating > 7)
+    $listing : Listing($destinationId : location.destination.id, $rating : rating > 3)
     $flag : DestinationFlag(destinationId == $destinationId, $timestamp: loginTimestamp)
 then
     insert(new AccommodationPoints($listing, 10, $timestamp));
@@ -636,7 +647,7 @@ rule "Penalize poorly rated destinations"
 salience 10
 when
     $listing : Listing($destinationId : location.destination.id)
-    $flag : DestinationFlag(destinationId == $destinationId, averageRating < 7, $timestamp: loginTimestamp)
+    $flag : DestinationFlag(destinationId == $destinationId, averageRating < 4, $timestamp: loginTimestamp)
 then
     insert(new AccommodationPoints($listing, -10, $timestamp));
     System.out.println("Penalized poorly rated destination for listing with id " + $listing.getId());
@@ -647,7 +658,7 @@ salience 10
 when
     $listing : Listing($listingId : id, $tags : tags)
     $tag : Tag() from $tags
-    $flag : TagFlag(tagId == $tag.id, averageRating > 7, $timestamp: loginTimestamp)
+    $flag : TagFlag(tagId == $tag.id, averageRating > 3, $timestamp: loginTimestamp)
 then
     insert(new AccommodationPoints($listing, 10, $timestamp)); 
     System.out.println("Rewarded desireble tag for listing with id " + $listing.getId());
@@ -673,7 +684,7 @@ when
     not TagFlag(tagId == $tag.id, $timestamp == loginTimestamp)
 then
     insert(new AccommodationPoints($listing, -5, $timestamp));
-    System.out.println("Penalized poorly rated tag for listing with id " + $listing.getId());
+    System.out.println("Penalized non desireble tag for listing with id " + $listing.getId());
 end
 
 rule "Penalize badly rated tags"
@@ -681,7 +692,7 @@ salience 10
 when
     $listing : Listing($listingId : id, $tags : tags)
     $tag : Tag() from $tags
-    $flag : TagFlag(tagId == $tag.id, averageRating < 7, $timestamp: loginTimestamp)
+    $flag : TagFlag(tagId == $tag.id, averageRating < 4, $timestamp: loginTimestamp)
 then
     insert(new AccommodationPoints($listing, -10, $timestamp));
     System.out.println("Penalized poorly rated tag for listing with id " + $listing.getId());
@@ -762,6 +773,8 @@ then
         topRatedListings.add(listing);
     }
 
+    System.out.println("Query results: " + results.size());
+
     topRatedListings.sort((a, b) -> Double.compare(b.getRating(), a.getRating()));
     topRatedListings = topRatedListings.subList(0, Math.min(10, topRatedListings.size()));
 
@@ -774,3 +787,38 @@ end
 // =========================================
 // REVIEW LISTING - CEP
 
+rule "Listing can be reviewed by the traveler"
+when
+    $event: CollectReviewableListingsEvent($travelerId: travelerId)
+    $traveler: Traveler($travelerId == id)
+    $listings: List() from accumulate(
+        $booking: Booking(isReservation() == false, 
+                          $listing: listing, 
+                          status == BookingStatus.ACCEPTED, 
+                          endDate before LocalDateTime.now(),
+                          $travelerId == traveler.id),
+        collectList($listing)
+    )
+then
+    System.out.println("Listings: " + $listings.size());
+    Set<Listing> uniqueListings = new HashSet<>($listings);
+    insert(new CheckPreviousReviewsEvent($travelerId, uniqueListings));
+    delete($event)
+end
+
+rule "Listing was not reviewed before by the traveler"
+when
+    $event: CheckPreviousReviewsEvent($travelerId: travelerId, $listings: listings)
+    $reviewed: Set() from accumulate(
+        Review(traveler.id == $travelerId, $listing: listing),
+        collectSet($listing)
+    )
+then
+    Set<Listing> finalListings = new HashSet<>( $listings );
+    finalListings.removeAll($reviewed);
+    System.out.println("Traveler with id " + $travelerId + " can review " + finalListings.size() + " listings");
+    
+    insert(new ReviewableListings($travelerId, finalListings));
+
+    delete($event)
+end

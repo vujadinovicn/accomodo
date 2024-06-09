@@ -43,6 +43,14 @@ export class PropertyService {
   denyPropertyRequest(id: number, reason: ReasonDTO) {
     return this.http.put<any>(environment.apiHost + "/property/deny/" + id, reason, {withCredentials: true});
   }
+
+  getRecsForUser(id: number) {
+    return this.http.get<any>(environment.apiHost + "/listing/recommendations?id=" + id);
+  }
+}
+
+export interface ListingRecsDTO {
+  listings: FullListingDTO[]
 }
 
 export interface ListingDTO {
@@ -55,6 +63,15 @@ export interface ListingDTO {
   destination: ListingDestinationDTO
 }
 
+export interface FullListingDTO {
+  id: number,
+  title: string,
+  price: number,
+  description: string,
+  image: string,
+  location: FullListingLocationDTO
+  rating: number
+}
 
 
 export interface ReturnedPropertyDTO {
@@ -84,6 +101,13 @@ export interface ListingLocationDTO {
   lat: number,
   lng: number, 
   address: string
+}
+
+export interface FullListingLocationDTO {
+  lat: number,
+  lng: number, 
+  address: string
+  destination: ListingDestinationDTO
 }
 
 export interface ListingDestinationDTO {

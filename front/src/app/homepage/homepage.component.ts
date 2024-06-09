@@ -1,4 +1,4 @@
-import { ListingDTO, PropertyDTO, PropertyService, ReturnedPropertyDTO } from './../../services/property.service';
+import { FullListingDTO, ListingDTO, ListingRecsDTO, PropertyDTO, PropertyService, ReturnedPropertyDTO } from './../../services/property.service';
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AddPropertyDialogComponent } from '../add-property-dialog/add-property-dialog.component';
@@ -15,6 +15,7 @@ import { ViewListingDialogComponent } from '../view-listing-dialog/view-listing-
 })
 export class HomepageComponent implements OnInit {
   properties: ListingDTO[] = [];
+  recListings: FullListingDTO[] = [];
   currentPage = 1;
   enableClick: boolean =true;
   pageSize = 4;
@@ -30,18 +31,19 @@ export class HomepageComponent implements OnInit {
     private propertyDetailsService: PropertyDetailsService) { }
 
   ngOnInit(): void {
-    this.loadItems();
 
-    let loggedUser = this.authService.getUser();
+    this.loggedUser = this.authService.getUser();
     // this.name = loggedUser? loggedUser.name: "";
     this.role = this.authService.getRole();
+
+    this.loadItems();
+
     // this.loggedUser = loggedUser;
     console.log("eee");
     // console.log(this.loggedUser.role)
   }
 
   loadItems(): void {
-    console.log("idi u kurac");
 
     // this.propertyService.getPaginatedProperties(this.currentPage, this.pageSize).subscribe({
     //   next: (value) => {
@@ -54,6 +56,22 @@ export class HomepageComponent implements OnInit {
     //     console.log(err);
     //   }
     // });
+    
+    if (this.role == "ROLE_TRAVELER") {
+      console.log(this.role)
+      this.propertyService.getRecsForUser(this.loggedUser.id).subscribe({
+        next: (value: ListingRecsDTO) => {
+              console.log("dobijeno za recs" + JSON.stringify(value, null, 2));
+              // this.currentPage = value.pageIndex;
+              // this.count = value.count;
+              console.log(value.listings[0]);
+              this.recListings = value.listings;
+            }, 
+            error: (err) => {
+              console.log(err);
+            }
+      });
+    }
 
     this.propertyService.getListingsForOwner().subscribe({
       next: (value) => {

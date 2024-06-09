@@ -31,6 +31,7 @@ public class AddListingDTO {
         this.image = image;
     }
 
+
     public String getTitle() {
         return title;
     }
@@ -86,4 +87,8 @@ public class AddListingDTO {
     public void setId(Long id) {
         this.id = id;
     }
+
+   
+
+    
 }

@@ -41,6 +41,7 @@
     "ngx-material-timepicker": "^5.5.3",
     "ngx-select-dropdown": "^3.3.1",
     "ngx-star-rating": "^2.1.0",
+    "ngx-stars": "^1.6.5",
     "rxjs": "~7.5.0",
     "sockjs-client": "^1.6.1",
     "stompjs": "^2.3.3",

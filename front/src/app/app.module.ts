@@ -24,12 +24,13 @@ import { LoginComponent } from './login/login.component';
 import { SideNavbarComponent } from './side-navbar/side-navbar.component';
 import { MapComponent } from './map/map.component';
 
-
+import { NgxStarsModule } from 'ngx-stars';
 import { RegisterComponent } from './register/register.component';
 import { ReportsComponent } from './reports/reports.component';
 import { BookingsComponent } from './bookings/bookings.component';
 import { DenyBookingComponent } from './deny-booking-dialog/deny-booking-dialog.component';
 import { ViewListingDialogComponent } from './view-listing-dialog/view-listing-dialog.component';
+import { ReviewDialogComponent } from './review-dialog/review-dialog.component';
 
 @NgModule({
   declarations: [
@@ -43,7 +44,8 @@ import { ViewListingDialogComponent } from './view-listing-dialog/view-listing-d
     ReportsComponent,
     BookingsComponent,
     DenyBookingComponent,
-    ViewListingDialogComponent
+    ViewListingDialogComponent,
+    ReviewDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -61,6 +63,7 @@ import { ViewListingDialogComponent } from './view-listing-dialog/view-listing-d
     CdTimerModule,
     NgxStarRatingModule,
     SelectDropDownModule,
+    NgxStarsModule,
 
     // JwtModule.forRoot({
     //   config: {

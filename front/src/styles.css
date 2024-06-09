@@ -315,3 +315,44 @@ label.star::before{
     /* box-shadow: 0 4px 8px 0 rgba(141, 141, 141, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); */
     position: relative;
 }
+
+.homepage-container {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 25px;
+    height: 94%;
+}
+
+.title-topper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.title {
+    color: #2C87D7;
+    font-weight: bolder !important;
+    font-size: 1.8em !important;
+}
+
+.card-holder {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px !important;
+}
+
+#recs-container {
+    margin-bottom: 20px;
+}
+
+#stars {
+    position: absolute;
+    margin-top: -18px;
+    margin-bottom: 20px;
+}
+
+::ng-deep label.star {
+    padding: 0 5px 0px 0px !important;
+    font-size: 15px !important;
+}

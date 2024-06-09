@@ -1,27 +1,8 @@
-.homepage-container {
-    display: flex;
-    flex-direction: column;
-    padding: 20px 25px;
-    height: 94%;
-}
 
-.title-topper {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
-
-.title {
-    color: #2C87D7;
-    font-weight: bolder !important;
-    font-size: 1.8em !important;
-}
-
-.card-holder {
-    margin-top: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px !important;
+.add-review-btn {
+    position: absolute;
+    bottom: 5px;
+    right: 10px;
 }
 
 app-property-card {
@@ -63,87 +44,7 @@ mat-paginator {
 }
 
 
-#card-container {
-    display: flex;
-    position: relative;
-    
-}
 
-.transition {
-    transition: transform 0.2s ease-in-out;
-}
-
-.transition:hover{
-    transform: scale(1.02);
-    cursor: pointer;
-}
-
-.image-container {
-    height: 220px;
-    width: 200px;
-    /* flex: 1; */
-    object-fit: cover;
-}
-
-.image-container-details {
-    height: 220px;
-    width: 50%;
-    /* flex: 1; */
-    object-fit: cover;
-}
-
-h2 {
-    font-weight: bold;
-    font-size: 1.4em;
-    margin-top: 12px;
-    margin-bottom: 10px;
-}
-
-.h2-bigger-font {
-    font-size: 1.7em;
-    font-weight: 700;
-}
-
-#info-container {
-    flex: 1;
-    height: 100%;
-    padding-left: 20px;
-}
-
-#info-container div {
-    margin-bottom: 6px;
-}
-
-#info-container i {
-    margin-right: 8px;
-}
-
-.custom-font {
-    font-size: 18px;
-}
-
-#info-container span {
-    font-weight: 400;
-    /* font-weight: 600;
-    font-size: 0.9em;
-    color: #555555 !important */
-}
-
-.button-container {
-    display: flex;
-    justify-content: space-between;
-    margin-right: 10px;
-    margin-top: -16px;
-}
-
-.button-container button {
-    width: 120px;
-    text-align: center !important;
-    border: none;
-    font-size: 1em !important;
-    padding: 5px 0px !important;
-    cursor: pointer;
-}
 
 .status {
     position: absolute;
