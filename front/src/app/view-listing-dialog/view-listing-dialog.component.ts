@@ -90,8 +90,30 @@ export class ViewListingDialogComponent implements OnInit {
 
   }
 
+  deleteDiscount() {
+    this.propertyService.deleteDiscount(this.listing.discount.id).subscribe({
+      next: (value) => {
+        this.snackBar.open(value.message, "", {
+          duration: 2700, panelClass: ['snack-bar-server-error']
+       });
+       this.listing.discount = null;
+      },
+      error: (err) => {
+        this.snackBar.open(err.error, "", {
+          duration: 2700, panelClass: ['snack-bar-server-error']
+       });
+      },
+    })
+  }
+
   addDiscount() {
     if (this.discountForm.valid) {
+      if (this.listing.discount) {
+        this.snackBar.open("Please delete the current discount before adding a new one.", "", {
+          duration: 2700, panelClass: ['snack-bar-server-error']
+       });
+       return;
+      }
       console.log(this.discountForm.value);
       let dto: AddDiscountDTO = {
         listingId: this.listing.id,
@@ -104,9 +126,10 @@ export class ViewListingDialogComponent implements OnInit {
       this.propertyService.addDiscount(dto).subscribe({
         next: (value) => {
             console.log("success" + value);
-            this.snackBar.open(value.message, "", {
+            this.snackBar.open("Discount added successfully!", "", {
               duration: 2700, panelClass: ['snack-bar-server-error']
            });
+           this.listing.discount = value;
         },
         error: (err) => {
           console.log(err)

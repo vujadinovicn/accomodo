@@ -22,7 +22,8 @@
                 </div>
                 <div>
                     <i [ngClass]="enableClick ? 'fa-solid fa-money-bill' : 'custom-font fa-money-bill'"></i>
-                    <span [ngClass]="enableClick ? 'black' : 'custom-font black'">Price: <span style="font-weight: 600 !important;">{{ listing.price }} euro</span></span>
+                    <span [ngClass]="enableClick ? 'black' : 'custom-font black'" *ngIf="!listing.discount">Price: <span style="font-weight: 600 !important;">{{ listing.price }} euro</span></span>
+                    <span [ngClass]="enableClick ? 'black' : 'custom-font black'" *ngIf="listing.discount">Price: <span style="text-decoration: line-through;">{{ listing.price }} euro</span> <span style="font-weight: 600 !important; margin-left: 10px;">{{listing.price  - listing.discount.amount}}e</span></span>
                 </div>
                 <div>
                     <i [ngClass]="enableClick ? 'fa-solid fa-layer-group blue' : 'custom-font fa-layer-group blue'"></i>
@@ -80,7 +81,7 @@
                     </form>
                 </div>
 
-                <div *ngIf="role == 'ROLE_OWNER'">
+                <div *ngIf="role == 'ROLE_OWNER'" style="overflow: scroll;">
                     <mat-expansion-panel>
                         <mat-expansion-panel-header>
                             <mat-panel-title>
@@ -88,25 +89,37 @@
                             </mat-panel-title>
                             <!-- <mat-panel-description></mat-panel-description> -->
                         </mat-expansion-panel-header>
-                        <hr style="border: 2px solid #D9D9D9;">
-                        <form id="add-discount-form" [formGroup]="discountForm">
-                            <div class="form-section" style="display: flex; flex-direction: column; vertical-align: middle; justify-content: space-between; align-items: baseline;">
-                                <mat-form-field style="margin-bottom: 20px;">
-                                    <mat-label>Choose the end of discount date</mat-label>
-                                    <input matInput [matDatepicker]="picker3" formControlName="validTo">
-                                    <mat-datepicker-toggle matIconSuffix [for]="picker3"></mat-datepicker-toggle>
-                                    <mat-datepicker #picker3></mat-datepicker>
-                                </mat-form-field>
-                                <mat-form-field style="margin-bottom: 20px;">
-                                    <mat-label>Discount amount [euro]</mat-label>
-                                    <input matInput type="number" name="amount" formControlName="amount">
-                                    <mat-error *ngIf="discountForm.get('amount')?.errors?.['required']">Entering amount is required</mat-error>
-                                </mat-form-field>
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <hr style="border: 2px solid #D9D9D9;">
+                            <form id="add-discount-form" [formGroup]="discountForm">
+                                <div class="form-section" style="display: flex; flex-direction: column; vertical-align: middle; justify-content: space-between; align-items: baseline;">
+                                    <mat-form-field style="margin-bottom: 20px;">
+                                        <mat-label>Choose the end of discount date</mat-label>
+                                        <input matInput [matDatepicker]="picker3" formControlName="validTo">
+                                        <mat-datepicker-toggle matIconSuffix [for]="picker3"></mat-datepicker-toggle>
+                                        <mat-datepicker #picker3></mat-datepicker>
+                                    </mat-form-field>
+                                    <mat-form-field style="margin-bottom: 20px;">
+                                        <mat-label>Discount amount [euro]</mat-label>
+                                        <input matInput type="number" name="amount" formControlName="amount">
+                                        <mat-error *ngIf="discountForm.get('amount')?.errors?.['required']">Entering amount is required</mat-error>
+                                    </mat-form-field>
+                                </div>
+                                <div id="send-request-btn-container" style="text-align: center; margin-top: -30px !important;">
+                                    <button id="send-request-btns" style="margin-right: 10px;" class="conf-button" type="submit" mat-raised-button (click)="addDiscount()">Add discount</button>
+                                </div>
+                            </form>
+                            <div class="discount-cont" *ngIf="listing.discount">
+                                <div class="discount-info">
+                                    <p class="disc-title light-blue">Active discount</p>
+                                    <p>Amount: {{listing.discount.amount}}e</p>
+                                    <p>Valid to: {{listing.discount.validTo  | date:'dd.MM.yyyy'}}</p>
+                                </div>
+                                <div class="discount-actions">
+                                    <button id="delete-discount-btn" style="margin-right: 10px;" class="back-red" type="button" mat-raised-button (click)="deleteDiscount()"><i class="fa-solid fa-trash"></i></button>
+                                </div>
                             </div>
-                            <div id="send-request-btn-container" style="text-align: center;">
-                                <button id="send-request-btns" style="margin-right: 10px;" class="conf-button" type="submit" mat-raised-button (click)="addDiscount()">Add discount</button>
-                            </div>
-                        </form>
+                        </div>
                     </mat-expansion-panel>
                 </div>
             </div>

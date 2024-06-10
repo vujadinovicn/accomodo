@@ -177,20 +177,23 @@ public class ListingService implements IListingService{
 
 
 	@Override
-	public void addDiscount(AddDiscountDTO dto) {
+	public ReturnedDiscountDTO addDiscount(AddDiscountDTO dto) {
 		Listing listing = allListings.findById(dto.getListingId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing does not exist!"));
 		
+		Discount prev = allDiscounts.findByListingId(listing.getId()).orNull();
+		if (prev != null) {
+			throw new RuntimeException("There's already an active discount for the listing. Please delete it before adding a new one.");
+		}
+
 		if (dto.getAmount() > listing.getPrice())
 			throw new RuntimeException("Discount amount can't be higher than the listing price.");
 
 		Discount discount = new Discount(dto.getAmount(), dto.getValidTo(), listing);
-		Traveler traveler = allTravelers.findById(1L).get();
 
 		allDiscounts.save(discount);
 		allDiscounts.flush();
 
 		cepKieSession.insert(discount);
-		cepKieSession.insert(traveler);
 		int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
@@ -201,6 +204,8 @@ public class ListingService implements IListingService{
                 mailService.sendDiscountEmail(emailEvent);
             }
         }
+
+		return new ReturnedDiscountDTO(discount.getId(), discount.getAmount(), discount.getValidTo());
 	}
 
 	@Override
@@ -377,6 +382,26 @@ public class ListingService implements IListingService{
 			dtos.add(dto);
 		}
 		return dtos;
+	}
+
+	@Override
+	public void deleteDiscount(Long id) {
+		Discount discount = this.allDiscounts.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Discount does not exist!"));
+
+		Collection<?> allDiscountsFromSession = cepKieSession.getObjects(new ClassObjectFilter(Discount.class));
+
+        for (Object obj : allDiscountsFromSession) {
+            Discount discountFromSession = (Discount) obj;
+            if (discountFromSession.getId().equals(id)) {
+                FactHandle factHandle = cepKieSession.getFactHandle(discountFromSession);
+                if (factHandle != null) {
+                    cepKieSession.delete(factHandle);
+                }
+            }
+        }
+
+		this.allDiscounts.delete(discount);
+		this.allDiscounts.flush();
 	}
 
 	

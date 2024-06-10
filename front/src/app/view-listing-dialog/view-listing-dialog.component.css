@@ -92,3 +92,43 @@
 .title-cont {
     position: relative;
 }
+
+.discount-cont {
+    margin-top: 25px;
+    position: relative;
+    border: 2px solid lightblue;
+    border-radius: 10px;
+    padding: 5px;
+    width: 90%;
+}
+
+.disc-title {
+    font-weight: bold;
+}
+
+.discount-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.discount-actions {
+    position: absolute;
+    right: 0px;
+    bottom: 25px;
+}
+
+#delete-discount-btn {
+    width: fit-content;
+    margin: 0px;
+    padding: 10px !important;
+    border-radius: 50px;
+    text-align: center;
+    color: white;
+    min-width: 0px;
+    line-height: 1em; 
+}
+
+#delete-discount-btn i {
+    margin: 0px !important;
+}

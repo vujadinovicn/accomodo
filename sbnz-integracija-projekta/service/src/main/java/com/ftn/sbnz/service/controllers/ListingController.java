@@ -23,6 +23,7 @@ import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
 import com.ftn.sbnz.service.dtos.MessageDTO;
 import com.ftn.sbnz.service.dtos.RecommendedListingsDTO;
+import com.ftn.sbnz.service.dtos.ReturnedDiscountDTO;
 import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
 import com.ftn.sbnz.service.dtos.ReturnedReviewDTO;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
@@ -65,8 +66,17 @@ public class ListingController {
     @RequestMapping(path = "/discount", method = RequestMethod.POST)
 	public ResponseEntity<?>  addDiscount(@RequestBody AddDiscountDTO dto) {
 		try {
-        this.listingService.addDiscount(dto);
-			return new ResponseEntity<MessageDTO>(new MessageDTO("Discount added successfully."), HttpStatus.OK);
+		return new ResponseEntity<ReturnedDiscountDTO>(this.listingService.addDiscount(dto), HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@RequestMapping(path = "/discount", method = RequestMethod.DELETE)
+	public ResponseEntity<?>  addDiscount(@RequestParam Long id) {
+		try {
+			this.listingService.deleteDiscount(id);
+			return new ResponseEntity<MessageDTO>(new MessageDTO("Discount deleted successfully."), HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		}

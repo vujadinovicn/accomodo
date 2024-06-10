@@ -64,6 +64,10 @@ export class PropertyService {
     });
   }
 
+  deleteDiscount(id: number): Observable<any> {
+    return this.http.delete<any>(environment.apiHost + "/listing/discount?id=" + id);
+  }
+
   
 }
 
