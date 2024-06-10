@@ -116,6 +116,37 @@ h2 {
     position: relative;
 }
 
+.discount-card {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    color: #77addd;
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+}
+
+.price-dis-card {
+    background-color: #77addd !important;
+    width: fit-content;
+    color: white !important;
+    border-radius: 7px;
+    padding: 5px;
+    font-weight: bold;
+}
+
+.price-card {
+    background-color: #77addd !important;
+    width: fit-content;
+    color: white !important;
+    border-radius: 7px;
+    padding: 5px;
+    position: absolute;
+    bottom: 10px;
+    right: 15px;
+    font-weight: bold;
+}
+
 @media screen and (max-width: 900px) { 
     
     #card-container{ 

@@ -23,7 +23,7 @@ import { HomepageComponent } from './homepage/homepage.component';
 import { LoginComponent } from './login/login.component';
 import { SideNavbarComponent } from './side-navbar/side-navbar.component';
 import { MapComponent } from './map/map.component';
-
+import { MatExpansionModule } from '@angular/material/expansion';
 import { NgxStarsModule } from 'ngx-stars';
 import { RegisterComponent } from './register/register.component';
 import { ReportsComponent } from './reports/reports.component';
@@ -64,6 +64,7 @@ import { ReviewDialogComponent } from './review-dialog/review-dialog.component';
     NgxStarRatingModule,
     SelectDropDownModule,
     NgxStarsModule,
+    MatExpansionModule,
 
     // JwtModule.forRoot({
     //   config: {

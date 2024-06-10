@@ -1,4 +1,4 @@
-import { PropertyService, ReasonDTO, ReturnedReviewDTO } from '../../services/property.service';
+import { AddDiscountDTO, PropertyService, ReasonDTO, ReturnedReviewDTO } from '../../services/property.service';
 import { Component, OnInit, Inject, Output, EventEmitter } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -32,6 +32,10 @@ export class ViewListingDialogComponent implements OnInit {
   bookingForm = new FormGroup({
     endDate: new FormControl('', [Validators.required]),
     startDate: new FormControl('', [Validators.required]),
+  })
+  discountForm = new FormGroup({
+    validTo: new FormControl('', [Validators.required]),
+    amount: new FormControl(0, [Validators.required]),
   })
 
   ngOnInit(): void {
@@ -85,7 +89,37 @@ export class ViewListingDialogComponent implements OnInit {
   addProperty(){
 
   }
+
+  addDiscount() {
+    if (this.discountForm.valid) {
+      console.log(this.discountForm.value);
+      let dto: AddDiscountDTO = {
+        listingId: this.listing.id,
+        ownerId: this.authService.getId(),
+        amount: this.discountForm.value.amount!,
+        validTo: this.discountForm.value.validTo!
+      }
+
+      console.log(dto);
+      this.propertyService.addDiscount(dto).subscribe({
+        next: (value) => {
+            console.log("success" + value);
+            this.snackBar.open(value.message, "", {
+              duration: 2700, panelClass: ['snack-bar-server-error']
+           });
+        },
+        error: (err) => {
+          console.log(err)
+          this.snackBar.open(err.error, "", {
+            duration: 2700, panelClass: ['snack-bar-server-error']
+         });
+        },
+      });
+    }
+  }
 }
+
+
 
 export interface MakeBookingDTO{
   startDate: string,

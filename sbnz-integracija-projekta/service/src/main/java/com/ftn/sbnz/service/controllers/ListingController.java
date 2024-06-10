@@ -63,8 +63,13 @@ public class ListingController {
 	}
 
     @RequestMapping(path = "/discount", method = RequestMethod.POST)
-	public void addDiscount(@RequestBody AddDiscountDTO dto) {
+	public ResponseEntity<?>  addDiscount(@RequestBody AddDiscountDTO dto) {
+		try {
         this.listingService.addDiscount(dto);
+			return new ResponseEntity<MessageDTO>(new MessageDTO("Discount added successfully."), HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+		}
 	}
 
     @RequestMapping(path = "/review", method = RequestMethod.POST)
@@ -96,7 +101,7 @@ public class ListingController {
 	@RequestMapping(path = "/recommendations", method = RequestMethod.GET)
 	public ResponseEntity<?> getRecommendations(@RequestParam Long id) {
 		try {
-			List<Listing> recs = this.listingService.getListingRecommendations(id);
+			List<ReturnedListingDTO> recs = this.listingService.getListingRecommendations(id);
 			return new ResponseEntity<RecommendedListingsDTO>(new RecommendedListingsDTO(recs), HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<String>("Fetching listing recs failed!", HttpStatus.INTERNAL_SERVER_ERROR);

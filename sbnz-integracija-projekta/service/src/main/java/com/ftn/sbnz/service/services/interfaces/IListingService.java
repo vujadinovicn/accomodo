@@ -22,7 +22,7 @@ public interface IListingService {
     public void backward();
     public List<ReturnedListingDTO> getListingsForOwner();
     Review getReview(long listingId, long travelerId);
-    public List<Listing> getListingRecommendations(Long id);
+    public List<ReturnedListingDTO> getListingRecommendations(Long id);
     public List<ReturnedListingDTO> getAll();
     public List<ReturnedReviewDTO> getReviews(Long id);
     

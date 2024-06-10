@@ -38,6 +38,7 @@ import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
 import com.ftn.sbnz.service.dtos.ListingLocationDTO;
+import com.ftn.sbnz.service.dtos.ReturnedDiscountDTO;
 import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
 import com.ftn.sbnz.service.dtos.ReturnedReviewDTO;
 import com.ftn.sbnz.service.mail.IMailService;
@@ -178,6 +179,10 @@ public class ListingService implements IListingService{
 	@Override
 	public void addDiscount(AddDiscountDTO dto) {
 		Listing listing = allListings.findById(dto.getListingId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing does not exist!"));
+		
+		if (dto.getAmount() > listing.getPrice())
+			throw new RuntimeException("Discount amount can't be higher than the listing price.");
+
 		Discount discount = new Discount(dto.getAmount(), dto.getValidTo(), listing);
 		Traveler traveler = allTravelers.findById(1L).get();
 
@@ -291,18 +296,10 @@ public class ListingService implements IListingService{
 
 	@Override
 	public List<ReturnedListingDTO> getListingsForOwner() {
-		List<ReturnedListingDTO> dtos = new ArrayList<>();
 		System.out.println(userService.getCurrentUser());
 		// List<Listing> listings = allListings.findAllByOwnerId(userService.getCurrentUser().getId());
 		List<Listing> listings = allListings.findAllByOwnerId(2L);
-		for (int i = 0; i < listings.size(); i ++){
-			ListingDestinationDTO destinationDto = new ListingDestinationDTO(listings.get(i).getLocation().getDestination().getName());
-			ListingLocationDTO locationDto = new ListingLocationDTO(listings.get(i).getLocation().getLat(), listings.get(i).getLocation().getLng(), listings.get(i).getLocation().getAddress());
-			ReturnedListingDTO dto = new ReturnedListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
-					 destinationDto, locationDto, "", listings.get(i).getRating());
-			dtos.add(dto);
-		}
-		return dtos;
+		return parseListingToDto(listings);
 	}
 
 	
@@ -313,7 +310,7 @@ public class ListingService implements IListingService{
 	}
 
 	@Override
-	public List<Listing> getListingRecommendations(Long id) {
+	public List<ReturnedListingDTO> getListingRecommendations(Long id) {
 		Traveler traveler = allTravelers.findById(id).orElseThrow();
 
 		FetchListingRecomendationEvent event = new FetchListingRecomendationEvent(traveler, LocalDateTime.now());		
@@ -332,7 +329,7 @@ public class ListingService implements IListingService{
                 for (Listing listing: result.getListings()) {
                     System.out.println(listing);
                 }
-                return result.getListings();
+                return parseListingToDto(result.getListings());
             }
         }
 
@@ -341,16 +338,8 @@ public class ListingService implements IListingService{
 
 	@Override
 	public List<ReturnedListingDTO> getAll() {
-		List<ReturnedListingDTO> dtos = new ArrayList<>();
 		List<Listing> listings = allListings.findAll();
-		for (int i = 0; i < listings.size(); i ++){
-			ListingDestinationDTO destinationDto = new ListingDestinationDTO(listings.get(i).getLocation().getDestination().getName());
-			ListingLocationDTO locationDto = new ListingLocationDTO(listings.get(i).getLocation().getLat(), listings.get(i).getLocation().getLng(), listings.get(i).getLocation().getAddress());
-			ReturnedListingDTO dto = new ReturnedListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
-					 destinationDto, locationDto, "", listings.get(i).getRating());
-			dtos.add(dto);
-		}
-		return dtos;
+		return parseListingToDto(listings);
 	}
 
 	@Override
@@ -371,6 +360,22 @@ public class ListingService implements IListingService{
 		// 	addTravelerViewedListingEvent(userService.getCurrentUser(), listing);
 		// }
 
+		return dtos;
+	}
+
+	private List<ReturnedListingDTO> parseListingToDto(List<Listing> listings) {
+		List<ReturnedListingDTO> dtos = new ArrayList<>();
+		for (int i = 0; i < listings.size(); i ++){
+			ListingDestinationDTO destinationDto = new ListingDestinationDTO(listings.get(i).getLocation().getDestination().getName());
+			ListingLocationDTO locationDto = new ListingLocationDTO(listings.get(i).getLocation().getLat(), listings.get(i).getLocation().getLng(), listings.get(i).getLocation().getAddress());
+			ReturnedListingDTO dto = new ReturnedListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
+					 destinationDto, locationDto, "", listings.get(i).getRating());
+
+			Discount discount = allDiscounts.findByListingId(listings.get(i).getId()).orNull();
+			if (discount != null)
+				dto.setDiscount(new ReturnedDiscountDTO(discount.getId(), discount.getAmount(), discount.getValidTo()));
+			dtos.add(dto);
+		}
 		return dtos;
 	}
 
