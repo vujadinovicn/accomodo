@@ -51,10 +51,28 @@ export class PropertyService {
   getAllListings() {
     return this.http.get<any>(environment.apiHost + "/listing/all");
   }
+
+  getReviewsForListing(id: number): Observable<any> {
+    return this.http.get<any>(environment.apiHost + "/listing/review?id=" + id);
+  }
+
+  addDiscount(dto: AddDiscountDTO): Observable<any> {
+    return this.http.post<any>(environment.apiHost + "/listing/discount", dto,  {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      })
+    });
+  }
+
+  deleteDiscount(id: number): Observable<any> {
+    return this.http.delete<any>(environment.apiHost + "/listing/discount?id=" + id);
+  }
+
+  
 }
 
 export interface ListingRecsDTO {
-  listings: FullListingDTO[]
+  listings: ReturnedListingDTO[]
 }
 
 export interface ListingDTO {
@@ -75,7 +93,9 @@ export interface ReturnedListingDTO {
   image: string,
   location: ListingLocationDTO,
   destination: ListingDestinationDTO,
-  rating: number
+  rating: number,
+  discount: ReturnedDiscountDTO
+
 }
 
 export interface FullListingDTO {
@@ -86,6 +106,7 @@ export interface FullListingDTO {
   image: string,
   location: FullListingLocationDTO
   rating: number
+
 }
 
 
@@ -174,4 +195,27 @@ export interface UserDTO {
 
 export interface ReasonDTO {
   reason: string
+}
+
+export interface ReturnedReviewDTO {
+  id: number,
+  rating: number,
+  comment: string,
+  date: string,
+  travelerFullName: string,
+  travelerId: number,
+  listingId: number
+}
+
+export interface AddDiscountDTO {
+  listingId: number,
+  ownerId: number,
+  amount: number,
+  validTo: string
+}
+
+export interface ReturnedDiscountDTO {
+  id: number,
+  amount: number,
+  validTo: string
 }

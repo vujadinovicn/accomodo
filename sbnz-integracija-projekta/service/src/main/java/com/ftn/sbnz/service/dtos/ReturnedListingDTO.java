@@ -9,6 +9,7 @@ public class ReturnedListingDTO {
     private ListingLocationDTO location;
     private String image;
     private double rating;
+    private ReturnedDiscountDTO discount;
 
     public ReturnedListingDTO(Long id, String title, double price, String description,
             ListingDestinationDTO destination, ListingLocationDTO location, String image, double rating) {
@@ -84,6 +85,14 @@ public class ReturnedListingDTO {
 
     public void setRating(double rating) {
         this.rating = rating;
+    }
+
+    public ReturnedDiscountDTO getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(ReturnedDiscountDTO discount) {
+        this.discount = discount;
     }
 
 }

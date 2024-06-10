@@ -15,7 +15,7 @@ import { ViewListingDialogComponent } from '../view-listing-dialog/view-listing-
 })
 export class HomepageComponent implements OnInit {
   properties: ReturnedListingDTO[] = [];
-  recListings: FullListingDTO[] = [];
+  recListings: ReturnedListingDTO[] = [];
   currentPage = 1;
   enableClick: boolean =true;
   pageSize = 4;

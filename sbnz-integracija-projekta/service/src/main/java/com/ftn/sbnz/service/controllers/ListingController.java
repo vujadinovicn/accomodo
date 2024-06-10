@@ -23,7 +23,9 @@ import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
 import com.ftn.sbnz.service.dtos.MessageDTO;
 import com.ftn.sbnz.service.dtos.RecommendedListingsDTO;
+import com.ftn.sbnz.service.dtos.ReturnedDiscountDTO;
 import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
+import com.ftn.sbnz.service.dtos.ReturnedReviewDTO;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 
 import jakarta.validation.Valid;
@@ -62,8 +64,22 @@ public class ListingController {
 	}
 
     @RequestMapping(path = "/discount", method = RequestMethod.POST)
-	public void addDiscount(@RequestBody AddDiscountDTO dto) {
-        this.listingService.addDiscount(dto);
+	public ResponseEntity<?>  addDiscount(@RequestBody AddDiscountDTO dto) {
+		try {
+		return new ResponseEntity<ReturnedDiscountDTO>(this.listingService.addDiscount(dto), HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@RequestMapping(path = "/discount", method = RequestMethod.DELETE)
+	public ResponseEntity<?>  addDiscount(@RequestParam Long id) {
+		try {
+			this.listingService.deleteDiscount(id);
+			return new ResponseEntity<MessageDTO>(new MessageDTO("Discount deleted successfully."), HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+		}
 	}
 
     @RequestMapping(path = "/review", method = RequestMethod.POST)
@@ -77,6 +93,16 @@ public class ListingController {
 		}
 	}
 
+	@RequestMapping(path = "/review", method = RequestMethod.GET)
+	public ResponseEntity<?> getReviews(@RequestParam Long id) {
+		try {
+			List<ReturnedReviewDTO> reviews = this.listingService.getReviews(id);
+			return new ResponseEntity<List<ReturnedReviewDTO>>(reviews, HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+		}
+	}
+
 	@RequestMapping(path = "/backward", method = RequestMethod.GET)
 	public void backward() {
         this.listingService.backward();
@@ -85,7 +111,7 @@ public class ListingController {
 	@RequestMapping(path = "/recommendations", method = RequestMethod.GET)
 	public ResponseEntity<?> getRecommendations(@RequestParam Long id) {
 		try {
-			List<Listing> recs = this.listingService.getListingRecommendations(id);
+			List<ReturnedListingDTO> recs = this.listingService.getListingRecommendations(id);
 			return new ResponseEntity<RecommendedListingsDTO>(new RecommendedListingsDTO(recs), HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<String>("Fetching listing recs failed!", HttpStatus.INTERNAL_SERVER_ERROR);

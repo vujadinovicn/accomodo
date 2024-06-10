@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 
 @Entity
 public class Discount implements Serializable {
@@ -18,7 +19,7 @@ public class Discount implements Serializable {
     private double amount;
     private LocalDateTime validTo;
 
-    @ManyToOne
+    @OneToOne
     private Listing listing;
 
     public Discount() {}

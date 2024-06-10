@@ -38,7 +38,9 @@ import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
 import com.ftn.sbnz.service.dtos.ListingLocationDTO;
+import com.ftn.sbnz.service.dtos.ReturnedDiscountDTO;
 import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
+import com.ftn.sbnz.service.dtos.ReturnedReviewDTO;
 import com.ftn.sbnz.service.mail.IMailService;
 import com.ftn.sbnz.service.repositories.DestinationRepository;
 import com.ftn.sbnz.service.repositories.DiscountRepository;
@@ -92,14 +94,14 @@ public class ListingService implements IListingService{
 		Listing listing = allListings.findById(dto.getListingId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing does not exist!"));
 
 		if (user.getRole() == UserRole.TRAVELER) {
-			addTravelerViewedListingEvent(user, listing);
+			addTravelerViewedListingEvent(user.getId(), listing);
 		}
 
 		return listing;
 	}
 
-	private void addTravelerViewedListingEvent(User user, Listing listing) {
-		Traveler traveler = allTravelers.findById(user.getId()).get();
+	private void addTravelerViewedListingEvent(Long travelerId, Listing listing) {
+		Traveler traveler = allTravelers.findById(travelerId).get();
 
 		ListingViewedEvent viewedEvent = new ListingViewedEvent(traveler, listing);
 		
@@ -114,7 +116,6 @@ public class ListingService implements IListingService{
         //         break;
         //     }
         // }
-		cepKieSession.insert(traveler);
         int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
@@ -176,16 +177,23 @@ public class ListingService implements IListingService{
 
 
 	@Override
-	public void addDiscount(AddDiscountDTO dto) {
+	public ReturnedDiscountDTO addDiscount(AddDiscountDTO dto) {
 		Listing listing = allListings.findById(dto.getListingId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing does not exist!"));
+		
+		Discount prev = allDiscounts.findByListingId(listing.getId()).orNull();
+		if (prev != null) {
+			throw new RuntimeException("There's already an active discount for the listing. Please delete it before adding a new one.");
+		}
+
+		if (dto.getAmount() > listing.getPrice())
+			throw new RuntimeException("Discount amount can't be higher than the listing price.");
+
 		Discount discount = new Discount(dto.getAmount(), dto.getValidTo(), listing);
-		Traveler traveler = allTravelers.findById(1L).get();
 
 		allDiscounts.save(discount);
 		allDiscounts.flush();
 
 		cepKieSession.insert(discount);
-		cepKieSession.insert(traveler);
 		int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
@@ -196,6 +204,8 @@ public class ListingService implements IListingService{
                 mailService.sendDiscountEmail(emailEvent);
             }
         }
+
+		return new ReturnedDiscountDTO(discount.getId(), discount.getAmount(), discount.getValidTo());
 	}
 
 	@Override
@@ -220,10 +230,10 @@ public class ListingService implements IListingService{
 		LocalDateTime timestamp = LocalDateTime.now();
 		Review review = new Review(dto.getRating(), dto.getComment(), timestamp, listing, traveler);
 
-		updateListingRating(listing);
-
 		allReviews.save(review);
 		allReviews.flush();
+
+		updateListingRating(listing);
 
 		cepKieSession.insert(review);
 
@@ -291,18 +301,10 @@ public class ListingService implements IListingService{
 
 	@Override
 	public List<ReturnedListingDTO> getListingsForOwner() {
-		List<ReturnedListingDTO> dtos = new ArrayList<>();
 		System.out.println(userService.getCurrentUser());
 		// List<Listing> listings = allListings.findAllByOwnerId(userService.getCurrentUser().getId());
 		List<Listing> listings = allListings.findAllByOwnerId(2L);
-		for (int i = 0; i < listings.size(); i ++){
-			ListingDestinationDTO destinationDto = new ListingDestinationDTO(listings.get(i).getLocation().getDestination().getName());
-			ListingLocationDTO locationDto = new ListingLocationDTO(listings.get(i).getLocation().getLat(), listings.get(i).getLocation().getLng(), listings.get(i).getLocation().getAddress());
-			ReturnedListingDTO dto = new ReturnedListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
-					 destinationDto, locationDto, "", listings.get(i).getRating());
-			dtos.add(dto);
-		}
-		return dtos;
+		return parseListingToDto(listings);
 	}
 
 	
@@ -313,7 +315,7 @@ public class ListingService implements IListingService{
 	}
 
 	@Override
-	public List<Listing> getListingRecommendations(Long id) {
+	public List<ReturnedListingDTO> getListingRecommendations(Long id) {
 		Traveler traveler = allTravelers.findById(id).orElseThrow();
 
 		FetchListingRecomendationEvent event = new FetchListingRecomendationEvent(traveler, LocalDateTime.now());		
@@ -332,7 +334,7 @@ public class ListingService implements IListingService{
                 for (Listing listing: result.getListings()) {
                     System.out.println(listing);
                 }
-                return result.getListings();
+                return parseListingToDto(result.getListings());
             }
         }
 
@@ -341,16 +343,65 @@ public class ListingService implements IListingService{
 
 	@Override
 	public List<ReturnedListingDTO> getAll() {
-		List<ReturnedListingDTO> dtos = new ArrayList<>();
 		List<Listing> listings = allListings.findAll();
+		return parseListingToDto(listings);
+	}
+
+	@Override
+	public List<ReturnedReviewDTO> getReviews(Long listingId) {
+		Listing listing = allListings.findById(listingId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing does not exist!"));
+		List<Review> reviews = allReviews.findAllByListingId(listingId);
+
+		List<ReturnedReviewDTO> dtos = new ArrayList<>();
+		for (Review review: reviews) {
+			ReturnedReviewDTO dto = new ReturnedReviewDTO(review.getId(), review.getRating(), review.getComment(), review.getDate(), listingId, review.getTraveler().getId(), review.getTraveler().getName() + " " + review.getTraveler().getLastname());
+			dtos.add(dto);
+		}
+
+		addTravelerViewedListingEvent(3l, listing);
+
+		//TODO: ovo kad se popravi getcurruser
+		// if (userService.getCurrentUser().getRole() == UserRole.TRAVELER) {
+		// 	addTravelerViewedListingEvent(userService.getCurrentUser(), listing);
+		// }
+
+		return dtos;
+	}
+
+	private List<ReturnedListingDTO> parseListingToDto(List<Listing> listings) {
+		List<ReturnedListingDTO> dtos = new ArrayList<>();
 		for (int i = 0; i < listings.size(); i ++){
 			ListingDestinationDTO destinationDto = new ListingDestinationDTO(listings.get(i).getLocation().getDestination().getName());
 			ListingLocationDTO locationDto = new ListingLocationDTO(listings.get(i).getLocation().getLat(), listings.get(i).getLocation().getLng(), listings.get(i).getLocation().getAddress());
 			ReturnedListingDTO dto = new ReturnedListingDTO(listings.get(i).getId(), listings.get(i).getTitle(), listings.get(i).getPrice(), listings.get(i).getDescription(),
 					 destinationDto, locationDto, "", listings.get(i).getRating());
+
+			Discount discount = allDiscounts.findByListingId(listings.get(i).getId()).orNull();
+			if (discount != null)
+				dto.setDiscount(new ReturnedDiscountDTO(discount.getId(), discount.getAmount(), discount.getValidTo()));
 			dtos.add(dto);
 		}
 		return dtos;
+	}
+
+	@Override
+	public void deleteDiscount(Long id) {
+		Discount discount = this.allDiscounts.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Discount does not exist!"));
+
+		Collection<?> allDiscountsFromSession = cepKieSession.getObjects(new ClassObjectFilter(Discount.class));
+
+        for (Object obj : allDiscountsFromSession) {
+            Discount discountFromSession = (Discount) obj;
+            if (discountFromSession.getId().equals(id)) {
+                FactHandle factHandle = cepKieSession.getFactHandle(discountFromSession);
+                if (factHandle != null) {
+                    cepKieSession.delete(factHandle);
+                }
+            }
+        }
+
+		this.allDiscounts.delete(discount);
+		this.allDiscounts.flush();
 	}
 
 	

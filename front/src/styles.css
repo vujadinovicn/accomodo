@@ -239,6 +239,10 @@ label.star::before{
     color: #ece929 !important;
 }
 
+.star-yellow {
+    color: #fcde4f !important;
+}
+
 .black {
     color: #383838 !important;
 }
