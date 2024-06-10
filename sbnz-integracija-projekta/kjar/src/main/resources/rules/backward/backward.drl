@@ -1,6 +1,9 @@
 package backward;
+import com.ftn.sbnz.model.models.ListingAccumulator;
+import com.ftn.sbnz.model.models.LocationBackward;
+import com.ftn.sbnz.model.models.Listing;
 
-import com.ftn.sbnz.backward.model.models.LocationBackward;
+global String backwardLocation;
 
 query isContainedIn( String x, String y )
   LocationBackward( x, y; )
@@ -8,10 +11,17 @@ query isContainedIn( String x, String y )
   ( LocationBackward( z, y; ) and isContainedIn( x, z; ) )
 end
 
-rule "go4"
+rule "Find by locations using backward"
+no-loop true
 when
-    String( this == "go4" )
-    isContainedIn(thing, "Serbia"; )
+    // String( this == "go4" )
+    $listing: Listing($location: location.address, $id: id)
+    // LocationBackward( $location, "Savski Venac"; )
+    isContainedIn($location, backwardLocation; )
+    $accumulator: ListingAccumulator()
 then
-    System.out.println( "thing " + thing + " is in the Office" );
+    modify($accumulator){
+      addListing($id)
+    }
+    System.out.println( "Place "  + $id +  " is in " + backwardLocation);
 end

@@ -25,12 +25,12 @@
                 <span [ngClass]="enableClick ? 'black' : 'custom-font black'">Price: <span style="font-weight: 600 !important;">{{ listing.price }} Euro</span></span>
     
             </div>
-            <div>
-                <i [ngClass]="enableClick ? 'fa-solid fa-layer-group blue' : 'custom-font fa-solid fa-layer-group blue'" ></i>
-                <span [ngClass]="enableClick ? 'black' : 'custom-font black'">Description: <span style="font-weight: 600 !important;">{{ listing.description }}</span></span>
+            <div style="max-width: 300px;">
+                <i style="display: inline-block;" [ngClass]="enableClick ? 'fa-solid fa-layer-group blue' : 'custom-font fa-solid fa-layer-group blue'" ></i>
+                <span style="display: inline-block;" [ngClass]="enableClick ? 'black description-text' : 'custom-font black description-text'">Description: <span style="font-weight: 600 !important;">{{ listing.description }}</span></span>
             </div>
             
-            <div *ngIf="this.role=='ROLE_OWNER'">
+            <div *ngIf="this.role=='ROLE_TRAVELER'">
             <hr style="border: 2px solid #D9D9D9;">
             <div>
                 <h3 style="text-align: center; margin-bottom: 0;" [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">Interested?</h3>
@@ -57,13 +57,22 @@
                         <mat-datepicker #picker2></mat-datepicker>
                     </mat-form-field>
                 </div>
-                <div id="send-request-btn-container" style="text-align: center; float: right;">
+                <div id="send-request-btn-container" *ngIf="role == 'ROLE_TRAVELER'" style="text-align: center; float: right;">
                     <button id="send-request-btns" style="margin-right: 10px;" class="conf-button" type="submit" mat-raised-button (click)="book(false)">Reserve</button>
                     <button id="send-request-btn" class="conf-button back-light-blue" type="submit" mat-raised-button (click)="book(true)">Book</button>
                 </div>
+                
             </form>
+            
             </div>
-            </div>
+            <div *ngIf="role == 'ROLE_OWNER'" style="float: right; margin-left: 100px; right: 0; bottom: 0; position: absolute;">
+                <button style="margin-top: 10px !important;
+                margin-bottom: 10px;
+                /* width: 80px; */
+                border: none;
+                padding: 10px !important" class="conf-button add-prop-btn back-red" (click)="deleteListing()">Delete</button>
+            </div>    
+        </div>
         
         </div>
     </div>

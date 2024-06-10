@@ -18,9 +18,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.ftn.sbnz.service.security.auth.RestAuthenticationEntryPoint;
 import com.ftn.sbnz.service.security.auth.TokenAuthenticationFilter;
@@ -79,7 +76,7 @@ public class WebSecurityConfig {
         http.exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint);
 
     	http.authorizeRequests()
-			.requestMatchers(myRequestMatcher("/api/**")).permitAll()
+			// .requestMatchers(myRequestMatcher("/api/**")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/user/login")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/user")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/oauth/callback")).permitAll()
@@ -90,7 +87,7 @@ public class WebSecurityConfig {
 			.requestMatchers(myRequestMatcher("api/certificate/validate-upload")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/user/rotatePassword")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/user/**")).permitAll()
-			.requestMatchers(myRequestMatcher("/api/**")).permitAll()
+			// .requestMatchers(myRequestMatcher("/api/**")).permitAll()
 			.anyRequest().authenticated().and()
 			.cors().and()
 			.addFilterBefore(new TokenAuthenticationFilter(tokenUtils,  userDetailsService(), tokenService), BasicAuthenticationFilter.class);
@@ -111,7 +108,8 @@ public class WebSecurityConfig {
     @Bean           
     public WebSecurityCustomizer webSecurityCustomizer() {     
     	// Dozvoljena POST metoda na ruti /auth/login, za svaki drugi tip HTTP metode greska je 401 Unauthorized
-    	return (web) -> web.ignoring().antMatchers(HttpMethod.POST, "/api/user/login").antMatchers(HttpMethod.POST, "/api/user");
+    	return (web) -> web.ignoring().antMatchers(HttpMethod.POST, "/api/user/login").
+		antMatchers(HttpMethod.POST, "/api/user").antMatchers(HttpMethod.PUT, "api/listing/login");
     }
 
 	private RequestMatcher myRequestMatcher(String endpoint) {

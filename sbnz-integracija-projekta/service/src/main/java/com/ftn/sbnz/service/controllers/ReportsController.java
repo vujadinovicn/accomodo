@@ -19,12 +19,12 @@ public class ReportsController {
     private IReportsService reportsService;
     
     @GetMapping(value = "/top-owner")
-	public Map<String, Object> getTopDestinationsForOwner() {
+	public Map<String, Long> getTopDestinationsForOwner() {
         return this.reportsService.getTopDestinationsForOwner();
 	}
 
     @GetMapping(value = "/top-traveler")
-	public Map<String, Object> getTopDestinationsForTraveler() {
+	public Map<String, Long> getTopDestinationsForTraveler() {
         return this.reportsService.getTopDestinationsForTraveler();
 	}
 
@@ -39,12 +39,12 @@ public class ReportsController {
 	}
 
     @GetMapping(value = "/top-owners")
-	public Map<String, Object> getTopOwners() {
+	public Map<String, Long> getTopOwners() {
         return this.reportsService.getTopOwners();
 	}
 
     @GetMapping(value = "/top-travelers")
-	public Map<String, Object> getTopTravelers() {
+	public Map<String, Long> getTopTravelers() {
         return this.reportsService.getTopTravelers();
 	}
 

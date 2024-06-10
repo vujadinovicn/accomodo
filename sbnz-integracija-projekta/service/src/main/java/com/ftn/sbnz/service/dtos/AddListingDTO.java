@@ -9,6 +9,7 @@ public class AddListingDTO {
     private ListingLocationDTO location;
     private String image;
 
+    public AddListingDTO(){}
     
     public AddListingDTO(String title, double price, String description, ListingDestinationDTO destination,
             ListingLocationDTO location, String image) {

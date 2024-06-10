@@ -4,11 +4,11 @@ import java.util.Map;
 
 public interface IReportsService {
 
-    public Map<String, Object> getTopDestinationsForOwner();
-    public Map<String, Object> getTopDestinationsForTraveler();
+    public Map<String, Long> getTopDestinationsForOwner();
+    public Map<String, Long> getTopDestinationsForTraveler();
     public Map<String, Double> getSpentForTraveler();
     public Map<String, Double> getEarnedForOwner();
-    public Map<String, Object> getTopOwners() ;
-    public Map<String, Object> getTopTravelers(); 
+    public Map<String, Long> getTopOwners() ;
+    public Map<String, Long> getTopTravelers(); 
     
 }

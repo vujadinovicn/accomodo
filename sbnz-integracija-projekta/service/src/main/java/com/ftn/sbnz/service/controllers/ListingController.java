@@ -2,12 +2,15 @@ package com.ftn.sbnz.service.controllers;
 
 import java.util.List;
 
+import org.kie.api.KieBase;
+import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Location;
 import com.ftn.sbnz.service.dtos.AddDiscountDTO;
 import com.ftn.sbnz.service.dtos.AddListingDTO;
 import com.ftn.sbnz.service.dtos.AddReviewDTO;
@@ -33,14 +37,17 @@ public class ListingController {
     @Autowired
     private final IListingService listingService;
 
+	// @Autowired
+	// private KieBase kieBase;
+
 	public ListingController(IListingService listingService) {
         this.listingService = listingService;
 	}
 
-	@PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE) 
-	public ResponseEntity<?> addListing(@Valid @RequestBody ListingDestinationDTO dto) {
-		System.out.println("e");
-        // this.listingService.addListing(dto);
+	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE) 
+	public ResponseEntity<?> addListing(@RequestBody AddListingDTO dto) {
+		// System.out.println("e");
+        this.listingService.addListing(dto);
 		return null;
 	}
 
@@ -50,7 +57,8 @@ public class ListingController {
 	}
 
 	@RequestMapping(method = RequestMethod.GET)
-	public void getListing(@RequestBody GetListingDTO dto) {
+	public void getListing(@RequestParam Long listingId, @RequestParam Long userId) {
+		GetListingDTO dto = new GetListingDTO(userId, listingId);
         this.listingService.getById(dto);
 	}
 
@@ -65,8 +73,18 @@ public class ListingController {
 	}
 
 	@RequestMapping(path = "/backward", method = RequestMethod.GET)
-	public void backward() {
-        this.listingService.backward();
+	public List<AddListingDTO> backward(@RequestParam String location) {
+		// KieSession forwardKsession = kieBase.newKieSession();
+		// Location l = new Location();
+		// l.setAddress("Zmaj Ognjena Vuka");
+		// int n = forwardKsession.fireAllRules();
+        return this.listingService.backward(location);
+		// return null;
+	}
+
+	@RequestMapping(method = RequestMethod.DELETE)
+	public void delete(@RequestParam Long id) {
+        this.listingService.delete(id);
 	}
 
 	@RequestMapping(path = "/recommendations", method = RequestMethod.GET)
@@ -77,5 +95,15 @@ public class ListingController {
 		} catch (Exception e) {
 			return new ResponseEntity<String>("Fetching listing recs failed!", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	@RequestMapping(path = "/filter-rating", method = RequestMethod.GET)
+	public List<AddListingDTO> filterByRating(@RequestParam int rating) {
+		return listingService.filterByRating(rating);
+	}
+
+	@RequestMapping(path = "/filter-price", method = RequestMethod.GET)
+	public List<AddListingDTO> filterByPrice(@RequestParam double min, @RequestParam double max) {
+		return listingService.filterByPrice(min, max);
 	}
 }

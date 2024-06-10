@@ -1,0 +1,108 @@
+package cep;
+import java.util.List;
+import java.time.LocalDateTime;
+import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.models.Traveler;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.enums.BookingStatus;
+import com.ftn.sbnz.model.enums.EmailNotificationType;
+import com.ftn.sbnz.model.events.ReservationEvent;
+import com.ftn.sbnz.model.events.BookingEvent;
+import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.models.Listing;
+import org.drools.core.time.TimeUtils.*;
+
+
+import java.util.Date;
+// global java.util.Date dateNow;
+
+declare OverlappedBookingsEvent
+    @role(event)
+    @expires(2m)
+    firstBookingId: Long
+    secondBookingId: Long
+end 
+
+declare ChronoCheckOverlappedBookingsEvent
+    @role(event)
+    firstBookingId: Long
+    secondBookingId: Long
+end 
+
+
+rule "Detect overlapping bookings"
+no-loop true
+when
+    $booking1: Booking($id1 : id, status == BookingStatus.ACCEPTED,
+        $locationId: listing.location.id,
+        $traveler1: traveler,
+        $startDate1: startDate,
+        $endDate1: endDate
+    )
+    $booking2: Booking(this != $booking1, $id2 : id, status == BookingStatus.ACCEPTED,
+        listing.location.id == $locationId,
+        $traveler2: traveler,
+        $startDate2: startDate,
+        $endDate2: endDate,
+        (
+            ($startDate2 after[5s] $startDate1 && $startDate2 before[5s] $endDate1) ||
+            ($endDate2 after[5s] $startDate1 && $endDate2 before[5s] $endDate1) 
+        )
+    )
+    not (OverlappedBookingsEvent(firstBookingId == $id1, secondBookingId == $id2))
+    not (OverlappedBookingsEvent(firstBookingId == $id2, secondBookingId == $id1))
+then
+    insert(new OverlappedBookingsEvent($id1, $id2));
+    System.out.println("Bookings are overlapping!");
+end
+
+rule "Handle overlapping bookings if there is less than 7 days for one of bookings"
+no-loop true
+when
+    $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
+    $booking1: Booking(id == $id1)
+    $booking2: Booking(id == $id2, $startDate2: startDate, !($startDate2 after[7d] dateNow))
+then
+    modify($booking2){
+        setStatus(BookingStatus.DENIED)
+    }
+    // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
+    System.out.println("Booking with id: " + $id2 + " has been DENIED!");
+end
+
+rule "Handle overlapping bookings if there is more than 7 days for one of bookings"
+no-loop true
+when
+    $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
+    $booking1: Booking(id == $id1)
+    $booking2: Booking(id == $id2, $startDate2: startDate, $startDate2 after[7d] dateNow)
+then
+    insert(new ChronoCheckOverlappedBookingsEvent($id1, $id2));
+    // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.RESCHEDULE));
+    System.out.println("Send notification to traveler for potential overlap!");
+end
+
+rule "Delete bookings if less than 7 days"
+    timer( cron: 0 0 8 * * ? )
+when
+    $event: ChronoCheckOverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
+    $booking1: Booking(id == $id1, $travelerId : traveler.id)
+    $booking2: Booking(id == $id2, $startDate2: startDate, !($startDate2 after[7d] dateNow))
+    $traveler: Traveler(id == $travelerId)
+then
+    modify($booking1){
+        setStatus(BookingStatus.DENIED)
+    }
+    modify($booking2){
+        setStatus(BookingStatus.DENIED)
+    }
+    modify($traveler){
+        setIressponsible(true)
+    }
+    modify($traveler){
+        setDateOfIrresponsible(new Date());
+    }
+    // Send confirmation email
+    // sendConfirmationEmail($reservation);
+    System.out.println("Bookings automatically deleted!");
+end

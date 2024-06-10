@@ -32,6 +32,11 @@ public class BookingController {
         return this.bookingService.getByOwner();
 	}
 
+	@RequestMapping(path = "/traveler", method = RequestMethod.GET, produces = "application/json")
+	public List<ReturnedBookingDTO> getByTraveler() {
+        return this.bookingService.getByTraveler();
+	}
+
 	@RequestMapping(method = RequestMethod.POST, produces = "application/json")
 	public void bookListing(@RequestBody BookingDTO dto) {
 		System.out.println("Rezervisan (controller)!");

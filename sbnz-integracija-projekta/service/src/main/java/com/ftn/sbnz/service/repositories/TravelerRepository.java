@@ -7,5 +7,5 @@ import com.ftn.sbnz.model.models.Traveler;
 
 @Repository
 public interface TravelerRepository extends JpaRepository<Traveler, Long> {
-    
+    public Traveler findByEmail(String email);
 }

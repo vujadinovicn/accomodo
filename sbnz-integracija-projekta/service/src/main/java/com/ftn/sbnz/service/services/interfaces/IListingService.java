@@ -17,9 +17,12 @@ public interface IListingService {
 
     public void addDiscount(AddDiscountDTO dto);
     public void addReview(AddReviewDTO dto);
-    public void backward();
+    public List<AddListingDTO> backward(String location);
     public List<AddListingDTO> getListingsForOwner();
     Review getReview(long listingId, long travelerId);
     public List<Listing> getListingRecommendations(Long id);
+    public void delete(Long id);
+    public List<AddListingDTO> filterByRating(int rating);
+    public List<AddListingDTO> filterByPrice(double min, double max);
     
 }

@@ -30,6 +30,9 @@ import { ReportsComponent } from './reports/reports.component';
 import { BookingsComponent } from './bookings/bookings.component';
 import { DenyBookingComponent } from './deny-booking-dialog/deny-booking-dialog.component';
 import { ViewListingDialogComponent } from './view-listing-dialog/view-listing-dialog.component';
+import { UsersComponent } from './users/users.component';
+import { RegisterOwnerComponent } from './register-owner/register-owner.component';
+import { TokenInterceptor } from './interceptor/token-interceptor';
 
 @NgModule({
   declarations: [
@@ -43,7 +46,9 @@ import { ViewListingDialogComponent } from './view-listing-dialog/view-listing-d
     ReportsComponent,
     BookingsComponent,
     DenyBookingComponent,
-    ViewListingDialogComponent
+    ViewListingDialogComponent,
+    UsersComponent,
+    RegisterOwnerComponent
   ],
   imports: [
     BrowserModule,
@@ -72,6 +77,11 @@ import { ViewListingDialogComponent } from './view-listing-dialog/view-listing-d
   ],
   providers: [
     { provide: MAT_DIALOG_DATA, useValue: {} },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: TokenInterceptor,
+      multi: true
+    },
     {
       provide: MatDialogRef,
       useValue: {}

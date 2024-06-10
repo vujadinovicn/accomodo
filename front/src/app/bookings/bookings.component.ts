@@ -26,10 +26,35 @@ export class BookingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.role = this.authService.getRole();
-    this.bookingService.getByOwner().subscribe(data => {
-      console.log(data);
-      this.bookings = data;
-      this.allBookings = data;
+
+    if (this.role == "ROLE_OWNER") {
+      this.bookingService.getByOwner().subscribe(data => {
+        console.log(data);
+        this.bookings = data;
+        this.sortBookings();
+        this.allBookings = data;
+        console.log(this.bookings[0].status);
+        console.log(this.role);
+      });
+    }
+    else if (this.role == "ROLE_TRAVELER") {
+      this.bookingService.getByTraveler().subscribe(data => {
+        console.log(data);
+        this.bookings = data;
+        this.allBookings = data;
+        this.sortBookings();
+        console.log(this.bookings[0].status);
+        console.log(this.role);
+      });
+    }
+  }
+
+  sortBookings(){
+    this.bookings.sort((a, b) => {
+      const dateA = new Date(a.startDate);
+      const dateB = new Date(b.startDate);
+    
+      return dateB.getTime() - dateA.getTime();
     });
   }
 

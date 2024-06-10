@@ -17,7 +17,7 @@ export class PropertyService {
 
   addListing(dto: any): Observable<any> {
     console.log(dto);
-    return this.http.post<any>(environment.apiHost + "/listing/login", dto,  {
+    return this.http.post<any>(environment.apiHost + "/listing", JSON.stringify(dto),  {
       headers: new HttpHeaders({
         'Content-Type': 'application/json',
       })
@@ -25,7 +25,7 @@ export class PropertyService {
   }
 
   getListingsForOwner() {
-    return this.http.get<any>(environment.apiHost + "/listing/owner");
+    return this.http.get<any>(environment.apiHost + "/listing/owner", {withCredentials: true});
   }
 
   getDetails(id: string) {

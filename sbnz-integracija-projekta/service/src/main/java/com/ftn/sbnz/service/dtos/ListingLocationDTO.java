@@ -5,6 +5,8 @@ public class ListingLocationDTO {
     private double lng;
     private String address;
     
+    public ListingLocationDTO(){}
+    
     public ListingLocationDTO(double lat, double lng, String address) {
         this.lat = lat;
         this.lng = lng;

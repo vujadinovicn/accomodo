@@ -74,6 +74,7 @@ export class ReportsComponent implements OnInit {
   private getSpentForTraveler() {
     this.reportsService.getSpentForTraveler().subscribe(data => {
       this.spentByTraveler = data;
+      console.log(data);
     });
   }
 
@@ -90,6 +91,8 @@ export class ReportsComponent implements OnInit {
         this.topDestinationsForOwnerKey.push(key);
         this.topDestinationsForOwnerValue.push(value);
         console.log(value);
+        this.topDestinationsForOwnerKey.reverse();
+        this.topDestinationsForOwnerValue.reverse();
       }
     });
   }
@@ -100,8 +103,11 @@ export class ReportsComponent implements OnInit {
         let value = data[key];
         this.topDestinationsForTravelerKey.push(key);
         this.topDestinationsForTravelerValue.push(value);
-        console.log(value);
       }
+      console.log(data);
+      this.topDestinationsForTravelerKey.reverse();
+      this.topDestinationsForTravelerValue.reverse();
     });
+
   }
 }

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -16,6 +16,14 @@ export class BookingService {
     //   withCredentials: true
     };
     return this.http.get<any>(environment.apiHost + "/booking/owner", options);
+  }
+
+  public getByTraveler(): Observable<any> {
+    const options: any = {
+      responseType: 'json',
+    //   withCredentials: true
+    };
+    return this.http.get<any>(environment.apiHost + "/booking/traveler", options);
   }
 
   public denyBooking(dto: any): Observable<any> {
@@ -39,7 +47,7 @@ export class BookingService {
       responseType: 'json',
     //   withCredentials: true
     };
-    return this.http.put<any>(environment.apiHost + "/booking/cancel?id="+bookingId, options);
+    return this.http.put<any>(environment.apiHost + "/booking/cancel?bookingId="+bookingId, options);
   }
 
   public bookListing(dto: any): Observable<any> {
@@ -47,7 +55,12 @@ export class BookingService {
       responseType: 'json',
     //   withCredentials: true
     };
-    return this.http.post<any>(environment.apiHost + "/booking", dto, options);
+    console.log(dto);
+    // return null;
+    return this.http.post<any>(environment.apiHost + "/booking", dto, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'})
+      });
   }
 
 }

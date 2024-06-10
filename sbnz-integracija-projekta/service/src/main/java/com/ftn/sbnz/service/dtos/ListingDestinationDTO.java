@@ -14,4 +14,6 @@ public class ListingDestinationDTO {
     public ListingDestinationDTO(String name) {
         this.name = name;
     }
+
+    public ListingDestinationDTO() {}
 }

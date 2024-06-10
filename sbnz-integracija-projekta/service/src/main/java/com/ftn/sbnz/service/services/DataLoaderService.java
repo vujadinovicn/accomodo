@@ -1,8 +1,11 @@
 package com.ftn.sbnz.service.services;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import com.ftn.sbnz.model.models.Destination;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.Location;
+import com.ftn.sbnz.model.models.LocationBackward;
 import com.ftn.sbnz.model.models.Owner;
 import com.ftn.sbnz.model.models.Review;
 import com.ftn.sbnz.model.models.Tag;
@@ -26,6 +30,7 @@ import com.ftn.sbnz.service.repositories.OwnerRepository;
 import com.ftn.sbnz.service.repositories.ReviewRepository;
 import com.ftn.sbnz.service.repositories.TagRepository;
 import com.ftn.sbnz.service.repositories.TravelerRepository;
+import com.ftn.sbnz.service.services.interfaces.IGoogleMapsService;
 
 @Component
 public class DataLoaderService {
@@ -59,10 +64,20 @@ public class DataLoaderService {
     @Autowired
     private DiscountRepository allDiscounts;
 
+    @Autowired
+	private IGoogleMapsService googleMapsService;
+
     @PostConstruct
     public void init() {
         loadDataIntoKieSession();
+        System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
     }
+
+    @PreDestroy
+    public void cleanup() {
+        // kieSession.dispose();
+    }
+
 
     public void loadDataIntoKieSession() {
         List<Listing> listings = allListings.findAll();
@@ -76,6 +91,26 @@ public class DataLoaderService {
         List<Location> locations = allLocations.findAll();
 
         for (Listing listing : listings) {
+            Map<String, String> hierarchy = this.googleMapsService.reverseGeocode(listing.getLocation().getLat(), listing.getLocation().getLng());
+            String state = hierarchy.get("state");
+            String county = hierarchy.get("county");
+            String city = hierarchy.get("city");
+            String street = hierarchy.get("street");
+            String streetNo = hierarchy.get("streetno");
+            // System.out.println(state);
+            System.out.println("county");
+            System.out.println(county);
+            System.out.println("city");
+            System.out.println(city);
+            System.out.println("street");
+            System.out.println(street);
+            System.out.println("no");
+            System.out.println(streetNo);
+
+            // kieSession.insert( new LocationBackward(county, state));
+            kieSession.insert( new LocationBackward(city, county));
+            kieSession.insert( new LocationBackward(street, city));
+            kieSession.insert( new LocationBackward(streetNo, street));
             kieSession.insert(listing);
         }
 
@@ -110,6 +145,9 @@ public class DataLoaderService {
         for (Location location : locations) {
             kieSession.insert(location);
         }
+
+        kieSession.setGlobal("dateNow", new Date());
+
 
         // kieSession.fireAllRules();
     }

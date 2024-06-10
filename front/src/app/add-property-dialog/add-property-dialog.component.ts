@@ -128,7 +128,7 @@ export class AddPropertyDialogComponent implements OnInit {
 
   addProperty() {
     console.log(this.addPropertyForm.value?.cityAndCountry!);
-    if (this.selectedMarkerPosition) {
+    if (this.selectedMarkerPosition && this.lat != 0 && this.lng != 0) {
       console.log(this.selectedMarkerPosition)
       let location: ListingLocationDTO = {
         // cityId: (this.addPropertyForm.value.cityAndCountry! as unknown as LocationDTO).cityId,
@@ -154,7 +154,7 @@ export class AddPropertyDialogComponent implements OnInit {
       console.log(this.filePath)
       console.log(dto);
       console.log(this.loggedUser);
-      this.propertyService.addListing(destination).subscribe({
+      this.propertyService.addListing(dto).subscribe({
         next: (value) => {
           this.snackBar.open("Property request sent.", "", {
           duration: 2700, panelClass: ['snack-bar-success']

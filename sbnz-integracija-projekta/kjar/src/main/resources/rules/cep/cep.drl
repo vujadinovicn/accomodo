@@ -23,27 +23,32 @@ import com.ftn.sbnz.model.enums.EmailNotificationType;
 import com.ftn.sbnz.model.events.BookingAcceptedEvent;
 import com.ftn.sbnz.model.events.BookingDeniedEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.BlockingEvent;
+import com.ftn.sbnz.model.events.ReservationEvent;
 import com.ftn.sbnz.model.events.BookingEvent;
 import com.ftn.sbnz.model.events.BookingEmailEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.NegativeReviewEvent;
 import com.ftn.sbnz.model.events.ReservationCanceledEvent;
+import com.ftn.sbnz.model.events.ReservationDeniedEvent;
+import com.ftn.sbnz.model.events.ReservationAcceptedEvent;
 import com.ftn.sbnz.model.events.AddedListingEvent;
 import com.ftn.sbnz.model.models.LocationBackward;
 import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.Owner;
 import com.ftn.sbnz.model.models.Destination;
+import com.ftn.sbnz.model.models.ListingAccumulator;
 import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
 
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
-
+import com.ftn.sbnz.model.events.ChronoCheckReservationEvent;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 
 import java.util.Date;
 
 global java.util.Date dateNow;
-global String backwardLocation;
+// global java.util.List matchedListings;
 
 global IListingService listingService;
 
@@ -52,182 +57,73 @@ declare MaliciousTravelerEvent
     travelerId: Long
 end 
 
-
-declare OverlappedBookingsEvent
-    @role(event)
-    @expires(2m)
-    firstBookingId: Long
-    secondBookingId: Long
-end 
-
 declare RecommendTrendingAccommodationEvent
     @role(event)
     @expires(1m)
     loginTimestamp: LocalDateTime
 end
 
-// =========================================
-// BOOKING RULES - FORWARD
-
-rule "Send notification to owner after booking event"
-    no-loop true
-    when
-        $BookingEvent: BookingEvent($bookingId: bookingId)
-        not BookingAcceptedEvent(bookingId == $bookingId)
-        not BookingDeniedEvent(bookingId == $bookingId)
-    then
-        insert(new BookingEmailEvent(null, null, EmailNotificationType.BOOKING_CREATED));
-        System.out.println("Posalji notifikaciju owneru!");
-end
-
-
-rule "Booking accepted by owner"
-    no-loop true
-    when
-        $bookingAcceptedEvent: BookingAcceptedEvent($bookingId: bookingId)
-        $booking: Booking(id == $bookingId, 
-            status == BookingStatus.PENDING,
-            $listing: listing,
-            $traveler: traveler
-        )
-    then
-        modify($booking){
-            setStatus(BookingStatus.ACCEPTED)
-        }
-        //insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_ACCEPTED));
-        System.out.println("Posalji notifikaciju traveleru da je booking prihvacen!");
-end
-
-rule "Booking denied by owner"
-    no-loop true
-    when
-        $bookingDeniedEvent: BookingDeniedEvent($bookingId: bookingId, $reason: reason)
-        $booking: Booking(id == $bookingId, 
-            status == BookingStatus.PENDING,
-            $listing: listing,
-            $traveler: traveler
-        )
-    then
-        modify($booking){
-            setStatus(BookingStatus.DENIED)
-        }
-        insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
-        System.out.println("Posalji notifikaciju traveleru da je booking odbijen zbog: " + $reason);
-end
-
-
-// =========================================
-// OVERLAPPED BOOKINGS - CEP
-
-rule "Detect overlapping bookings"
+rule "Send email 10 days before reservation starts"
+    // timer( cron: 5 * * * * ? )
 no-loop true
 when
-    $booking1: Booking($id1 : id, status == BookingStatus.ACCEPTED,
-        $locationId: listing.location.id,
-        $traveler1: traveler,
-        $startDate1: startDate,
-        $endDate1: endDate
-    )
-    $booking2: Booking(this != $booking1, $id2 : id, status == BookingStatus.ACCEPTED,
-        listing.location.id == $locationId,
-        $traveler2: traveler,
-        $startDate2: startDate,
-        $endDate2: endDate,
-        (
-            ($startDate2 after[5s] $startDate1 && $startDate2 before[5s] $endDate1) ||
-            ($endDate2 after[5s] $startDate1 && $endDate2 before[5s] $endDate1) 
-        )
-    )
-    not (OverlappedBookingsEvent(firstBookingId == $id1, secondBookingId == $id2))
-    then
-        insert(new OverlappedBookingsEvent($id1, $id2));
-        System.out.println("Bookings are overlapping!");
-end
-
-rule "Handle overlapping bookings if there is less than 7 days for one of bookings"
-no-loop true
-when
-    $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
-    $booking1: Booking(id == $id1)
-    $booking2: Booking(id == $id2, $startDate2: startDate, !($startDate2 after[7d] dateNow))
-    then
-        modify($booking2){
-            setStatus(BookingStatus.DENIED)
-        }
-        // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
-        System.out.println("Booking with id: " + $id2 + " has been DENIED!");
-end
-
-rule "Handle overlapping bookings if there is more than 7 days for one of bookings"
-no-loop true
-when
-    $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
-    $booking1: Booking(id == $id1)
-    $booking2: Booking(id == $id2, $startDate2: startDate, $startDate2 after[7d] dateNow)
-    then
-        // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.RESCHEDULE));
-        System.out.println("Send notification to traveler for potential overlap!");
-end
-
-// =========================================
-// FAVORITE LOCATIONS - FORWARD
-rule "Add location to favorite locations on view"
-no-loop true
-when
-    $event: ListingViewedEvent($traveler: traveler, $destination: listing.location.destination)
-    not ((Traveler(favoriteDestinations contains $destination) from $traveler))
-    $totalViews: Number(intValue >= 2) from accumulate(
-        $viewEvent: ListingViewedEvent(
-            this != $event,
-            traveler.id == $traveler.id,
-            listing.location.destination.id == $destination.id
-        ) over window:time(3d),
-        count($viewEvent)
-    )
+    $event: ChronoCheckReservationEvent($id: bookingId)
+    $booking: Booking(id == $id, status == BookingStatus.PENDING,
+                    $startDate: startDate, !($startDate after[10d] dateNow))
+    eval($booking.isReservation())
+    eval(!$event.isSentEmail())
 then
-    modify($traveler) {
-        getFavoriteDestinations().add($destination)
+    modify($event){
+        setSentEmail(true);
     }
-    System.out.println("Destination " + $destination.getName() + " added to favorites for traveler " + $traveler.getEmail());
+    // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
+    System.out.println("Sent email for reservation with id: " + $id);
 end
 
-rule "Send notification to traveler when listing with favorite location is added"
+rule "Handle reservation if less than 7 days"
+    // timer( cron: 5 * * * * ? )
 no-loop true
 when
-    $event: AddedListingEvent($listing: listing)
-    Traveler($traveler: this, favoriteDestinations contains $listing.location.destination)
+    $event: ChronoCheckReservationEvent($id: bookingId)
+    $booking: Booking(id == $id, status == BookingStatus.PENDING,
+                    $startDate: startDate, !($startDate after[7d] dateNow))
+    eval($booking.isReservation())
 then
-    String notificationMessage = "New listing, " + $listing.getTitle() + ", has arrived in one on of your favorite destinations!";
-    insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
-    System.out.println("New listing notification sent to traveler " + $traveler.getEmail() + " for " + $listing.getTitle());
+    delete($event);
+    modify($booking){
+        setStatus(BookingStatus.ACCEPTED)
+    }
+    // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
+    System.out.println("Reservation with id: " + $id + " has been changed to booking!");
 end
+
 
 // =========================================
 // FAVORITE LISTINGS - FORWARD
 
-rule "Add listing to favorite listings on view"
-when
-    $event: ListingViewedEvent($traveler: traveler, $listing: listing)
-    not (Traveler(favoriteListings contains $listing) from $traveler)
-then
-    modify($traveler) {
-        getFavoriteListings().add($listing)
-    }
-    System.out.println("Listing " + $listing.getTitle() + " added to favorites for traveler " + $traveler.getEmail());
-end
+// rule "Add listing to favorite listings on view"
+// when
+//     $event: ListingViewedEvent($traveler: traveler, $listing: listing)
+//     not (Traveler(favoriteListings contains $listing) from $traveler)
+// then
+//     modify($traveler) {
+//         getFavoriteListings().add($listing)
+//     }
+//     System.out.println("Listing " + $listing.getTitle() + " added to favorites for traveler " + $traveler.getEmail());
+// end
 
 
-rule "Notify traveler on favorite listing price drop"
-when
-    $discount: Discount($listing: listing)
-    Traveler($traveler: this, favoriteListings contains $listing)
-    // Traveler($traveler: this, id==1)
-then
-    String notificationMessage = "You're in luck! The booking you were checking out, " + $listing.getTitle() + ", is available at an even better price! Hurry to see the new offer, it ends " + $discount.getValidTo();
-    // sendNotification($traveler, notificationMessage);
-    System.out.println("Discount notification sent to traveler " + $traveler.getEmail() + " for listing " + $listing.getTitle());
-    insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
-end
+// rule "Notify traveler on favorite listing price drop"
+// when
+//     $discount: Discount($listing: listing)
+//     Traveler($traveler: this, favoriteListings contains $listing)
+//     // Traveler($traveler: this, id==1)
+// then
+//     String notificationMessage = "You're in luck! The booking you were checking out, " + $listing.getTitle() + ", is available at an even better price! Hurry to see the new offer, it ends " + $discount.getValidTo();
+//     // sendNotification($traveler, notificationMessage);
+//     System.out.println("Discount notification sent to traveler " + $traveler.getEmail() + " for listing " + $listing.getTitle());
+//     insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
+// end
 
 // =========================================
 // NEGATIVE REVIEWS AND MALICIOUS USER - CEP
@@ -270,187 +166,6 @@ then
     System.out.println("Malicious traveler is on it again! Alert the admin to double check.");
 end
 
-// =========================================
-// CANCELATIONS AND IRRESOPNSIBLE TRAVELER - CEP
-
-salience 10
-rule "Delete cancelation event if there is already one"
-no-loop true
-when
-    $event: ReservationCanceledEvent($bookingId: booking.id)
-    ReservationCanceledEvent(booking.id == $bookingId, this != $event)
-then
-    delete($event)
-    System.out.println("You can't cancel already canceled booking!");
-end
-
-
-rule "Cancel booking for traveler request"
-no-loop true
-when
-    ReservationCanceledEvent($canceledBooking: booking)
-    $booking: Booking(this == $canceledBooking, (status == BookingStatus.ACCEPTED || status == BookingStatus.PENDING))
-then
-    modify($booking){
-        setStatus(BookingStatus.CANCELED)
-    }
-    System.out.println("Traveler canceled the booking!");
-end
-
-
-rule "Flag irresponsible traveler"
-no-loop true
-when
-    $traveler: Traveler(isIressponsible() == false)
-    Number(intValue >= 2) from accumulate(
-        $event: ReservationCanceledEvent(booking.traveler.id == $traveler.id) over window:time(15s),
-        count($event)
-    )
-then
-    modify($traveler){
-        setIressponsible(true);
-    }
-     modify($traveler){
-        setDateOfIrresponsible(new Date());
-    }
-    System.out.println("Traveler has been flagged as an irresponsible one!");
-end
-
-
-rule "Notify admin after irresponsible canceled more bookings"
-when
-    $traveler: Traveler(isIressponsible() == true, $dateOfIrresponsable: dateOfIrresponsible)
-    Number(intValue >= 2) from accumulate(
-        $event: ReservationCanceledEvent(booking.traveler.id == $traveler.id, this after[5s] $dateOfIrresponsable),
-        count($event)
-    )
-then
-    // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
-    System.out.println("Administrator notified about irresponsible traveler's additional cancellation!");
-end
-
-
-query isContainedIn( String x, String y )
-  LocationBackward( x, y; )
-  or
-  ( LocationBackward( z, y; ) and isContainedIn( x, z; ) )
-end
-
-rule "go4"
-when
-    String( this == "go4" )
-    $listing: Listing($location: location.address)
-    isContainedIn(thing, backwardLocation; )
-then
-    System.out.println( "Place " + thing + " is in " + backwardLocation );
-end
-
-// query isContainedIn( String x, String y, boolean alreadyMatched )
-//   LocationBackward( x, y; )
-//   or
-//   ( LocationBackward( z, y; ) and not(alreadyMatched == true) and isContainedIn(x, z, true; ) )
-// end
-
-// rule "go4"
-// when
-//     String( this == "go4" )
-//     isContainedIn(thing, "Serbia", alreadyMatched; )
-// then
-//     System.out.println( "Place " + thing + " is in Serbia" );
-// end
-
-query "Top Destinations For Owner" (Long ownerId)
-    $destination: Destination()
-    $count: Number() from accumulate (
-        Booking(listing.location.destination.name == $destination.name, listing.owner.id == ownerId),
-        count(1)
-    )
-end
-
-query "Top Destinations For Traveler" (Long travelerId)
-    $destination: Destination()
-    $count: Number() from accumulate (
-        Booking(listing.location.destination.name == $destination.name, traveler.id == travelerId),
-        count(1)
-    )
-end
-
-// add for bookingstatus == accepted
-query "Earned By Owner" (Long ownerId)
-    $spentAllTime: Number() from accumulate (
-        $booking: Booking($listing : listing, listing.owner.id == ownerId),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
-    )
-    $spent7days: Number() from accumulate (
-        $booking: Booking($listing : listing, listing.owner.id == ownerId),
-        // over window:time(7d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
-    )
-    $spentMonth: Number() from accumulate (
-        $booking: Booking($listing : listing, listing.owner.id == ownerId),
-        // over window:time(30d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
-    )
-    $spentSixMonths: Number() from accumulate (
-        $booking: Booking($listing : listing, listing.owner.id== ownerId),
-        // over window:time(180d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
-    )
-    $spentYear: Number() from accumulate (
-        $booking: Booking($listing : listing, listing.owner.id == ownerId),
-        // over window:time(365d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
-    )
-end
-
-query "Spent For Traveler" (Long travelerId)
-    $spentAllTime: Number() from accumulate (
-        $booking: Booking(traveler.id == travelerId, $listing : listing),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
-    )
-    $spent7days: Number() from accumulate (
-        $booking: Booking(traveler.id == travelerId, $listing : listing),
-        // over window:time(7d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
-    )
-    $spentMonth: Number() from accumulate (
-        $booking: Booking(traveler.id == travelerId, $listing : listing),
-        // over window:time(30d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
-    )
-    $spentSixMonths: Number() from accumulate (
-        $booking: Booking(traveler.id == travelerId, $listing : listing),
-        // over window:time(180d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
-    )
-    $spentYear: Number() from accumulate (
-        $booking: Booking(traveler.id == travelerId, $listing : listing),
-        // over window:time(365d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
-    )
-end
-
-function int daysBetween(java.util.Date startDate, java.util.Date endDate) {
-    java.time.LocalDate startLocalDate = startDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
-    java.time.LocalDate endLocalDate = endDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
-    return (int) java.time.temporal.ChronoUnit.DAYS.between(startLocalDate, endLocalDate);
-}
-
-query "Top Owners"
-    $owner: Owner()
-    $count: Number() from accumulate (
-        Booking(listing.owner.id == $owner.id),
-        count(1)
-    )
-end
-
-query "Top Travelers"
-    $traveler: Traveler()
-    $count: Number() from accumulate (
-        Booking(traveler.id == $traveler.id),
-        count(1)
-    )
-end
 
 // =========================================
 // RECOMMEND LISTINGS TO TRAVELER - COMPLEX FORWARD
@@ -769,6 +484,19 @@ then
 
     insert(new AccommodationRecommendationResult(topRatedListings, $timestamp));
     delete($event);
+end
+
+
+rule "Block or unblock traveler"
+no-loop true
+salience 1
+when
+    $event: BlockingEvent($email: email, $block: block)
+    $traveler: Traveler(email == $email)
+then
+    modify($traveler){
+        setBlocked($block);
+    }
 end
 
 // =========================================

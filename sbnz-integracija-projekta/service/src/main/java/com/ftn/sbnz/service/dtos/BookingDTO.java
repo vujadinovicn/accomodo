@@ -7,16 +7,18 @@ public class BookingDTO {
     private Date startDate;
     private Date endDate;
     private BookingStatus status;
-    private boolean isReservation;
+    private boolean reservation;
     private Long listingId;
     private Long travelerId;
 
-    public BookingDTO(Date startDate, Date endDate, BookingStatus status, boolean isReservation,
+    public BookingDTO() {}
+
+    public BookingDTO(Date startDate, Date endDate, BookingStatus status, boolean reservation,
             Long listingId, Long travelerId) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.status = status;
-        this.isReservation = isReservation;
+        this.reservation = reservation;
         this.listingId = listingId;
         this.travelerId = travelerId;
     }
@@ -37,14 +39,10 @@ public class BookingDTO {
         return status;
     }
     public void setStatus(BookingStatus status) {
+        System.out.println(status);
         this.status = status;
     }
-    public boolean isReservation() {
-        return isReservation;
-    }
-    public void setReservation(boolean isReservation) {
-        this.isReservation = isReservation;
-    }
+    
     public Long getListingId() {
         return listingId;
     }
@@ -57,6 +55,16 @@ public class BookingDTO {
     public void setTravelerId(Long travelerId) {
         this.travelerId = travelerId;
     }
+
+    public boolean isReservation() {
+        return reservation;
+    }
+
+    public void setReservation(boolean reservation) {
+        this.reservation = reservation;
+    }
+
+    
 
     
 }
