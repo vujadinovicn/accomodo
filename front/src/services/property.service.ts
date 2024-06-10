@@ -51,6 +51,10 @@ export class PropertyService {
   getAllListings() {
     return this.http.get<any>(environment.apiHost + "/listing/all");
   }
+
+  getReviewsForListing(id: number): Observable<any> {
+    return this.http.get<any>(environment.apiHost + "/listing/review?id=" + id);
+  }
 }
 
 export interface ListingRecsDTO {
@@ -174,4 +178,14 @@ export interface UserDTO {
 
 export interface ReasonDTO {
   reason: string
+}
+
+export interface ReturnedReviewDTO {
+  id: number,
+  rating: number,
+  comment: string,
+  date: string,
+  travelerFullName: string,
+  travelerId: number,
+  listingId: number
 }

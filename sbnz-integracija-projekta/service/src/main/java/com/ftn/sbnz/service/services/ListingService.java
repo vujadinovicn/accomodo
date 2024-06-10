@@ -39,6 +39,7 @@ import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
 import com.ftn.sbnz.service.dtos.ListingLocationDTO;
 import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
+import com.ftn.sbnz.service.dtos.ReturnedReviewDTO;
 import com.ftn.sbnz.service.mail.IMailService;
 import com.ftn.sbnz.service.repositories.DestinationRepository;
 import com.ftn.sbnz.service.repositories.DiscountRepository;
@@ -92,14 +93,14 @@ public class ListingService implements IListingService{
 		Listing listing = allListings.findById(dto.getListingId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing does not exist!"));
 
 		if (user.getRole() == UserRole.TRAVELER) {
-			addTravelerViewedListingEvent(user, listing);
+			addTravelerViewedListingEvent(user.getId(), listing);
 		}
 
 		return listing;
 	}
 
-	private void addTravelerViewedListingEvent(User user, Listing listing) {
-		Traveler traveler = allTravelers.findById(user.getId()).get();
+	private void addTravelerViewedListingEvent(Long travelerId, Listing listing) {
+		Traveler traveler = allTravelers.findById(travelerId).get();
 
 		ListingViewedEvent viewedEvent = new ListingViewedEvent(traveler, listing);
 		
@@ -114,7 +115,6 @@ public class ListingService implements IListingService{
         //         break;
         //     }
         // }
-		cepKieSession.insert(traveler);
         int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
@@ -220,10 +220,10 @@ public class ListingService implements IListingService{
 		LocalDateTime timestamp = LocalDateTime.now();
 		Review review = new Review(dto.getRating(), dto.getComment(), timestamp, listing, traveler);
 
-		updateListingRating(listing);
-
 		allReviews.save(review);
 		allReviews.flush();
+
+		updateListingRating(listing);
 
 		cepKieSession.insert(review);
 
@@ -350,6 +350,27 @@ public class ListingService implements IListingService{
 					 destinationDto, locationDto, "", listings.get(i).getRating());
 			dtos.add(dto);
 		}
+		return dtos;
+	}
+
+	@Override
+	public List<ReturnedReviewDTO> getReviews(Long listingId) {
+		Listing listing = allListings.findById(listingId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing does not exist!"));
+		List<Review> reviews = allReviews.findAllByListingId(listingId);
+
+		List<ReturnedReviewDTO> dtos = new ArrayList<>();
+		for (Review review: reviews) {
+			ReturnedReviewDTO dto = new ReturnedReviewDTO(review.getId(), review.getRating(), review.getComment(), review.getDate(), listingId, review.getTraveler().getId(), review.getTraveler().getName() + " " + review.getTraveler().getLastname());
+			dtos.add(dto);
+		}
+
+		addTravelerViewedListingEvent(3l, listing);
+
+		//TODO: ovo kad se popravi getcurruser
+		// if (userService.getCurrentUser().getRole() == UserRole.TRAVELER) {
+		// 	addTravelerViewedListingEvent(userService.getCurrentUser(), listing);
+		// }
+
 		return dtos;
 	}
 

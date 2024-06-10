@@ -10,6 +10,7 @@ import com.ftn.sbnz.service.dtos.AddListingDTO;
 import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
 import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
+import com.ftn.sbnz.service.dtos.ReturnedReviewDTO;
 
 public interface IListingService {
     public Listing getById(GetListingDTO dto);
@@ -23,5 +24,6 @@ public interface IListingService {
     Review getReview(long listingId, long travelerId);
     public List<Listing> getListingRecommendations(Long id);
     public List<ReturnedListingDTO> getAll();
+    public List<ReturnedReviewDTO> getReviews(Long id);
     
 }

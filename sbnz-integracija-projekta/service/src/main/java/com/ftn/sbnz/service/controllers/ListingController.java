@@ -24,6 +24,7 @@ import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
 import com.ftn.sbnz.service.dtos.MessageDTO;
 import com.ftn.sbnz.service.dtos.RecommendedListingsDTO;
 import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
+import com.ftn.sbnz.service.dtos.ReturnedReviewDTO;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 
 import jakarta.validation.Valid;
@@ -72,6 +73,16 @@ public class ListingController {
 		try {
 			this.listingService.addReview(dto);
 			return new ResponseEntity<MessageDTO>(new MessageDTO("Review added successfully."), HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+		}
+	}
+
+	@RequestMapping(path = "/review", method = RequestMethod.GET)
+	public ResponseEntity<?> getReviews(@RequestParam Long id) {
+		try {
+			List<ReturnedReviewDTO> reviews = this.listingService.getReviews(id);
+			return new ResponseEntity<List<ReturnedReviewDTO>>(reviews, HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		}

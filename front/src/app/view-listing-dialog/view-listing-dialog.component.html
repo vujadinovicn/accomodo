@@ -1,4 +1,4 @@
-<div>
+<div class="dialog-cont">
     <!-- <app-property-card [property]="property" [enableClick]="true" (click)="openPropertyDetails(i)" (rejectionCompleted)="processRejection($event)"></app-property-card>
     <p>{{ property.title }}</p> -->
     <div>
@@ -29,6 +29,29 @@
                 <i [ngClass]="enableClick ? 'fa-solid fa-layer-group blue' : 'custom-font fa-solid fa-layer-group blue'" ></i>
                 <span [ngClass]="enableClick ? 'black' : 'custom-font black'">Description: <span style="font-weight: 600 !important;">{{ listing.description }}</span></span>
             </div>
+
+            <div class="review-container">
+                <div class="title-container review-title" style="margin-top: 20px;">
+                    <div class="title-cont">
+                        <div class="title-topper">
+                            <p class="title" >Reviews</p>
+                        </div>
+                        <div id="stars-rev">
+                            <ngx-star-rating [ngModel]="listing.rating" [disabled]="true"></ngx-star-rating>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                </div>
+                <div *ngFor="let review of reviews" class="review-card">
+                    <div class="review-header">
+                        <p class="review-name blue">{{review.travelerFullName}}</p>
+                        <p class="review-rating star-yellow">{{review.rating}}</p><i class="fa fa-star star-yellow" aria-hidden="true"></i>
+                    </div>
+                    <p class="review-comment dark-gray">"{{review.comment}}"</p>
+                </div>
+            </div>
+            
             
             <div *ngIf="this.role=='ROLE_OWNER'">
             <hr style="border: 2px solid #D9D9D9;">

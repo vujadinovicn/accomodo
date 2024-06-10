@@ -1,4 +1,4 @@
-import { PropertyService, ReasonDTO } from '../../services/property.service';
+import { PropertyService, ReasonDTO, ReturnedReviewDTO } from '../../services/property.service';
 import { Component, OnInit, Inject, Output, EventEmitter } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -27,6 +27,7 @@ export class ViewListingDialogComponent implements OnInit {
   enableClick: boolean = false;
   listing: any;
   role: any;
+  reviews: ReturnedReviewDTO[] = [];
 
   bookingForm = new FormGroup({
     endDate: new FormControl('', [Validators.required]),
@@ -36,6 +37,17 @@ export class ViewListingDialogComponent implements OnInit {
   ngOnInit(): void {
     this.listing = this.data.listing;
     this.role = this.authService.getRole();
+
+    this.propertyService.getReviewsForListing(this.listing.id).subscribe({
+      next: (value: ReturnedReviewDTO[]) => {
+          this.reviews = value;
+      },
+      error: (err) => {
+        this.snackBar.open(err.error, "", {
+          duration: 2700, panelClass: ['snack-bar-server-error']
+       });
+      },
+    });
   }
 
   book(isBooking: boolean){
