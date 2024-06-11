@@ -24,8 +24,10 @@
     margin-right: 8px;
 }
 
-.custom-font {
-    font-size: 18px;
+h2 {
+    margin: 0;
+    margin-bottom: 10px;
+    font-size: 1.75em;
 }
 
 #info-container span {
@@ -40,6 +42,10 @@
     justify-content: space-between;
     margin-right: 10px;
     margin-top: -16px;
+}
+
+::ng-deep .mat-dialog-container {
+    padding: 15px !important;
 }
 
 .button-container button {
@@ -93,12 +99,12 @@
     /* position: relative; */
 
 .review-container {
-    margin-top: 30px;
-    height: 200px;
+    margin-top: 20px;
+    height: 150px;
     overflow: scroll;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 5px;
 }
 
 .review-header {
@@ -124,6 +130,7 @@
     border-radius: 10px;
     padding: 10px;
     margin-bottom : 5px;
+    font-size: 0.9em !important;
 }
 
 .title {
@@ -165,7 +172,7 @@
 .discount-info {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 2px;
 }
 
 .discount-actions {
@@ -187,4 +194,12 @@
 
 #delete-discount-btn i {
     margin: 0px !important;
+}
+
+::ng-deep .mat-expansion-panel-header.mat-expanded {
+    height: 40px;
+}
+
+::ng-deep .mat-expansion-panel-header {
+    height: 40px;
 }
