@@ -132,7 +132,7 @@ public class ListingController {
 			List<ReturnedListingDTO> recs = this.listingService.getListingRecommendations(id);
 			return new ResponseEntity<RecommendedListingsDTO>(new RecommendedListingsDTO(recs), HttpStatus.OK);
 		} catch (Exception e) {
-			return new ResponseEntity<String>("Fetching listing recs failed!", HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 

@@ -31,6 +31,7 @@ import com.ftn.sbnz.model.events.ReservationEvent;
 import com.ftn.sbnz.model.events.BookingEvent;
 import com.ftn.sbnz.model.events.BookingEmailEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
+import com.ftn.sbnz.model.events.NewDiscountEvent;
 import com.ftn.sbnz.model.events.NegativeReviewEvent;
 import com.ftn.sbnz.model.events.ReservationCanceledEvent;
 import com.ftn.sbnz.model.events.CustomEmailEvent;
@@ -127,12 +128,14 @@ end
 rule "Notify traveler on favorite listing price drop"
 when
     $discount: Discount($listing: listing)
+    $event: NewDiscountEvent($discount.id == discountId)
     Traveler($traveler: this, favoriteListings contains $listing)
     // Traveler($traveler: this, id==1)
 then
     String notificationMessage = "You're in luck! The booking you were checking out, " + $listing.getTitle() + ", is available at an even better price! Hurry to see the new offer, it ends " + $discount.getValidTo();
     // sendNotification($traveler, notificationMessage);
     System.out.println("Discount notification sent to traveler " + $traveler.getEmail() + " for listing " + $listing.getTitle());
+    
     insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
 end
 

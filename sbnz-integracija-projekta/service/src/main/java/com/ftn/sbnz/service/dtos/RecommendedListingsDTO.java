@@ -2,7 +2,6 @@ package com.ftn.sbnz.service.dtos;
 
 import java.util.List;
 
-import com.ftn.sbnz.model.models.Listing;
 
 public class RecommendedListingsDTO {
     private List<ReturnedListingDTO> listings;

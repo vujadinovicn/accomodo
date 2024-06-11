@@ -24,6 +24,7 @@ import com.ftn.sbnz.model.enums.UserRole;
 import com.ftn.sbnz.model.events.AddedListingEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.NewDiscountEvent;
 import com.ftn.sbnz.model.models.Destination;
 import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
 import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
@@ -218,11 +219,14 @@ public class ListingService implements IListingService{
 			throw new RuntimeException("Discount amount can't be higher than the listing price.");
 
 		Discount discount = new Discount(dto.getAmount(), dto.getValidTo(), listing);
-
 		allDiscounts.save(discount);
 		allDiscounts.flush();
 
+		NewDiscountEvent discEvent = new NewDiscountEvent(discount.getId());
+
+
 		cepKieSession.insert(discount);
+		cepKieSession.insert(discEvent);
 		int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
@@ -233,6 +237,8 @@ public class ListingService implements IListingService{
                 mailService.sendDiscountEmail(emailEvent);
             }
         }
+
+		cepKieSession.delete(cepKieSession.getFactHandle(discEvent));
 
 		return new ReturnedDiscountDTO(discount.getId(), discount.getAmount(), discount.getValidTo());
 	}
