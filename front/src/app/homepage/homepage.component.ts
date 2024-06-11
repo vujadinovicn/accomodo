@@ -119,7 +119,8 @@ export class HomepageComponent implements OnInit {
     const dialogRef = this.dialog.open(ViewListingDialogComponent, { data: { listing: listing } });;
 
     dialogRef.afterClosed().subscribe((result) => {
-      // this.loadItems();
+      // if (this.role == "ROLE_TRAVELER")
+      //   this.loadItems();  
     });
   }
 

@@ -37,7 +37,7 @@
                                 <p class="title">Reviews</p>
                             </div>
                             <div id="stars-rev">
-                                <ngx-star-rating [ngModel]="listing.rating" [disabled]="true"></ngx-star-rating>
+                                <ngx-star-rating [ngModel]="getRoundedRating()" [disabled]="true"></ngx-star-rating>
                             </div>
                         </div>
                         <hr>

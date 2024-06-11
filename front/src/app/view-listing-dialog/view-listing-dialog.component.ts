@@ -156,6 +156,10 @@ export class ViewListingDialogComponent implements OnInit {
       });
     }
   }
+
+  getRoundedRating(): number {
+    return Math.round(this.listing.rating);
+  }
 }
 
 
