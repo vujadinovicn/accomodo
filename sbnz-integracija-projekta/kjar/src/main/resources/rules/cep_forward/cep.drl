@@ -37,6 +37,7 @@ import com.ftn.sbnz.model.events.ReservationCanceledEvent;
 import com.ftn.sbnz.model.events.CustomEmailEvent;
 import com.ftn.sbnz.model.events.ReservationDeniedEvent;
 import com.ftn.sbnz.model.events.ReservationAcceptedEvent;
+import com.ftn.sbnz.model.events.MaliciousTravelerEvent;
 import com.ftn.sbnz.model.events.AddedListingEvent;
 import com.ftn.sbnz.model.models.LocationBackward;
 import com.ftn.sbnz.model.models.Listing;
@@ -57,11 +58,6 @@ global java.util.Date dateNow;
 // global java.util.List matchedListings;
 
 global IListingService listingService;
-
-declare MaliciousTravelerEvent
-    @role(event)
-    travelerId: Long
-end 
 
 declare CheckPreviousReviewsEvent
     @role(event)
@@ -123,8 +119,8 @@ end
 rule "Assign malicious user flag"
 no-loop true
 when
-    $traveler: Traveler(isMalicious() == false)
-    $totalReviews: Number(intValue > 5) from accumulate(
+    $traveler: Traveler(isMalicious() == false, $travelerId: id)
+    $totalReviews: Number(intValue > 2) from accumulate(
         $review: Review(traveler.id == $traveler.id),
         count($review)
     )
@@ -134,8 +130,9 @@ when
     )
 then
     modify($traveler) {
-        setMalicious(true)
+        setMalicious(true);
     }
+    insert(new MaliciousTravelerEvent($travelerId));
     System.out.println("Traveler " + $traveler.getEmail() + " has been flagged as a malicious traveler.");
 end
 

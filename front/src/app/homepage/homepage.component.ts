@@ -115,11 +115,12 @@ export class HomepageComponent implements OnInit {
     });
   }
   
-  openListingDetails(index: any) {
-    const dialogRef = this.dialog.open(ViewListingDialogComponent, { data: { listing: this.properties[index] } });;
+  openListingDetails(listing: any) {
+    const dialogRef = this.dialog.open(ViewListingDialogComponent, { data: { listing: listing } });;
 
     dialogRef.afterClosed().subscribe((result) => {
-      // this.loadItems();
+      // if (this.role == "ROLE_TRAVELER")
+      //   this.loadItems();  
     });
   }
 
@@ -192,6 +193,10 @@ export class HomepageComponent implements OnInit {
       return "10%";
     else 
       return "20%";
+  }
+
+  getRoundedRating(listing: any): number {
+    return Math.round(listing.rating);
   }
 }
 

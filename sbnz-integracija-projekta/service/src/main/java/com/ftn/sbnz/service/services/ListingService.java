@@ -23,6 +23,7 @@ import com.ftn.sbnz.model.enums.UserRole;
 import com.ftn.sbnz.model.events.AddedListingEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.MaliciousTravelerEvent;
 import com.ftn.sbnz.model.events.NewDiscountEvent;
 import com.ftn.sbnz.model.models.Destination;
 import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
@@ -282,8 +283,18 @@ public class ListingService implements IListingService{
 
 		//TODO: sta sa ovim
 		// traveler = (Traveler) cepKieSession.getObject(cepKieSession.getFactHandle(traveler));
-		allTravelers.save(traveler);
-		allTravelers.flush();
+		Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(MaliciousTravelerEvent.class));
+        for (Object event : newEvents) {
+            if (event instanceof MaliciousTravelerEvent) {
+                MaliciousTravelerEvent Mevent = (MaliciousTravelerEvent) event;
+				if (traveler.getId() == Mevent.getTravelerId()) {
+					traveler.setMalicious(true);
+					allTravelers.save(traveler);
+					allTravelers.flush();
+				}
+            }
+        }
+		
 	}
 
 	private void updateListingRating(Listing listing) {

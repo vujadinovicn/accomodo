@@ -17,7 +17,7 @@
             <div *ngFor="let listing of recListings; let i = index">
                 <!-- <app-property-card [property]="property" [enableClick]="true" (click)="openPropertyDetails(i)" (rejectionCompleted)="processRejection($event)"></app-property-card>
                 <p>{{ property.title }}</p> -->
-                <div class="basic-container" id="card-hp-container" (click)="openListingDetails(i)" [ngClass]="{'transition': enableClick}">
+                <div class="basic-container" id="card-hp-container" (click)="openListingDetails(listing)" [ngClass]="{'transition': enableClick}">
                     <div [ngClass]="enableClick ? 'image-container' : 'image-container-details'">
                         <img src="../../assets/device-default.jpg" class="card-img"/>
                     </div>
@@ -27,7 +27,7 @@
                                 <h2 [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{ listing.title }}</h2>
                             </div>
                             <div id="stars">
-                                <ngx-star-rating [ngModel]="listing.rating" [disabled]="true"></ngx-star-rating>
+                                <ngx-star-rating [ngModel]="getRoundedRating(listing)" [disabled]="true"></ngx-star-rating>
                             </div>
                             <div class="info-card info-card-first">
                                 <i [ngClass]="enableClick ? 'fa-solid fa-location-dot red' : 'custom-font fa-solid fa-location-dot red'"></i>
@@ -97,7 +97,7 @@
         <div *ngFor="let listing of properties; let i = index">
             <!-- <app-property-card [property]="property" [enableClick]="true" (click)="openPropertyDetails(i)" (rejectionCompleted)="processRejection($event)"></app-property-card>
             <p>{{ property.title }}</p> -->
-            <div class="basic-container" id="card-hp-container" (click)="openListingDetails(i)" [ngClass]="{'transition': enableClick}">
+            <div class="basic-container" id="card-hp-container" (click)="openListingDetails(listing)" [ngClass]="{'transition': enableClick}">
                 <div [ngClass]="enableClick ? 'image-container' : 'image-container-details'">
                     <img src="../../assets/device-default.jpg" class="card-img"/>
                 </div>
@@ -107,7 +107,7 @@
                             <h2 [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{ listing.title }}</h2>
                         </div>
                         <div id="stars">
-                            <ngx-star-rating [ngModel]="listing.rating" [disabled]="true"></ngx-star-rating>
+                            <ngx-star-rating [ngModel]="getRoundedRating(listing)" [disabled]="true"></ngx-star-rating>
                         </div>
                         <div class="info-card info-card-first">
                             <i [ngClass]="enableClick ? 'fa-solid fa-location-dot red' : 'custom-font fa-solid fa-location-dot red'"></i>
