@@ -23,12 +23,12 @@ template "send-notification-after-booking"
 rule "Send notification to owner after @{eventType}"
     no-loop true
 when
-    $event: @{eventType}($bookingId: bookingId)
+    $event: @{eventType}($bookingId: bookingId, $email: emailTo, $emailMessage: emailMessage)
     not @{acceptedEventType}(bookingId == $bookingId)
     not @{deniedEventType}(bookingId == $bookingId)
 then
     insert(new ChronoCheckReservationEvent($bookingId, false));
-    insert(new CustomEmailEvent("vujadinovic01@gmail.com", "Booking has been made!"));
+    insert(new CustomEmailEvent($email, "Booking has been made!" + " " + $emailMessage));
     System.out.println("@{message}");
 end
 end template
