@@ -27,7 +27,7 @@ when
     not @{deniedEventType}(bookingId == $bookingId)
 then
     insert(new ChronoCheckReservationEvent($bookingId, false));
-    insert(new BookingEmailEvent(null, null, @{notificationType}));
+    insert(new BookingEmailEvent(null, null, @{notificationType}, ""));
     System.out.println("@{message}");
 end
 end template

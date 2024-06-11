@@ -5,17 +5,17 @@ import java.util.List;
 import com.ftn.sbnz.model.models.Listing;
 
 public class RecommendedListingsDTO {
-    private List<Listing> listings;
+    private List<ReturnedListingDTO> listings;
 
-    public RecommendedListingsDTO(List<Listing> listings) {
+    public RecommendedListingsDTO(List<ReturnedListingDTO> listings) {
         this.listings = listings;
     }
 
-    public List<Listing> getListings() {
+    public List<ReturnedListingDTO> getListings() {
         return listings;
     }
 
-    public void setListings(List<Listing> listings) {
+    public void setListings(List<ReturnedListingDTO> listings) {
         this.listings = listings;
     }
 

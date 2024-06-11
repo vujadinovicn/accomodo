@@ -23,8 +23,8 @@ import { HomepageComponent } from './homepage/homepage.component';
 import { LoginComponent } from './login/login.component';
 import { SideNavbarComponent } from './side-navbar/side-navbar.component';
 import { MapComponent } from './map/map.component';
-
-
+import { MatExpansionModule } from '@angular/material/expansion';
+import { NgxStarsModule } from 'ngx-stars';
 import { RegisterComponent } from './register/register.component';
 import { ReportsComponent } from './reports/reports.component';
 import { BookingsComponent } from './bookings/bookings.component';
@@ -33,6 +33,7 @@ import { ViewListingDialogComponent } from './view-listing-dialog/view-listing-d
 import { UsersComponent } from './users/users.component';
 import { RegisterOwnerComponent } from './register-owner/register-owner.component';
 import { TokenInterceptor } from './interceptor/token-interceptor';
+import { ReviewDialogComponent } from './review-dialog/review-dialog.component';
 
 @NgModule({
   declarations: [
@@ -48,7 +49,8 @@ import { TokenInterceptor } from './interceptor/token-interceptor';
     DenyBookingComponent,
     ViewListingDialogComponent,
     UsersComponent,
-    RegisterOwnerComponent
+    RegisterOwnerComponent,
+    ReviewDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -66,6 +68,8 @@ import { TokenInterceptor } from './interceptor/token-interceptor';
     CdTimerModule,
     NgxStarRatingModule,
     SelectDropDownModule,
+    NgxStarsModule,
+    MatExpansionModule,
 
     // JwtModule.forRoot({
     //   config: {

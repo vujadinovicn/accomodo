@@ -1,0 +1,86 @@
+#review-cont {
+    position: relative;
+}
+
+p {
+    margin-bottom: 0;
+}
+
+h1 {
+    margin: 0;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#comment {
+    border: none;
+    margin-bottom: 10px;
+    border-bottom: 1px solid black;
+    width: 100%;
+}
+
+#comment:hover {
+    border: none;
+    border-bottom: 1px solid #1E4A5A;
+}
+
+button {
+    color: white !important;
+    font-size: 0.8em;
+    padding: 0.3em 1em ;
+    border-radius: 5px;
+    border: 0;
+    height: fit-content;
+    font-family: 'Poppins', sans-serif;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+#stars-dialog {
+    width: 170px;
+    margin: 0px 10px 45px 15px;
+}
+
+#dstars {
+    margin: auto;
+    margin-top: -10px !important;
+    margin-bottom: 20px !important;
+}
+::ng-deep label.star {
+    padding: 0 5px !important;
+    font-size: 20px !important;
+}
+
+#btns {
+    display: flex;
+    flex-direction: row;
+}
+
+.green {
+    background-color: #33A02C;
+    margin-left: auto;
+}
+
+.red {
+    background-color: #A8201A;
+}
+
+.conf-button {
+    padding: 10px 15px !important;
+    font-size: 0.9em;
+}
+
+.conf-button:nth-child(1) {
+    position: absolute;
+    left: -5px;
+    bottom: 10px;
+}
+
+.conf-button:nth-child(2) {
+    position: absolute;
+    right: -5px;
+    bottom: 10px;
+
+}

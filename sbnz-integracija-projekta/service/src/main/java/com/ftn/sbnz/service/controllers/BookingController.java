@@ -33,8 +33,8 @@ public class BookingController {
 	}
 
 	@RequestMapping(path = "/traveler", method = RequestMethod.GET, produces = "application/json")
-	public List<ReturnedBookingDTO> getByTraveler() {
-        return this.bookingService.getByTraveler();
+	public List<ReturnedBookingDTO> getByTraveler(@RequestParam Long id) {
+        return this.bookingService.getByTraveler(id);
 	}
 
 	@RequestMapping(method = RequestMethod.POST, produces = "application/json")

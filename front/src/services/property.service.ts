@@ -43,6 +43,36 @@ export class PropertyService {
   denyPropertyRequest(id: number, reason: ReasonDTO) {
     return this.http.put<any>(environment.apiHost + "/property/deny/" + id, reason, {withCredentials: true});
   }
+
+  getRecsForUser(id: number) {
+    return this.http.get<any>(environment.apiHost + "/listing/recommendations?id=" + id);
+  }
+
+  getAllListings() {
+    return this.http.get<any>(environment.apiHost + "/listing/all");
+  }
+
+  getReviewsForListing(id: number): Observable<any> {
+    return this.http.get<any>(environment.apiHost + "/listing/review?id=" + id);
+  }
+
+  addDiscount(dto: AddDiscountDTO): Observable<any> {
+    return this.http.post<any>(environment.apiHost + "/listing/discount", dto,  {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      })
+    });
+  }
+
+  deleteDiscount(id: number): Observable<any> {
+    return this.http.delete<any>(environment.apiHost + "/listing/discount?id=" + id);
+  }
+
+  
+}
+
+export interface ListingRecsDTO {
+  listings: ReturnedListingDTO[]
 }
 
 export interface ListingDTO {
@@ -55,6 +85,29 @@ export interface ListingDTO {
   destination: ListingDestinationDTO
 }
 
+export interface ReturnedListingDTO {
+  id: number,
+  title: string,
+  price: number,
+  description: string,
+  image: string,
+  location: ListingLocationDTO,
+  destination: ListingDestinationDTO,
+  rating: number,
+  discount: ReturnedDiscountDTO
+
+}
+
+export interface FullListingDTO {
+  id: number,
+  title: string,
+  price: number,
+  description: string,
+  image: string,
+  location: FullListingLocationDTO
+  rating: number
+
+}
 
 
 export interface ReturnedPropertyDTO {
@@ -84,6 +137,13 @@ export interface ListingLocationDTO {
   lat: number,
   lng: number, 
   address: string
+}
+
+export interface FullListingLocationDTO {
+  lat: number,
+  lng: number, 
+  address: string
+  destination: ListingDestinationDTO
 }
 
 export interface ListingDestinationDTO {
@@ -135,4 +195,27 @@ export interface UserDTO {
 
 export interface ReasonDTO {
   reason: string
+}
+
+export interface ReturnedReviewDTO {
+  id: number,
+  rating: number,
+  comment: string,
+  date: string,
+  travelerFullName: string,
+  travelerId: number,
+  listingId: number
+}
+
+export interface AddDiscountDTO {
+  listingId: number,
+  ownerId: number,
+  amount: number,
+  validTo: string
+}
+
+export interface ReturnedDiscountDTO {
+  id: number,
+  amount: number,
+  validTo: string
 }

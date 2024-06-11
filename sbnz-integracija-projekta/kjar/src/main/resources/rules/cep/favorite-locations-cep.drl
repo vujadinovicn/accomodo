@@ -21,7 +21,6 @@ import com.ftn.sbnz.model.events.ListingViewedEvent;
 import com.ftn.sbnz.model.events.BlockingEvent;
 import com.ftn.sbnz.model.events.ReservationEvent;
 import com.ftn.sbnz.model.events.BookingEvent;
-import com.ftn.sbnz.model.events.BookingEmailEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.NegativeReviewEvent;
 import com.ftn.sbnz.model.events.ReservationCanceledEvent;

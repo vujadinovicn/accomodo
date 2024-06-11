@@ -21,5 +21,5 @@ public interface IBookingService {
 
     public List<ReturnedBookingDTO> getByOwner();
 
-    public List<ReturnedBookingDTO> getByTraveler();
+    public List<ReturnedBookingDTO> getByTraveler(Long travelerId);
 }

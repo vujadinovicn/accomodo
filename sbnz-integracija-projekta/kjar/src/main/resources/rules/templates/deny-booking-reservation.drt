@@ -27,7 +27,7 @@ then
     modify($booking){
         setStatus(BookingStatus.DENIED)
     }
-    insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
+    insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED, $reason));
     System.out.println("@{message} " + $reason);
 end
 end template

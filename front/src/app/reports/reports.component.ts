@@ -41,8 +41,10 @@ export class ReportsComponent implements OnInit {
       this.getSpentForTraveler();
     }
 
-    this.getTopTravelers();
-    this.getTopOwners();
+    if (this.role == "ROLE_ADMIN"){
+      this.getTopTravelers();
+      this.getTopOwners();
+    }
 
     // this.role='ROLE_ADMIN';
   }

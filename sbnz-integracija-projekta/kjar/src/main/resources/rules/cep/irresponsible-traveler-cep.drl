@@ -23,6 +23,7 @@ import com.ftn.sbnz.model.enums.EmailNotificationType;
 import com.ftn.sbnz.model.events.BookingAcceptedEvent;
 import com.ftn.sbnz.model.events.BookingDeniedEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.CustomEmailEvent;
 import com.ftn.sbnz.model.events.BlockingEvent;
 import com.ftn.sbnz.model.events.ReservationEvent;
 import com.ftn.sbnz.model.events.BookingEvent;
@@ -92,6 +93,6 @@ when
         count($event)
     )
 then
-    // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
+    insert(new CustomEmailEvent("vujadinovic01@gmail.com", "Irresponsible traveler, " + $traveler.getEmail() + ", is on it again!"));
     System.out.println("Administrator notified about irresponsible traveler's additional cancellation!");
 end

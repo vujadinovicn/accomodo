@@ -4,6 +4,7 @@ import { AuthService } from 'src/services/auth.service';
 import { BookingService } from 'src/services/booking.service';
 import { DenyBookingComponent } from '../deny-booking-dialog/deny-booking-dialog.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ReviewDialogComponent } from '../review-dialog/review-dialog.component';
 
 @Component({
   selector: 'app-bookings',
@@ -17,8 +18,8 @@ export class BookingsComponent implements OnInit {
   ) { }
 
   role: any = {};
+  loggedUserId: number = -1;
   enableClick: boolean = false;
-  status: string = "PENDING";
   selectedCar: string = "volvo";
   allBookings: ReturnedBookingsDTO[] = [];
 
@@ -26,27 +27,8 @@ export class BookingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.role = this.authService.getRole();
-
-    if (this.role == "ROLE_OWNER") {
-      this.bookingService.getByOwner().subscribe(data => {
-        console.log(data);
-        this.bookings = data;
-        this.sortBookings();
-        this.allBookings = data;
-        console.log(this.bookings[0].status);
-        console.log(this.role);
-      });
-    }
-    else if (this.role == "ROLE_TRAVELER") {
-      this.bookingService.getByTraveler().subscribe(data => {
-        console.log(data);
-        this.bookings = data;
-        this.allBookings = data;
-        this.sortBookings();
-        console.log(this.bookings[0].status);
-        console.log(this.role);
-      });
-    }
+    this.loggedUserId = this.authService.getId();
+    this.loadBookings();
   }
 
   sortBookings(){
@@ -55,7 +37,25 @@ export class BookingsComponent implements OnInit {
       const dateB = new Date(b.startDate);
     
       return dateB.getTime() - dateA.getTime();
-    });
+    });    
+  }
+
+  loadBookings() {
+    if (this.role == "ROLE_TRAVELER") {
+      this.bookingService.getByTraveler(this.loggedUserId).subscribe(data => {
+        console.log(data);
+        this.bookings = data;
+        this.allBookings = data;
+        this.sortBookings();
+      });
+    } else {
+      this.bookingService.getByOwner().subscribe(data => {
+        console.log(data);
+        this.bookings = data;
+        this.allBookings = data;
+        this.sortBookings();
+      });
+    }
   }
 
   denyBooking(index: any){
@@ -64,6 +64,13 @@ export class BookingsComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       // this.rejectionCompleted.emit(true);
     });
+  }
+
+  canCancel(booking: any): boolean {
+    const now = new Date();
+    const startDate = new Date(booking.startDate);
+
+    return startDate > now && booking.status == "PENDING";
   }
 
   acceptBooking(index: any){
@@ -102,7 +109,29 @@ export class BookingsComponent implements OnInit {
 
   onStatusChange(status: any){
     console.log(status)
-    this.bookings = this.allBookings.filter(item => item.status == status);
+    if (status == "ALL")
+      this.bookings = this.allBookings
+    else
+      this.bookings = this.allBookings.filter(item => item.status == status);
+  }
+
+  openDialog(index: any): void {
+    let booking = this.bookings[index];
+    let review: ReviewDTO = {
+      listingId: booking.listingId, travelerId: this.loggedUserId,
+      rating: 0,
+      comment: ''
+    };
+
+    const dialogRef = this.dialog.open(ReviewDialogComponent, {
+      width: '250px',
+      data: review
+    });
+
+    dialogRef.afterClosed().subscribe({next: (value) => {
+        this.loadBookings();
+    },})
+
   }
 
 }
@@ -110,12 +139,22 @@ export class BookingsComponent implements OnInit {
 export interface ReturnedBookingsDTO{
   bookingId: number,
   travelerId: number,
+  listingId: number,
   ownerId: number,
   travelerName: string,
   ownerName: string,
   listingName: string,
   status: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  reviewable: boolean,
+  reviewByTraveler: ReviewDTO,
+}
+
+export interface ReviewDTO {
+  listingId: number,
+  travelerId: number,
+  rating: number,
+  comment: string,
 
 }

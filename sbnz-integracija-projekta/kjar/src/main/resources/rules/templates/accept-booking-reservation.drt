@@ -28,7 +28,7 @@ then
     modify($booking){
         setStatus(BookingStatus.ACCEPTED)
     }
-    insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_ACCEPTED));
+    insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_ACCEPTED, ""));
     System.out.println("@{message}");
 end
 end template

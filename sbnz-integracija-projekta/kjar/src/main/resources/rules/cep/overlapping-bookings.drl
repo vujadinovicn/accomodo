@@ -60,13 +60,13 @@ rule "Handle overlapping bookings if there is less than 7 days for one of bookin
 no-loop true
 when
     $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
-    $booking1: Booking(id == $id1)
-    $booking2: Booking(id == $id2, $startDate2: startDate, !($startDate2 after[7d] dateNow))
+    $booking1: Booking(id == $id1, $traveler: traveler)
+    $booking2: Booking(id == $id2, $startDate2: startDate, !($startDate2 after[7d] dateNow), $listing: listing)
 then
     modify($booking2){
         setStatus(BookingStatus.DENIED)
     }
-    // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
+    insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED, ""));
     System.out.println("Booking with id: " + $id2 + " has been DENIED!");
 end
 
@@ -74,11 +74,11 @@ rule "Handle overlapping bookings if there is more than 7 days for one of bookin
 no-loop true
 when
     $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
-    $booking1: Booking(id == $id1)
-    $booking2: Booking(id == $id2, $startDate2: startDate, $startDate2 after[7d] dateNow)
+    $booking1: Booking(id == $id1, $traveler: traveler)
+    $booking2: Booking(id == $id2, $startDate2: startDate, $startDate2 after[7d] dateNow, $listing: listing)
 then
     insert(new ChronoCheckOverlappedBookingsEvent($id1, $id2));
-    // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.RESCHEDULE));
+    insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_RESCHEDULE, ""));
     System.out.println("Send notification to traveler for potential overlap!");
 end
 
@@ -102,7 +102,5 @@ then
     modify($traveler){
         setDateOfIrresponsible(new Date());
     }
-    // Send confirmation email
-    // sendConfirmationEmail($reservation);
     System.out.println("Bookings automatically deleted!");
 end

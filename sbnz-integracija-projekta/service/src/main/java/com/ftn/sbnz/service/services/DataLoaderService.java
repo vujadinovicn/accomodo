@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import org.hibernate.Hibernate;
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -115,6 +116,7 @@ public class DataLoaderService {
         }
 
         for (Traveler traveler : travelers) {
+            // Hibernate.initialize(traveler.getFavoriteListings());
             kieSession.insert(traveler);
         }
 
@@ -132,7 +134,11 @@ public class DataLoaderService {
 
         for (Booking booking : bookings) {
             kieSession.insert(booking);
+            System.out.println("BOOKINGS: " + booking.getTraveler().getId());
+
         }
+
+        System.out.println("BOOKINGS: " + bookings.size());
 
         for (Owner owner : owners) {
             kieSession.insert(owner);

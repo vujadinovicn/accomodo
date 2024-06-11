@@ -14,11 +14,13 @@ public class BookingEmailEvent implements Serializable{
     private String emailTo;
     private String listingName;
     private EmailNotificationType type;
+    private String reason;
 
-    public BookingEmailEvent(String emailTo, String listingName, EmailNotificationType type) {
+    public BookingEmailEvent(String emailTo, String listingName, EmailNotificationType type, String reason) {
         this.emailTo = emailTo;
         this.listingName = listingName;
         this.type = type;
+        this.reason = reason;
     }
     public String getEmailTo() {
         return emailTo;
@@ -38,4 +40,12 @@ public class BookingEmailEvent implements Serializable{
     public void setType(EmailNotificationType type) {
         this.type = type;
     }
+    public String getReason() {
+        return reason;
+    }
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    
 }

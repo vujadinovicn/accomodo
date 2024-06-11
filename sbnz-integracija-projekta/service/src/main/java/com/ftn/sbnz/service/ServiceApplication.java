@@ -77,6 +77,7 @@ public class ServiceApplication  {
 
 		sessionBuilder.addRules("/rules/cep/cep.drl");
 		sessionBuilder.addRules("/rules/cep/overlapping-bookings.drl");
+		// sessionBuilder.addRules("/rules/cep/flag-checker.drl");
 		sessionBuilder.addRules("/rules/cep/favorite-locations-cep.drl");
 		sessionBuilder.addRules("/rules/cep/irresponsible-traveler-cep.drl");
 		sessionBuilder.addRules("/rules/queries/admin-reports.drl");

@@ -1,7 +1,5 @@
 package com.ftn.sbnz.service.services;
 
-import java.time.LocalDateTime;
-
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;

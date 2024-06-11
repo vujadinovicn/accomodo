@@ -113,13 +113,18 @@ public class UserService implements IUserService, UserDetailsService{
         Traveler traveler = allTravelers.findByEmail(email);
         BlockingEvent event = new BlockingEvent(email, true);
         kieSession.insert(event);
-        kieSession.insert(traveler);
 
         int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
-        allTravelers.save(traveler);
-        allTravelers.flush();
+        for (Object object : kieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
+            Traveler t = (Traveler) object;
+            if (t.getId() == traveler.getId()) {
+				allTravelers.save(t);
+				allTravelers.flush();
+                break;
+            }
+        }
     }
 
     @Override
@@ -127,12 +132,17 @@ public class UserService implements IUserService, UserDetailsService{
         Traveler traveler = allTravelers.findByEmail(email);
         BlockingEvent event = new BlockingEvent(email, false);
         kieSession.insert(event);
-        kieSession.insert(traveler);
 
         int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
-        allTravelers.save(traveler);
-        allTravelers.flush();
+        for (Object object : kieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
+            Traveler t = (Traveler) object;
+            if (t.getId() == traveler.getId()) {
+				allTravelers.save(t);
+				allTravelers.flush();
+                break;
+            }
+        }
     }    
 }

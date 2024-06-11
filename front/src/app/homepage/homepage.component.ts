@@ -1,5 +1,5 @@
-import { ListingDTO, PropertyDTO, PropertyService, ReturnedPropertyDTO } from './../../services/property.service';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { FullListingDTO, ListingDTO, ListingRecsDTO, PropertyDTO, PropertyService, ReturnedListingDTO, ReturnedPropertyDTO } from './../../services/property.service';
 import { MatDialog } from '@angular/material/dialog';
 import { AddPropertyDialogComponent } from '../add-property-dialog/add-property-dialog.component';
 import { AuthService } from 'src/services/auth.service';
@@ -15,8 +15,9 @@ import { ListingService } from 'src/services/listing.service';
   styleUrls: ['./homepage.component.css']
 })
 export class HomepageComponent implements OnInit {
-  properties: ListingDTO[] = [];
-  allProperties: ListingDTO[] = [];
+  allProperties: ReturnedListingDTO[] = [];
+  properties: ReturnedListingDTO[] = [];
+  recListings: ReturnedListingDTO[] = [];
   currentPage = 1;
   enableClick: boolean =true;
   pageSize = 4;
@@ -33,31 +34,67 @@ export class HomepageComponent implements OnInit {
   private listingService: ListingService) { }
 
   ngOnInit(): void {
-    this.loadItems();
 
-    let loggedUser = this.authService.getUser();
+    this.loggedUser = this.authService.getUser();
     // this.name = loggedUser? loggedUser.name: "";
     this.role = this.authService.getRole();
+
+    this.loadItems();
+
     // this.loggedUser = loggedUser;
     console.log("eee");
     // console.log(this.loggedUser.role)
   }
 
-  loadItems(): void {
+  reset(): void {
+    this.loadItems();
+  }
 
-    this.propertyService.getListingsForOwner().subscribe({
-      next: (value) => {
-            console.log(value)
-            // this.currentPage = value.pageIndex;
-            // this.count = value.count;
-            this.properties = value;
-            this.allProperties = value;
-            console.log(this.properties[0]);
-          }, 
-          error: (err) => {
-            console.log(err);
-          }
-    })
+  loadItems(): void {
+    
+    if (this.role == "ROLE_TRAVELER") {
+      console.log(this.role);
+      console.log(this.authService.getId())
+      this.propertyService.getRecsForUser(this.authService.getId()).subscribe({
+        next: (value: ListingRecsDTO) => {
+              console.log("dobijeno za recs" + JSON.stringify(value, null, 2));
+              // this.currentPage = value.pageIndex;
+              // this.count = value.count;
+              console.log(value.listings[0]);
+              this.recListings = value.listings;
+              // this.allProperties = value;
+            }, 
+            error: (err) => {
+              console.log(err);
+            }
+      });
+
+      this.propertyService.getAllListings().subscribe({
+        next: (value) => {
+              console.log("dobijeno za sve" + JSON.stringify(value, null, 2));
+              this.properties = value;
+              this.allProperties = value;
+            }, 
+            error: (err) => {
+              console.log(err);
+            }
+      });
+    } else {
+
+      this.propertyService.getListingsForOwner().subscribe({
+        next: (value) => {
+              console.log(value)
+              // this.currentPage = value.pageIndex;
+              // this.count = value.count;
+              this.properties = value;
+              console.log(this.properties[0]);
+            }, 
+            error: (err) => {
+              console.log(err);
+            }
+      })
+    }
+
   }
 
   openAddPropertyDialog() {
@@ -99,7 +136,7 @@ export class HomepageComponent implements OnInit {
       next: (value) => {
         // this.options = ['Novi Sad, Serbia', 'Belgrade, Serbia']
           let data = value;
-          let temp: ListingDTO[] = [];
+          let temp: ReturnedListingDTO[] = [];
           console.log(data);
           for (let dto of data){
             for (let curr of this.allProperties){
@@ -122,7 +159,7 @@ export class HomepageComponent implements OnInit {
       next: (value) => {
         // this.options = ['Novi Sad, Serbia', 'Belgrade, Serbia']
           let data = value;
-          let temp: ListingDTO[] = [];
+          let temp: ReturnedListingDTO[] = [];
           console.log(data);
           for (let dto of data){
             for (let curr of this.allProperties){
