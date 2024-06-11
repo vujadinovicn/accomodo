@@ -2,15 +2,12 @@ package com.ftn.sbnz.service.controllers;
 
 import java.util.List;
 
-import org.kie.api.KieBase;
-import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,13 +15,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ftn.sbnz.model.models.Listing;
-import com.ftn.sbnz.model.models.Location;
 import com.ftn.sbnz.service.dtos.AddDiscountDTO;
 import com.ftn.sbnz.service.dtos.AddListingDTO;
 import com.ftn.sbnz.service.dtos.AddReviewDTO;
 import com.ftn.sbnz.service.dtos.GetListingDTO;
-import com.ftn.sbnz.service.dtos.ListingDestinationDTO;
 import com.ftn.sbnz.service.dtos.MessageDTO;
 import com.ftn.sbnz.service.dtos.RecommendedListingsDTO;
 import com.ftn.sbnz.service.dtos.ReturnedDiscountDTO;
@@ -32,7 +26,6 @@ import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
 import com.ftn.sbnz.service.dtos.ReturnedReviewDTO;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 
-import jakarta.validation.Valid;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")

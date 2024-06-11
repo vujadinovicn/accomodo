@@ -2,8 +2,6 @@ package com.ftn.sbnz.service.dtos;
 
 import java.util.Date;
 
-import com.ftn.sbnz.model.models.Review;
-
 public class ReturnedBookingDTO {
     private Long bookingId;
     private Long travelerId;

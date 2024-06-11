@@ -1,9 +1,6 @@
 package com.ftn.sbnz.service.dtos;
 
-import java.time.LocalDateTime;
-
 import com.ftn.sbnz.model.enums.TravelerLevel;
-import com.ftn.sbnz.model.enums.UserRole;
 
 public class TravelerDetailsDTO {
 

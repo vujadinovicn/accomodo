@@ -1,6 +1,5 @@
 package com.ftn.sbnz.service.dtos;
 
-import org.apache.tools.ant.taskdefs.Get;
 
 public class GetListingDTO {
     private Long userId;
