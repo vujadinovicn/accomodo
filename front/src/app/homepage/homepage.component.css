@@ -177,6 +177,24 @@ h2 {
     font-weight: bold;
 }
 
+.level-bronze {
+    border: 2px solid rgb(197, 135, 29);
+    color:  rgb(197, 135, 29) !important;
+    background: rgb(229, 202, 148);
+}
+
+.level-silver {
+    border: 2px solid rgb(151, 151, 151);
+    color:  rgb(151, 151, 151) !important;
+    background: rgb(232, 232, 232);
+}
+
+.level-gold {
+    border: 2px solid rgb(202, 165, 0);
+    color:  rgb(202, 165, 0) !important;
+    background: rgb(241 237 218);;
+}
+
 @media screen and (max-width: 900px) { 
     
     #card-container{ 

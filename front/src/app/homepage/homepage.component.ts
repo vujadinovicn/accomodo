@@ -23,7 +23,7 @@ export class HomepageComponent implements OnInit {
   enableClick: boolean =true;
   pageSize = 4;
   count = 0;
-  travelerDetails: any;
+  travelerDetails: TravelerDetailsDTO = {} as TravelerDetailsDTO;
 
   loggedUser: any = {};
   role: any = {};
@@ -41,10 +41,9 @@ export class HomepageComponent implements OnInit {
     this.loggedUser = this.authService.getUser();
     // this.name = loggedUser? loggedUser.name: "";
     this.role = this.authService.getRole();
-    this.loadItems();
     if (this.role == "ROLE_TRAVELER"){
       this.userService.getTravelerDetails().subscribe({
-        next: (value: any) => {
+        next: (value: TravelerDetailsDTO) => {
               console.log(value);
               this.travelerDetails = value;
             }, 
@@ -53,6 +52,8 @@ export class HomepageComponent implements OnInit {
             }
       });
     }
+    this.loadItems();
+    
   }
 
   reset(): void {
@@ -184,5 +185,19 @@ export class HomepageComponent implements OnInit {
   });
   }
 
-
+  mapToDiscount(): string {
+    if (this.travelerDetails.level == "BRONZE")
+      return "5%";
+    else if (this.travelerDetails.level == "BRONZE")
+      return "10%";
+    else 
+      return "20%";
+  }
 }
+
+export interface TravelerDetailsDTO {
+  email: string,
+  name: string,
+  lastname: string,
+  level: string
+  }

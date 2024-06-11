@@ -6,9 +6,9 @@
         <div class="title-container">
             <div class="title-topper">
                 <p class="title">Recommended for you</p>
-                <div style="display: flex; justify-content: end; align-items: center;
-                    border-radius: 15px; color: white; padding: 10px 20px; font-weight: 600;" class="back-green">
-                    {{this.travelerDetails.level}}
+                <div *ngIf="this.travelerDetails.level != 'NONE'" style="display: flex; justify-content: end; align-items: center;
+                    border-radius: 15px; color: white; padding: 10px 20px; font-weight: 600;" [ngClass]="'level-' + this.travelerDetails.level.toLowerCase()" >
+                    {{this.travelerDetails.level + " " + mapToDiscount() + " off"}}
                 </div>
             </div>
             <hr>
