@@ -18,10 +18,10 @@ when
     $listing: Listing($location: location.address, $id: id)
     // LocationBackward( $location, "Savski Venac"; )
     isContainedIn($location, backwardLocation; )
-    $accumulator: ListingAccumulator()
+    $accumulator: ListingAccumulator(listings not contains $id)
 then
     modify($accumulator){
       addListing($id)
     }
-    System.out.println( "Place "  + $id +  " is in " + backwardLocation);
+    System.out.println( "Listing "  + $id + ", in " + $location +  ", is in " + backwardLocation);
 end

@@ -33,13 +33,13 @@ end
 rule "Detect overlapping bookings"
 no-loop true
 when
-    $booking1: Booking($id1 : id, status == BookingStatus.ACCEPTED,
+    $booking1: Booking($id1 : id, 
         $locationId: listing.location.id,
         $traveler1: traveler,
         $startDate1: startDate,
         $endDate1: endDate
     )
-    $booking2: Booking(this != $booking1, $id2 : id, status == BookingStatus.ACCEPTED,
+    $booking2: Booking(this != $booking1, $id2 : id,
         listing.location.id == $locationId,
         $traveler2: traveler,
         $startDate2: startDate,
@@ -56,12 +56,12 @@ then
     System.out.println("Bookings are overlapping!");
 end
 
-rule "Handle overlapping bookings if there is less than 7 days for one of bookings"
+rule "Handle overlapping bookings if there is less than 14 days for one of bookings"
 no-loop true
 when
     $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
     $booking1: Booking(id == $id1, $traveler: traveler)
-    $booking2: Booking(id == $id2, $startDate2: startDate, !($startDate2 after[7d] dateNow), $listing: listing)
+    $booking2: Booking(id == $id2, $startDate2: startDate, !($startDate2 after[14d] dateNow), $listing: listing)
 then
     modify($booking2){
         setStatus(BookingStatus.DENIED)
@@ -70,24 +70,24 @@ then
     System.out.println("Booking with id: " + $id2 + " has been DENIED!");
 end
 
-rule "Handle overlapping bookings if there is more than 7 days for one of bookings"
+rule "Handle overlapping bookings if there is more than 14 days for one of bookings"
 no-loop true
 when
     $event: OverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
     $booking1: Booking(id == $id1, $traveler: traveler)
-    $booking2: Booking(id == $id2, $startDate2: startDate, $startDate2 after[7d] dateNow, $listing: listing)
+    $booking2: Booking(id == $id2, $startDate2: startDate, $startDate2 after[14d] dateNow, $listing: listing)
 then
     insert(new ChronoCheckOverlappedBookingsEvent($id1, $id2));
     insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_RESCHEDULE, ""));
     System.out.println("Send notification to traveler for potential overlap!");
 end
 
-rule "Delete bookings if less than 7 days"
+rule "Delete bookings if less than 14 days"
     timer( cron: 0 0 8 * * ? )
 when
     $event: ChronoCheckOverlappedBookingsEvent($id1: firstBookingId, $id2: secondBookingId)
     $booking1: Booking(id == $id1, $travelerId : traveler.id)
-    $booking2: Booking(id == $id2, $startDate2: startDate, !($startDate2 after[7d] dateNow))
+    $booking2: Booking(id == $id2, $startDate2: startDate, !($startDate2 after[14d] dateNow))
     $traveler: Traveler(id == $travelerId)
 then
     modify($booking1){

@@ -16,26 +16,21 @@ import org.drools.core.time.TimeUtils.*;
 
 import java.util.Date;
 
-rule "Check irresponsible traveler flag"
+rule "Remove irresponsible traveler flag"
     timer( cron: 0 0 0 1 * ? )
-// no-loop true
+no-loop true
 when
-    $traveler: Traveler()
-    $rCount: Number() from accumulate(
+    $traveler: Traveler(isIressponsible() == true)
+    $rCount: Number(intValue <= 2) from accumulate(
         $event: ReservationCanceledEvent(booking.traveler.id == $traveler.id) over window:time(15s),
         count($event)
     )
 then
-    if ($rCount.intValue() > 2) {
-        modify($traveler) {
-            setIrresponsible(true);
-            setDateOfIrresponsible(new Date());
-        }
-    } else {
-        modify($traveler) {
-            setIrresponsible(false);
-            setDateOfIrresponsible(new Date());
-        }
+    modify($traveler) {
+        setIressponsible(false);
+    }
+    modify($traveler){
+        setDateOfIrresponsible(new Date());
     }
     System.out.println("Traveler irresponsible flag has been changed!");
 end
@@ -44,24 +39,18 @@ rule "Check malicious traveler flag"
     timer( cron: 0 0 0 1 * ? )
 no-loop true
 when
-    $traveler: Traveler()
+    $traveler: Traveler(isMalicious() == true)
     $totalReviews: Number(intValue > 5) from accumulate(
         $review: Review(traveler.id == $traveler.id),
         count($review)
     )
-    $mCount : Number() from accumulate(
+    $mCount : Number(intValue() <= (0.8 * $totalReviews.intValue())) from accumulate(
         $negreview: NegativeReviewEvent(review.traveler.id == $traveler.id) over window:time(90d),
         count($negreview)
     )
 then
-    // if ($mCount.intValue() > (0.8 * $totalReviews.intValue())){
-    //     modify($traveler) {
-    //         setMalicious(true);
-    //     }
-    // } else {
-    //     modify($traveler) {
-    //         setMalicious(false);
-    //     }
-    // }
+    modify($traveler) {
+            setMalicious(false);
+    }
     System.out.println("Traveler malicious flag has been checked!");
 end
