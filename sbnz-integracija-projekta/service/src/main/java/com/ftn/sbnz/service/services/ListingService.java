@@ -115,38 +115,34 @@ public class ListingService implements IListingService{
         allViewedListings.flush();
 		
 		cepKieSession.insert(viewedEvent);
-		// for (Object object : cepKieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
-        //     Traveler t = (Traveler) object;
-        //     if (t.getId() == traveler.getId()) {
-        //    		cepKieSession.delete(cepKieSession.getFactHandle(t));
-        //         break;
-        //     }
-        // }
+		
         int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
-		for (Object object : cepKieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
-            Traveler t = (Traveler) object;
-            if (t.getId() == traveler.getId()) {
-				allTravelers.save(t);
+		if (n > 0) {
+			// for (Object object : cepKieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
+			// 	Traveler t = (Traveler) object;
+			// 	if (t.getId() == traveler.getId()) {
+			// 		allTravelers.save(t);
+			// 		allTravelers.flush();
+			// 		break;
+			// 	}
+			// }
+
+			if (!traveler.getFavoriteListings().contains(listing)) {
+				traveler.getFavoriteListings().add(listing);
+				allTravelers.save(traveler);
 				allTravelers.flush();
-                break;
-            }
-        }
-
-		Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
-        for (Object event : newEvents) {
-            if (event instanceof DiscountEmailEvent) {
-                DiscountEmailEvent emailEvent = (DiscountEmailEvent) event;
-                mailService.sendDiscountEmail(emailEvent);
-            }
-        }
-		// System.out.println(traveler.getFavoriteListings().size());
-
-		// if (n >= 1) {
-		// 	allTravelers.save(traveler);
-		// 	allTravelers.flush();
-		// }
+			}
+		}
+		
+		// Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
+        // for (Object event : newEvents) {
+        //     if (event instanceof DiscountEmailEvent) {
+        //         DiscountEmailEvent emailEvent = (DiscountEmailEvent) event;
+        //         mailService.sendDiscountEmail(emailEvent);
+        //     }
+        // }
 	}
 
 	@Override
@@ -372,7 +368,6 @@ public class ListingService implements IListingService{
 		FetchListingRecomendationEvent event = new FetchListingRecomendationEvent(traveler, LocalDateTime.now());		
 		
 		cepKieSession.insert(event);
-		// kieSession.insert(traveler);
         cepKieSession.setGlobal("listingService", this); 
 
         int n = cepKieSession.fireAllRules();
