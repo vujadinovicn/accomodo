@@ -1,5 +1,6 @@
 package com.ftn.sbnz.service.services;
 
+import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ public class RegistrationService implements IRegistrationService{
     @Autowired
 	private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private KieSession kieSession;
+
     @Override
     public void addUser(AddUserDTO dto) {
 		if (this.doesUserExist(dto.getEmail())) {
@@ -39,17 +43,16 @@ public class RegistrationService implements IRegistrationService{
         if (dto.getRole() == UserRole.TRAVELER){
             Traveler traveler = new Traveler(dto.getEmail(), dto.getPassword(), dto.getName(), dto.getLastname(), dto.getDateOfBirth());
             traveler.setPassword(passwordEncoder.encode(dto.getPassword()));
+            kieSession.insert(traveler);
             allTravelers.save(traveler);
             allTravelers.flush();
         }
         else if (dto.getRole() == UserRole.OWNER){
             Owner owner = new Owner(dto.getEmail(), dto.getPassword(), dto.getName(), dto.getLastname(), dto.getDateOfBirth());
             owner.setPassword(passwordEncoder.encode(dto.getPassword()));
+            kieSession.insert(owner);
             allOwners.save(owner);
             allOwners.flush();
-        }
-        else if (dto.getRole() == UserRole.ADMIN){
-            
         }
         else {
             System.out.println("wtf");

@@ -21,7 +21,7 @@ public class Traveler extends User {
     private TravelerLevel level;
     private Date dateOfIrresponsible;
 
-    @ManyToMany(cascade = {}, fetch = FetchType.EAGER)
+    @ManyToMany(cascade = {}, fetch = FetchType.LAZY)
     private Collection<Listing> favoriteListings = new ArrayList<Listing>();
     @ManyToMany(cascade = {}, fetch = FetchType.LAZY)
     private Collection<Destination> favoriteDestinations = new ArrayList<Destination>();

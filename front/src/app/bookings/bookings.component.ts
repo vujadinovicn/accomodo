@@ -28,9 +28,16 @@ export class BookingsComponent implements OnInit {
   ngOnInit(): void {
     this.role = this.authService.getRole();
     this.loggedUserId = this.authService.getId();
-
     this.loadBookings();
+  }
+
+  sortBookings(){
+    this.bookings.sort((a, b) => {
+      const dateA = new Date(a.startDate);
+      const dateB = new Date(b.startDate);
     
+      return dateB.getTime() - dateA.getTime();
+    });    
   }
 
   loadBookings() {
@@ -39,12 +46,14 @@ export class BookingsComponent implements OnInit {
         console.log(data);
         this.bookings = data;
         this.allBookings = data;
+        this.sortBookings();
       });
     } else {
       this.bookingService.getByOwner().subscribe(data => {
         console.log(data);
         this.bookings = data;
         this.allBookings = data;
+        this.sortBookings();
       });
     }
   }
@@ -61,7 +70,7 @@ export class BookingsComponent implements OnInit {
     const now = new Date();
     const startDate = new Date(booking.startDate);
 
-    return startDate > now;
+    return startDate > now && booking.status == "PENDING";
   }
 
   acceptBooking(index: any){

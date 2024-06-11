@@ -43,6 +43,36 @@ mat-paginator {
 
 }
 
+
+#card-container {
+    display: flex;
+    position: relative;
+    width: 450px;
+}
+
+.transition {
+    transition: transform 0.2s ease-in-out;
+}
+
+.transition:hover{
+    transform: scale(1.02);
+    cursor: pointer;
+}
+
+.image-container {
+    height: 220px;
+    width: 200px;
+    /* flex: 1; */
+    object-fit: cover;
+}
+
+.image-container-details {
+    height: 220px;
+    width: 50%;
+    /* flex: 1; */
+    object-fit: cover;
+}
+
 h2 {
     margin: 0 !important;
     margin-bottom: 20px !important;

@@ -1,5 +1,7 @@
 package com.ftn.sbnz.service.controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -10,13 +12,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.Authentication;
 
 import com.ftn.sbnz.model.models.User;
+import com.ftn.sbnz.service.dtos.AdminUsersDTO;
 import com.ftn.sbnz.service.dtos.CredentialsDTO;
 import com.ftn.sbnz.service.dtos.TokenDTO;
 import com.ftn.sbnz.service.security.jwt.IJWTTokenService;
@@ -60,6 +66,9 @@ public class UserController {
 
 		UserDetails user = (UserDetails) authentication.getPrincipal();
 		User userFromDb = this.userService.getUserByEmail(credentials.getEmail());
+
+		if (userFromDb.isBlocked())
+			return new ResponseEntity<Object>(null, HttpStatus.BAD_REQUEST);
 		 
 		String jwt = tokenUtils.generateToken(user, userFromDb);
 		this.tokenService.createToken(jwt);
@@ -67,5 +76,18 @@ public class UserController {
 		return new ResponseEntity<TokenDTO>(new TokenDTO(jwt, jwt), HttpStatus.OK);
 	}
 
-	
+	@GetMapping(value = "/admin") 
+	public List<AdminUsersDTO> getForAdmin(){
+		return this.userService.getForAdmin();
+	}
+
+	@PutMapping(value = "/block") 
+	public void block(@RequestParam String email){
+		this.userService.block(email);
+	}
+
+	@PutMapping(value = "/unblock") 
+	public void unblock(@RequestParam String email){
+		this.userService.unblock(email);
+	}
 }

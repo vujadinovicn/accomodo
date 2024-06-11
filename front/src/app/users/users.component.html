@@ -1,0 +1,39 @@
+<div class="homepage-container">
+    <div class="title-container">
+        <div class="title-topper">
+            <p class="title">Users</p>
+        </div>
+        <hr>
+    </div>
+    <div class="flex-container" style="display: block !important;"><div >
+    <div *ngFor="let data of users; let i = index" class="basic-container flex-container" style="padding: 10px;margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <div style="font-size: 1.5em;
+        display: inline-block">
+        {{this.users[i].name}}
+        </div>
+        <div class="flag" *ngIf="this.users[i].iressponsible">
+            Irresponsible
+        </div>
+        <div class="flag" *ngIf="this.users[i].malicious">
+            Malicious
+        </div>
+    </div>
+    
+    <div class="red" style="display: inline-block;
+        font-size: 1.5em;
+        font-weight: 600;
+        cursor: pointer;" *ngIf="!this.users[i].blocked" (click)="block(i)">
+        Block
+    </div>
+    <div class="green" style="display: inline-block;
+        font-size: 1.5em;
+        font-weight: 600;
+        cursor: pointer;" *ngIf="this.users[i].blocked" (click)="unblock(i)">
+        Unblock
+    </div>
+    </div>
+  </div>
+</div>
+      
+</div>

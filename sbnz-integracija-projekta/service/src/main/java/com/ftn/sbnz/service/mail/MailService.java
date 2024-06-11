@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.ftn.sbnz.model.enums.EmailNotificationType;
 import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.events.CustomEmailEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.sendgrid.Method;
 import com.sendgrid.Request;
@@ -44,6 +45,8 @@ public class MailService implements IMailService {
 			else if (emailNotificationEvent.getType() == EmailNotificationType.BOOKING_DENIED) 
 				status = "DENIED";
 			body = "Booking for " + emailNotificationEvent.getListingName() + " has been " + status + "!";
+			if (emailNotificationEvent.getType() == EmailNotificationType.BOOKING_DENIED) 
+				body += "Reason: " + emailNotificationEvent.getReason();
 		}
 		
 	    personalization.addDynamicTemplateData("body", body);
@@ -94,5 +97,34 @@ public class MailService implements IMailService {
 		}
 	}
 
+	@Override
+	public void sendCustomEmail(CustomEmailEvent emailNotificationEvent) {
+		Email from = new Email("vujadinovic01@gmail.com", "Accomodo");
+		String subject = "Hello";
+		String toRecieve = emailNotificationEvent.getEmailTo();
+		Email to = new Email(toRecieve);
+		Content c = new Content("text/plain", "message");
+		Mail mail = new Mail(from, subject, to, c);
+		mail.setSubject(subject);
+		
+		Personalization personalization = new Personalization();
+	    personalization.addTo(to);
+
+		String body = emailNotificationEvent.getBody();
+	    personalization.addDynamicTemplateData("body", body);
+	    mail.addPersonalization(personalization);
+		mail.setTemplateId("d");
+		
+		Request req = new Request();
+		try {
+			req.setMethod(Method.POST);
+			req.setEndpoint("mail/send");
+			req.setBody(mail.build());
+			Response res = this.sendGrid.api(req);
+			System.out.println(res.getStatusCode());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }
 

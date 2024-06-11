@@ -1,0 +1,34 @@
+template header
+eventType
+acceptedEventType
+deniedEventType
+notificationType
+message
+
+package rules;
+
+import com.ftn.sbnz.model.events.BookingEvent;
+import com.ftn.sbnz.model.events.ReservationEvent;
+import com.ftn.sbnz.model.events.BookingAcceptedEvent;
+import com.ftn.sbnz.model.events.BookingDeniedEvent;
+import com.ftn.sbnz.model.events.ReservationAcceptedEvent;
+import com.ftn.sbnz.model.events.ReservationDeniedEvent;
+import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.enums.EmailNotificationType;
+import com.ftn.sbnz.model.events.ChronoCheckReservationEvent;
+
+template "send-notification-after-booking"
+
+rule "Send notification to owner after @{eventType}"
+    no-loop true
+when
+    $event: @{eventType}($bookingId: bookingId)
+    not @{acceptedEventType}(bookingId == $bookingId)
+    not @{deniedEventType}(bookingId == $bookingId)
+then
+    insert(new ChronoCheckReservationEvent($bookingId, false));
+    insert(new BookingEmailEvent(null, null, @{notificationType}, ""));
+    System.out.println("@{message}");
+end
+end template
+

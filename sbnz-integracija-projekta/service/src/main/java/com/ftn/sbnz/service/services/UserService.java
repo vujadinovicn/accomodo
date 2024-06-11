@@ -10,6 +10,7 @@ import org.drools.core.ClassObjectFilter;
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,10 +19,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.ftn.sbnz.service.dtos.AdminUsersDTO;
 import com.ftn.sbnz.service.repositories.TravelerRepository;
 import com.ftn.sbnz.service.repositories.UserRepository;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 import com.ftn.sbnz.service.services.interfaces.IUserService;
+import com.ftn.sbnz.model.events.BlockingEvent;
 import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
 import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
 import com.ftn.sbnz.model.models.Listing;
@@ -91,5 +94,55 @@ public class UserService implements IUserService, UserDetailsService{
 
         return new ArrayList<>();
 	}
-    
+
+    @Override
+    public List<AdminUsersDTO> getForAdmin() {
+        List<Traveler> users = this.allTravelers.findAll();
+        List<AdminUsersDTO> dtos = new ArrayList<>();
+        for (Traveler traveler : users) {
+            System.out.println(traveler);
+            AdminUsersDTO dto = new AdminUsersDTO(traveler.getName() + " " + traveler.getLastname(), 
+                            traveler.getEmail(), traveler.isBlocked(), traveler.isIressponsible(), traveler.isMalicious());
+            dtos.add(dto);
+        }
+        return dtos;
+    }
+
+    @Override
+    public void block(String email) {
+        Traveler traveler = allTravelers.findByEmail(email);
+        BlockingEvent event = new BlockingEvent(email, true);
+        kieSession.insert(event);
+
+        int n = kieSession.fireAllRules();
+        System.out.println("Number of rules fired: " + n);
+
+        for (Object object : kieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
+            Traveler t = (Traveler) object;
+            if (t.getId() == traveler.getId()) {
+				allTravelers.save(t);
+				allTravelers.flush();
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void unblock(String email) {
+        Traveler traveler = allTravelers.findByEmail(email);
+        BlockingEvent event = new BlockingEvent(email, false);
+        kieSession.insert(event);
+
+        int n = kieSession.fireAllRules();
+        System.out.println("Number of rules fired: " + n);
+
+        for (Object object : kieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
+            Traveler t = (Traveler) object;
+            if (t.getId() == traveler.getId()) {
+				allTravelers.save(t);
+				allTravelers.flush();
+                break;
+            }
+        }
+    }    
 }

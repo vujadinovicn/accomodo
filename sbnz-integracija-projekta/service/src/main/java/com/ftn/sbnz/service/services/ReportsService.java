@@ -1,7 +1,9 @@
 package com.ftn.sbnz.service.services;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.QueryResults;
@@ -19,47 +21,70 @@ import com.ftn.sbnz.service.services.interfaces.IReportsService;
 public class ReportsService implements IReportsService{
 
     @Autowired
-	@Qualifier("cepSession")
+	// @Qualifier("cepSession")
     private KieSession kSession;
 
+    @Autowired
+    private UserService userService;
+
     @Override
-    public Map<String, Object> getTopDestinationsForOwner() {
+    public Map<String, Long> getTopDestinationsForOwner() {
         kSession.fireAllRules();
         
-        QueryResults results = kSession.getQueryResults("Top Destinations For Owner", 2L);
-        Map<String, Object> destinationMap = new HashMap<>();
+        QueryResults results = kSession.getQueryResults("Top Destinations For Owner", userService.getCurrentUser().getId());
+        Map<String, Long> destinationMap = new HashMap<>();
         for (QueryResultsRow row : results) {
             Destination destination = (Destination) row.get("$destination");
             Long count = (Long) row.get("$count");
             destinationMap.put(destination.getName(), count);
         }
+
+        Map<String, Long> result = destinationMap.entrySet()
+        .stream()
+        .sorted(Map.Entry.comparingByValue())
+        .collect(Collectors.toMap(
+            Map.Entry::getKey, 
+            Map.Entry::getValue, 
+            (oldValue, newValue) -> oldValue, LinkedHashMap::new));
         
-        return destinationMap;
+        
+        return result;
     }
 
     @Override
-    public Map<String, Object> getTopDestinationsForTraveler() {
+    public Map<String, Long> getTopDestinationsForTraveler() {
         kSession.fireAllRules();
         
-        QueryResults results = kSession.getQueryResults("Top Destinations For Traveler", 1L);
-        Map<String, Object> destinationMap = new HashMap<>();
+        QueryResults results = kSession.getQueryResults("Top Destinations For Traveler", userService.getCurrentUser().getId());
+        Map<String, Long> destinationMap = new HashMap<>();
         for (QueryResultsRow row : results) {
             Destination destination = (Destination) row.get("$destination");
             Long count = (Long) row.get("$count");
 
             destinationMap.put(destination.getName(), count);
         }
+
+        Map<String, Long> result = destinationMap.entrySet()
+        .stream()
+        .sorted(Map.Entry.comparingByValue())
+        .collect(Collectors.toMap(
+            Map.Entry::getKey, 
+            Map.Entry::getValue, 
+            (oldValue, newValue) -> oldValue, LinkedHashMap::new));
         
-        return destinationMap;
+        
+        return result;
     }
 
     @Override
     public Map<String, Double> getSpentForTraveler(){
         kSession.fireAllRules();
         Map<String, Double> money = new HashMap<>();
-        QueryResults results = kSession.getQueryResults("Spent For Traveler", 1L);
+        System.out.println(userService.getCurrentUser().getId());
+        QueryResults results = kSession.getQueryResults("Spent For Traveler", userService.getCurrentUser().getId());
         for (QueryResultsRow row : results) {
             Double spentAllTime = (Double) row.get("$spentAllTime");
+            System.out.println(spentAllTime);
             Double spent7Days = (Double) row.get("$spent7days");
             Double spentMonth = (Double) row.get("$spentMonth");
             Double spentSixMonths = (Double) row.get("$spentSixMonths");
@@ -78,7 +103,7 @@ public class ReportsService implements IReportsService{
     public Map<String, Double> getEarnedForOwner(){
         kSession.fireAllRules();
         Map<String, Double> money = new HashMap<>();
-        QueryResults results = kSession.getQueryResults("Earned By Owner", 2L);
+        QueryResults results = kSession.getQueryResults("Earned By Owner", userService.getCurrentUser().getId());
         for (QueryResultsRow row : results) {
             Double spentAllTime = (Double) row.get("$spentAllTime");
             Double spent7Days = (Double) row.get("$spent7days");
@@ -96,33 +121,49 @@ public class ReportsService implements IReportsService{
     }
 
     @Override
-    public Map<String, Object> getTopOwners() {
+    public Map<String, Long> getTopOwners() {
         kSession.fireAllRules();
         
         QueryResults results = kSession.getQueryResults("Top Owners");
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Long> map = new HashMap<>();
         for (QueryResultsRow row : results) {
             Owner owner = (Owner) row.get("$owner");
             Long count = (Long) row.get("$count");
             map.put(owner.getName() + " " + owner.getLastname(), count);
         }
         
-        return map;
+        Map<String, Long> result = map.entrySet()
+        .stream()
+        .sorted(Map.Entry.comparingByValue())
+        .collect(Collectors.toMap(
+            Map.Entry::getKey, 
+            Map.Entry::getValue, 
+            (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+        return result;
     }
 
     @Override
-    public Map<String, Object> getTopTravelers() {
+    public Map<String, Long> getTopTravelers() {
         kSession.fireAllRules();
         
         QueryResults results = kSession.getQueryResults("Top Travelers");
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Long> map = new HashMap<>();
         for (QueryResultsRow row : results) {
             Traveler owner = (Traveler) row.get("$traveler");
             Long count = (Long) row.get("$count");
             map.put(owner.getName() + " " + owner.getLastname(), count);
         }
         
-        return map;
+        Map<String, Long> result = map.entrySet()
+        .stream()
+        .sorted(Map.Entry.comparingByValue())
+        .collect(Collectors.toMap(
+            Map.Entry::getKey, 
+            Map.Entry::getValue, 
+            (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+        return result;
     }
     
     

@@ -6,11 +6,12 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/services/auth.service';
 import { BookingService } from 'src/services/booking.service';
+import { ListingService } from 'src/services/listing.service';
 
 @Component({
   selector: 'app-view-listing-dialog',
   templateUrl: './view-listing-dialog.component.html',
-  styleUrls: ['./view-listing-dialog.component.css', ]
+  styleUrls: ['./view-listing-dialog.component.css' ]
 })
 // '../homepage/homepage.component.css'
 export class ViewListingDialogComponent implements OnInit {
@@ -21,7 +22,8 @@ export class ViewListingDialogComponent implements OnInit {
     private propertyService: PropertyService,
     private snackBar: MatSnackBar,
     private bookingService: BookingService,
-    private authService: AuthService
+    private authService: AuthService,
+    private listingService: ListingService
   ) { }
 
   enableClick: boolean = false;
@@ -41,7 +43,7 @@ export class ViewListingDialogComponent implements OnInit {
   ngOnInit(): void {
     this.listing = this.data.listing;
     this.role = this.authService.getRole();
-
+    // this.listingService.getById(this.listing.id).subscribe({});
     this.propertyService.getReviewsForListing(this.listing.id).subscribe({
       next: (value: ReturnedReviewDTO[]) => {
           this.reviews = value;
@@ -54,40 +56,52 @@ export class ViewListingDialogComponent implements OnInit {
     });
   }
 
-  book(isBooking: boolean){
-    console.log(this.bookingForm.get('startDate')?.value);
+  parseDateString(dateString: string): Date {
+    return new Date(dateString);
+  }
 
+  book(isBooking: boolean){
     let dto : MakeBookingDTO = {
-      startDate: this.bookingForm.get('startDate')?.value!,
-      endDate: this.bookingForm.get('endDate')?.value!,
-      status: "",
-      isReservation: !isBooking,
+      startDate: this.parseDateString(this.bookingForm.get('startDate')?.value!),
+      endDate: this.parseDateString(this.bookingForm.get('endDate')?.value!),
+      status: 0,
+      reservation: !isBooking,
       listingId: this.listing.id,
       travelerId: 1 //treba nam traveler id
-
     }
+
 
     this.bookingService.bookListing(dto).subscribe({
       next: (value) => {
         console.log(value);
-        this.snackBar.open("You have successfully accepted the booking!", "", {
+        this.snackBar.open("You have successfully made the booking!", "", {
           duration: 2700, panelClass: ['snack-bar-success']
        });
       },
       error: (err) => {
         console.log(err)
-        this.snackBar.open("An error occured while submiting rejection!", "", {
+        this.snackBar.open("An error occured while booking!", "", {
           duration: 2700, panelClass: ['snack-bar-server-error']
        });
       }
     });
   }
 
-  submitRejectionReason() {
-  }
-
-  addProperty(){
-
+  deleteListing(){
+    this.listingService.delete(this.listing.id).subscribe({
+      next: (value) => {
+        console.log(value);
+        this.snackBar.open("You have successfully deleted listing!", "", {
+          duration: 2700, panelClass: ['snack-bar-success']
+       });
+      },
+      error: (err) => {
+        console.log(err)
+        this.snackBar.open("An error occured while submiting deletion!", "", {
+          duration: 2700, panelClass: ['snack-bar-server-error']
+       });
+      }
+    });
   }
 
   deleteDiscount() {
@@ -145,10 +159,10 @@ export class ViewListingDialogComponent implements OnInit {
 
 
 export interface MakeBookingDTO{
-  startDate: string,
-  endDate: string,
-  status: string,
-  isReservation: boolean,
+  startDate: any,
+  endDate: any,
+  status: number,
+  reservation: boolean,
   listingId: number,
   travelerId: number
 }

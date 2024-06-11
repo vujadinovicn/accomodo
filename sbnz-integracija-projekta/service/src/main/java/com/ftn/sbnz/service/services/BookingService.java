@@ -21,8 +21,12 @@ import com.ftn.sbnz.model.enums.EmailNotificationType;
 import com.ftn.sbnz.model.events.BookingAcceptedEvent;
 import com.ftn.sbnz.model.events.BookingDeniedEvent;
 import com.ftn.sbnz.model.events.BookingEvent;
+import com.ftn.sbnz.model.events.ReservationAcceptedEvent;
 import com.ftn.sbnz.model.events.CollectReviewableListingsEvent;
+import com.ftn.sbnz.model.events.CustomEmailEvent;
 import com.ftn.sbnz.model.events.ReservationCanceledEvent;
+import com.ftn.sbnz.model.events.ReservationDeniedEvent;
+import com.ftn.sbnz.model.events.ReservationEvent;
 import com.ftn.sbnz.model.events.BookingEmailEvent;
 import com.ftn.sbnz.model.models.Booking;
 import com.ftn.sbnz.model.models.BookingRejectionNotice;
@@ -42,6 +46,7 @@ import com.ftn.sbnz.service.repositories.TravelerRepository;
 import com.ftn.sbnz.service.services.interfaces.IBookingService;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 import com.ftn.sbnz.service.services.interfaces.ITravelerService;
+import com.ftn.sbnz.service.services.interfaces.IUserService;
 
 @Service
 public class BookingService implements IBookingService{
@@ -68,6 +73,9 @@ public class BookingService implements IBookingService{
     private IMailService mailService;
 
     @Autowired
+    private IUserService userService;
+
+    @Autowired
     private ReviewRepository allReviews;
 
     @Override
@@ -82,40 +90,39 @@ public class BookingService implements IBookingService{
 
     @Override
     public void bookListing(BookingDTO dto) {
-        // Owner owner = new Owner("vujadinovic74@gmail.com", "123", "Miodrag", "Vujadinovic");
-        // Traveler traveler = new Traveler("vujadinovic01@gmail.com", "123", "Nemanja", "Vujadinovic");
-        // allUsers.save(owner);
-        // allUsers.save(traveler);
-        // allUsers.flush();
-
         Listing listing = listingService.findById(dto.getListingId());
         Traveler traveler = travelerService.getById(dto.getTravelerId());
 
-        Booking booking = new Booking(dto.getStartDate(), dto.getEndDate(), BookingStatus.PENDING, false);
+        Booking booking = new Booking(dto.getStartDate(), dto.getEndDate(), BookingStatus.PENDING, dto.isReservation());
         booking.setTraveler(traveler);
         booking.setListing(listing);
-        kieSession.insert(booking);
-        kieSession.insert(traveler);
-        kieSession.insert(booking.getListing().getOwner());
-        kieSession.insert(booking.getListing().getLocation().getDestination());
-        kieSession.setGlobal("dateNow", new Date());
-
         allBookings.save(booking);
         allBookings.flush();
 
-        BookingEvent bevent = new BookingEvent(booking.getId());
-        kieSession.insert(bevent);
+        kieSession.setGlobal("dateNow", new Date());
+        kieSession.insert(booking);
+
+        if (dto.isReservation()){
+            System.out.println("jeste reyervacija");
+            ReservationEvent revent = new ReservationEvent(booking.getId());
+            kieSession.insert(revent);
+        } else {
+            BookingEvent bevent = new BookingEvent(booking.getId());
+            kieSession.insert(bevent);
+        }
+
         int n = kieSession.fireAllRules();
-
-        // Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(EmailNotificationEvent.class));
-        // for (Object event : newEvents) {
-        //     if (event instanceof EmailNotificationEvent) {
-        //         EmailNotificationEvent emailEvent = (EmailNotificationEvent) event;
-        //         System.out.println(emailEvent.getListingName());
-        //     }
-        // }
-
+        
+        Collection<?> bookings = kieSession.getObjects(new ClassObjectFilter(Booking.class));
+        for (Object bb : bookings) {
+            if (booking instanceof Booking) {
+                Booking b = (Booking) bb;
+                allBookings.save(b);
+            }
+        }
+        allBookings.flush();
         System.out.println("Number of rules fired: " + n);
+        this.sendEmails();
     }
 
 
@@ -123,27 +130,28 @@ public class BookingService implements IBookingService{
     public void acceptBooking(Long id) {
         Booking booking = getById(id);
 
-        BookingAcceptedEvent baevent = new BookingAcceptedEvent(id);
-        kieSession.insert(baevent);
-        kieSession.insert(booking);
+        if (booking.isReservation()){
+            ReservationAcceptedEvent revent = new ReservationAcceptedEvent(id);
+            kieSession.insert(revent);
+        } else {
+            BookingAcceptedEvent baevent = new BookingAcceptedEvent(id);
+            kieSession.insert(baevent);
+        }
+        // kieSession.insert(booking);
         kieSession.setGlobal("dateNow", new Date());
         int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired AFTER ACCEPTENCE: " + n);
 
-        Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(BookingEmailEvent.class));
-        for (Object event : newEvents) {
-            if (event instanceof BookingEmailEvent) {
-                BookingEmailEvent emailEvent = (BookingEmailEvent) event;
-                if (emailEvent.getType() == EmailNotificationType.BOOKING_ACCEPTED){
-                    mailService.sendBookingEmail(emailEvent);
-                    System.out.println("Email has been sent!");
-                }
+       
+        Collection<?> bookings = kieSession.getObjects(new ClassObjectFilter(Booking.class));
+        for (Object bb : bookings) {
+            if (booking instanceof Booking) {
+                Booking b = (Booking) bb;
+                allBookings.save(b);
             }
         }
-
-        allBookings.save(booking);
         allBookings.flush();
-        System.out.println(booking.getStatus());
+        this.sendEmails();
     }
 
 
@@ -155,24 +163,27 @@ public class BookingService implements IBookingService{
         allRejectionNotices.save(notice);
         allRejectionNotices.flush();
 
-        BookingDeniedEvent baevent = new BookingDeniedEvent(dto.getBookingId(), dto.getReason());
-        kieSession.insert(baevent);
-        kieSession.insert(booking);
+        if (booking.isReservation()){
+            ReservationDeniedEvent rEvent = new ReservationDeniedEvent(dto.getBookingId(), dto.getReason());
+            kieSession.insert(rEvent);
+        } else {
+            BookingDeniedEvent baevent = new BookingDeniedEvent(dto.getBookingId(), dto.getReason());
+            kieSession.insert(baevent);
+        }
+        
+        // kieSession.insert(booking);
         int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired AFTER DENIAL: " + n);
 
-        Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(BookingEmailEvent.class));
-        for (Object event : newEvents) {
-            if (event instanceof BookingEmailEvent) {
-                BookingEmailEvent emailEvent = (BookingEmailEvent) event;
-                if (emailEvent.getType() == EmailNotificationType.BOOKING_DENIED){
-                    mailService.sendBookingEmail(emailEvent);
-                    System.out.println("Email has been sent!");
-                }
+        this.sendEmails();
+
+        Collection<?> bookings = kieSession.getObjects(new ClassObjectFilter(Booking.class));
+        for (Object bb : bookings) {
+            if (booking instanceof Booking) {
+                Booking b = (Booking) bb;
+                allBookings.save(b);
             }
         }
-
-        allBookings.save(booking);
         allBookings.flush();
     }
 
@@ -201,26 +212,17 @@ public class BookingService implements IBookingService{
         int n = kieSession.fireAllRules();
         System.out.println("Number of rules fired AFTER CANCELATION: " + n);
 
-        Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(BookingEmailEvent.class));
-        for (Object event : newEvents) {
-            if (event instanceof BookingEmailEvent) {
-                BookingEmailEvent emailEvent = (BookingEmailEvent) event;
-                if (emailEvent.getType() == EmailNotificationType.BOOKING_RESCHEDULE){
-                    mailService.sendBookingEmail(emailEvent);
-                    System.out.println("Email has been sent!");
-                }
-            }
-        }
-
         allBookings.save(booking);
         allBookings.flush();
 
         allTravelers.flush();
+
+        this.sendEmails();
     }
 
     @Override
     public List<ReturnedBookingDTO> getByOwner() {
-        List<Booking> bookings = allBookings.findBookingsByOwnerId(2L);
+        List<Booking> bookings = allBookings.findBookingsByOwnerId(userService.getCurrentUser().getId());
         return getBookingDTOs(bookings, null);
     }
 
@@ -284,6 +286,31 @@ public class BookingService implements IBookingService{
             dtos.add(dto);
         }
         return dtos;
+    }
+
+    private void sendEmails(){
+        try {
+            Collection<?> newEvents = kieSession.getObjects(new ClassObjectFilter(BookingEmailEvent.class));
+            for (Object event : newEvents) {
+                if (event instanceof BookingEmailEvent) {
+                    BookingEmailEvent emailEvent = (BookingEmailEvent) event;
+                    mailService.sendBookingEmail(emailEvent);
+                    System.out.println("Email has been sent!");
+                }
+            }
+
+            newEvents = kieSession.getObjects(new ClassObjectFilter(CustomEmailEvent.class));
+            for (Object event : newEvents) {
+                if (event instanceof CustomEmailEvent) {
+                    CustomEmailEvent emailEvent = (CustomEmailEvent) event;
+                    mailService.sendCustomEmail(emailEvent);
+                    System.out.println("Email has been sent!");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("err");
+        }
+        
     }
 
 }

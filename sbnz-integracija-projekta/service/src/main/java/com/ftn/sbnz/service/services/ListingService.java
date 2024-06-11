@@ -4,12 +4,16 @@ package com.ftn.sbnz.service.services;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.drools.core.ClassObjectFilter;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
+import org.kie.api.runtime.rule.QueryResults;
+import org.kie.api.runtime.rule.QueryResultsRow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -26,6 +30,7 @@ import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
 import com.ftn.sbnz.model.models.Booking;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.ListingAccumulator;
 import com.ftn.sbnz.model.models.Location;
 import com.ftn.sbnz.model.models.LocationBackward;
 import com.ftn.sbnz.model.models.Owner;
@@ -119,49 +124,73 @@ public class ListingService implements IListingService{
         int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
-		System.out.println(traveler.getFavoriteListings().size());
+		for (Object object : cepKieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
+            Traveler t = (Traveler) object;
+            if (t.getId() == traveler.getId()) {
+				allTravelers.save(t);
+				allTravelers.flush();
+                break;
+            }
+        }
 
-		if (n >= 1) {
-			allTravelers.save(traveler);
-			allTravelers.flush();
-		}
+		Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
+        for (Object event : newEvents) {
+            if (event instanceof DiscountEmailEvent) {
+                DiscountEmailEvent emailEvent = (DiscountEmailEvent) event;
+                mailService.sendDiscountEmail(emailEvent);
+            }
+        }
+		// System.out.println(traveler.getFavoriteListings().size());
+
+		// if (n >= 1) {
+		// 	allTravelers.save(traveler);
+		// 	allTravelers.flush();
+		// }
 	}
 
 	@Override
 	public void addListing(AddListingDTO dto) {
-		System.out.println("nemanjaaaa");
-		Destination destination = new Destination(dto.getDestination().getName(), "21000");
-		Location location = new Location(dto.getLocation().getLat(), dto.getLocation().getLng(),
-								dto.getLocation().getAddress(), destination);
-		// Owner owner = allOwners.findById(userService.getCurrentUser().getId()).get();
-		Owner owner = allOwners.findById(2L).get();
-		
-		Listing listing = new Listing(dto.getTitle(), dto.getDescription(), dto.getPrice(), 0, owner);
-		listing.setLocation(location);
-
-		allListings.save(listing);
-		allLocations.save(location);
-		allDestinations.save(destination);
-		allListings.flush();
-		allLocations.flush();
-		allDestinations.flush();
-
-		AddedListingEvent addedListingEvent = new AddedListingEvent(listing);
-		cepKieSession.insert(addedListingEvent);
-		cepKieSession.insert(listing);
-		cepKieSession.insert(allTravelers.findById(1L).get());
-
 		Map<String, String> hierarchy = this.googleMapsService.reverseGeocode(dto.getLocation().getLat(), dto.getLocation().getLng());
-		String state = hierarchy.get("state");
+		// String state = hierarchy.get("state");
 		String county = hierarchy.get("county");
 		String city = hierarchy.get("city");
 		String street = hierarchy.get("street");
 		String streetNo = hierarchy.get("streetno");
 
-		cepKieSession.insert( new LocationBackward(county, state));
+		// cepKieSession.insert( new LocationBackward(county, state));
 		cepKieSession.insert( new LocationBackward(city, county));
 		cepKieSession.insert( new LocationBackward(street, city));
 		cepKieSession.insert( new LocationBackward(streetNo, street));
+
+		Destination destination = new Destination(dto.getDestination().getName(), "21000");
+		List<Destination> destinations = allDestinations.findAll();
+		for (Destination d : destinations) {
+			if (d.getName() == dto.getDestination().getName()){
+				destination = d;
+				break;
+			}
+		}
+		Location location = new Location(dto.getLocation().getLat(), dto.getLocation().getLng(),
+								streetNo, destination);
+		// Owner owner = allOwners.findById(userService.getCurrentUser().getId()).get();
+		Owner owner = allOwners.findById(userService.getCurrentUser().getId()).get();
+		
+		Listing listing = new Listing(dto.getTitle(), dto.getDescription(), dto.getPrice(), 0, owner);
+		listing.setLocation(location);
+
+		
+		allDestinations.save(destination);
+		allLocations.save(location);
+		allListings.save(listing);
+
+		allDestinations.flush();
+		allLocations.flush();
+		allListings.flush();
+
+		AddedListingEvent addedListingEvent = new AddedListingEvent(listing);
+		cepKieSession.insert(addedListingEvent);
+		// cepKieSession.insert(listing);
+		// cepKieSession.insert(allTravelers.findById(1L).get());
 
 		int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
@@ -283,27 +312,43 @@ public class ListingService implements IListingService{
 	}
 
 	@Override
-	public void backward(){
-		// cepKieSession.insert( new LocationBackward("Vojvodina", "Serbia") );
-		// cepKieSession.insert( new LocationBackward("Južnobački okrug", "Vojvodina") );
-		// cepKieSession.insert( new LocationBackward("Novi Sad", "Južnobački okrug") );
-		// cepKieSession.insert( new LocationBackward("Zmaj Ognjena Vuka", "Novi Sad") );
-		// cepKieSession.insert( new LocationBackward("Vojvodina", "Serbia") );
-		// cepKieSession.insert( new LocationBackward("Južnobački okrug", "Vojvodina") );
-		// cepKieSession.insert( new LocationBackward("Novi Sad", "Južnobački okrug") );
-		// cepKieSession.insert( new LocationBackward("Jirecekova", "Novi Sad") );
+	public List<ReturnedListingDTO> backward(String location){
+		System.out.println(location);
+		cepKieSession.setGlobal("backwardLocation", location);
+		ListingAccumulator accumulator = new ListingAccumulator();
+        cepKieSession.insert(accumulator);
+		
+        // cepKieSession.insert("go4");
+        int n = cepKieSession.fireAllRules();
+		System.out.println(n);
 
-		cepKieSession.setGlobal("backwardLocation", "Serbia");
-		cepKieSession.insert( "go4" );
-		cepKieSession.fireAllRules();
-		System.out.println("---");
+        Set<Long> matchedListings = accumulator.getListings();
+		List<ReturnedListingDTO> dtos = new ArrayList<>();
+		List<Listing> listings = new ArrayList<>();
+		Iterator<Long> iterator = matchedListings.iterator();
+		while (iterator.hasNext()) {
+			Listing listing = allListings.findById(iterator.next()).get();
+			listings.add(listing);
+		}
+
+		dtos = parseListingToDto(listings);
+		cepKieSession.delete(cepKieSession.getFactHandle(accumulator));
+		// Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(LocationBackward.class));
+        // for (Object event : newEvents) {
+        //     if (event instanceof LocationBackward) {
+        //         LocationBackward lb = (LocationBackward) event;
+		// 		// cepKieSession.delete(cepKieSession.getFactHandle(lb));
+		// 		cepKieSession.insert(lb);
+        //     }
+        // }
+		return dtos;
 	}
 
 	@Override
 	public List<ReturnedListingDTO> getListingsForOwner() {
 		System.out.println(userService.getCurrentUser());
 		// List<Listing> listings = allListings.findAllByOwnerId(userService.getCurrentUser().getId());
-		List<Listing> listings = allListings.findAllByOwnerId(2L);
+		List<Listing> listings = allListings.findAllByOwnerId(userService.getCurrentUser().getId());
 		return parseListingToDto(listings);
 	}
 
@@ -342,6 +387,43 @@ public class ListingService implements IListingService{
 	}
 
 	@Override
+	public void delete(Long id) {
+		allListings.deleteById(id);
+		for (Object object : cepKieSession.getObjects(new ClassObjectFilter(Listing.class))) {
+            Listing listing = (Listing) object;
+            if (id == listing.getId()) {
+                cepKieSession.delete(cepKieSession.getFactHandle(listing));
+            }
+        }
+	}
+
+	@Override
+	public List<ReturnedListingDTO> filterByRating(int rating) {
+		QueryResults results = cepKieSession.getQueryResults("Listings with specific rating", rating);
+
+        List<ReturnedListingDTO> dtos = new ArrayList<>();
+		List<Listing> listings = new ArrayList<>();
+        for (QueryResultsRow row : results) {
+            Listing listing = (Listing) row.get("$listing");
+            listings.add(listing);
+        }
+		dtos = parseListingToDto(listings);
+        return dtos;
+	}
+
+	@Override
+	public List<ReturnedListingDTO> filterByPrice(double min, double max) {
+		QueryResults results = cepKieSession.getQueryResults("Listings with min max price", min, max);
+
+        List<ReturnedListingDTO> dtos = new ArrayList<>();
+		List<Listing> listings = new ArrayList<>();
+        for (QueryResultsRow row : results) {
+            Listing listing = (Listing) row.get("$listing");
+            listings.add(listing);
+        }
+		dtos = parseListingToDto(listings);
+        return dtos;
+	}
 	public List<ReturnedListingDTO> getAll() {
 		List<Listing> listings = allListings.findAll();
 		return parseListingToDto(listings);
@@ -358,12 +440,9 @@ public class ListingService implements IListingService{
 			dtos.add(dto);
 		}
 
-		addTravelerViewedListingEvent(3l, listing);
-
-		//TODO: ovo kad se popravi getcurruser
-		// if (userService.getCurrentUser().getRole() == UserRole.TRAVELER) {
-		// 	addTravelerViewedListingEvent(userService.getCurrentUser(), listing);
-		// }
+		if (userService.getCurrentUser().getRole() == UserRole.TRAVELER) {
+			addTravelerViewedListingEvent(userService.getCurrentUser().getId(), listing);
+		}
 
 		return dtos;
 	}

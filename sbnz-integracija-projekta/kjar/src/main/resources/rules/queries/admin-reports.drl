@@ -1,0 +1,20 @@
+package queries;
+import com.ftn.sbnz.model.models.Owner;
+import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.models.Traveler;
+
+query "Top Owners"
+    $owner: Owner()
+    $count: Number() from accumulate (
+        Booking(listing.owner.id == $owner.id),
+        count(1)
+    )
+end
+
+query "Top Travelers"
+    $traveler: Traveler()
+    $count: Number() from accumulate (
+        Booking(traveler.id == $traveler.id),
+        count(1)
+    )
+end

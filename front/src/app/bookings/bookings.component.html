@@ -59,6 +59,8 @@
                         <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.owner?.name + " " + listing.owner?.lastname }}</span>
                     </div> -->
                     </div>
+                    <div style="display: flex;
+                    justify-content: space-evenly;">
                     <div *ngIf="role == 'ROLE_TRAVELER'" style="float: right; margin-right: 15px; margin-bottom: -20px;">
                         <div [ngClass]="{
                             'pending-status': booking.status == 'PENDING',

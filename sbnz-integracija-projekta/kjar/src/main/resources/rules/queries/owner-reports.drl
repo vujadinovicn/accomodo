@@ -1,0 +1,52 @@
+package queries;
+import com.ftn.sbnz.model.models.Owner;
+import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.models.Traveler;
+import com.ftn.sbnz.model.models.Destination;
+
+query "Top Destinations For Owner" (Long ownerId)
+    $destination: Destination()
+    $count: Number() from accumulate (
+        Booking(listing.location.destination.name == $destination.name, listing.owner.id == ownerId),
+        count(1)
+    )
+end
+
+// add for bookingstatus == accepted
+query "Earned By Owner" (Long ownerId)
+    $spentAllTime: Number() from accumulate (
+        $booking: Booking($listing : listing, status == BookingStatus.ACCEPTED,
+        listing.owner.id == ownerId, $startDate: startDate),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spent7days: Number() from accumulate (
+        $booking: Booking($listing : listing,  status == BookingStatus.ACCEPTED,
+        listing.owner.id == ownerId, $startDate: startDate) and eval(daysBetween($booking.getStartDate(), dateNow) <= 7),
+        // over window:time(7d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spentMonth: Number() from accumulate (
+        $booking: Booking($listing : listing,  status == BookingStatus.ACCEPTED,
+        listing.owner.id == ownerId, $startDate: startDate) and eval(daysBetween($booking.getStartDate(), dateNow) <= 30),
+        // over window:time(30d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spentSixMonths: Number() from accumulate (
+        $booking: Booking($listing : listing,  status == BookingStatus.ACCEPTED,
+        listing.owner.id== ownerId, $startDate: startDate) and eval(daysBetween($booking.getStartDate(), dateNow) <= 180),
+        // over window:time(180d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+    $spentYear: Number() from accumulate (
+        $booking: Booking($listing : listing,  status == BookingStatus.ACCEPTED,
+        listing.owner.id == ownerId, $startDate: startDate) and eval(daysBetween($booking.getStartDate(), dateNow) <= 365),
+        // over window:time(365d),
+        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+    )
+end
+
+// function int daysBetween(java.util.Date startDate, java.util.Date endDate) {
+//     java.time.LocalDate startLocalDate = startDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+//     java.time.LocalDate endLocalDate = endDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+//     return (int) java.time.temporal.ChronoUnit.DAYS.between(startLocalDate, endLocalDate);
+// }

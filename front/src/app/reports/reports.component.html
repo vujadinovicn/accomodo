@@ -9,7 +9,7 @@
         <div class="basic-container" style="width: 45%; margin-right: 20px; color: #2C87D7 !important;">
           <div class="title-topper">
             <p class="title" *ngIf="this.role=='ROLE_OWNER'" style="font-size: 1.2em !important; color: #2C87D7 !important;">Most booked destinations</p>
-            <p class="title" *ngIf="this.role=='ROLE_TRAVELER'"  style="font-size: 1.2em !important; color: #2C87D7 !important;">Favorite destinations destinations</p>
+            <p class="title" *ngIf="this.role=='ROLE_TRAVELER'"  style="font-size: 1.2em !important; color: #2C87D7 !important;">Favorite destinations</p>
             <p class="title" *ngIf="this.role=='ROLE_ADMIN'"  style="font-size: 1.2em !important; color: #2C87D7 !important;">Travelers with most bookings</p>
           </div>
           <hr>
@@ -17,27 +17,27 @@
           <div *ngIf="this.role=='ROLE_TRAVELER'">
             <div class="basic-container flex-container" style="padding: 10px;margin-bottom: 10px;">
                 <div *ngIf="topDestinationsForTravelerKey.length > 0">{{this.topDestinationsForTravelerKey[0]}}</div>
-                <div *ngIf="topDestinationsForTravelerKey.length > 0">{{this.topDestinationsForOwnerValue[0]}} bookings</div> 
+                <div *ngIf="topDestinationsForTravelerKey.length > 0">{{this.topDestinationsForTravelerValue[0]}} bookings</div> 
                 <div *ngIf="topDestinationsForTravelerKey.length <= 0" style="text-align: center; margin: auto;">NO DATA</div> 
             </div>
             <div class="basic-container flex-container" style="padding: 10px;margin-bottom: 10px;">
                 <div *ngIf="topDestinationsForTravelerKey.length > 1">{{this.topDestinationsForTravelerKey[1]}}</div>
-                <div *ngIf="topDestinationsForTravelerKey.length > 1">{{this.topDestinationsForOwnerValue[1]}} bookings</div> 
+                <div *ngIf="topDestinationsForTravelerKey.length > 1">{{this.topDestinationsForTravelerValue[1]}} bookings</div> 
                 <div *ngIf="topDestinationsForTravelerKey.length <= 2" style="text-align: center; margin: auto;">NO DATA</div> 
             </div>
             <div class="basic-container flex-container" style="padding: 10px; margin-bottom: 10px;">
                 <div *ngIf="topDestinationsForTravelerKey.length > 2">{{this.topDestinationsForTravelerKey[2]}}</div>
-                <div *ngIf="topDestinationsForTravelerKey.length > 2">{{this.topDestinationsForOwnerValue[2]}} bookings</div> 
+                <div *ngIf="topDestinationsForTravelerKey.length > 2">{{this.topDestinationsForTravelerValue[2]}} bookings</div> 
                 <div *ngIf="topDestinationsForTravelerKey.length <= 2" style="text-align: center; margin: auto;">NO DATA</div> 
             </div>
             <div class="basic-container flex-container" style="padding: 10px; margin-bottom: 10px;">
                 <div *ngIf="topDestinationsForTravelerKey.length > 3">{{this.topDestinationsForTravelerKey[3]}}</div>
-                <div *ngIf="topDestinationsForTravelerKey.length > 3">{{this.topDestinationsForOwnerValue[3]}} bookings</div> 
+                <div *ngIf="topDestinationsForTravelerKey.length > 3">{{this.topDestinationsForTravelerValue[3]}} bookings</div> 
                 <div *ngIf="topDestinationsForTravelerKey.length <= 3" style="text-align: center; margin: auto;">NO DATA</div> 
             </div>
             <div class="basic-container flex-container" style="padding: 10px;margin-bottom: 10px;">
                 <div *ngIf="topDestinationsForTravelerKey.length > 4">{{this.topDestinationsForTravelerKey[4]}}</div>
-                <div *ngIf="topDestinationsForTravelerKey.length > 4">{{this.topDestinationsForOwnerValue[4]}} bookings</div> 
+                <div *ngIf="topDestinationsForTravelerKey.length > 4">{{this.topDestinationsForTravelerValue[4]}} bookings</div> 
                 <div *ngIf="topDestinationsForTravelerKey.length <= 4" style="text-align: center; margin: auto;">NO DATA</div> 
             </div>
           </div>

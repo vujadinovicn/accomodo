@@ -1,5 +1,5 @@
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FullListingDTO, ListingDTO, ListingRecsDTO, PropertyDTO, PropertyService, ReturnedListingDTO, ReturnedPropertyDTO } from './../../services/property.service';
-import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AddPropertyDialogComponent } from '../add-property-dialog/add-property-dialog.component';
 import { AuthService } from 'src/services/auth.service';
@@ -7,6 +7,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { PropertyDetailsService } from 'src/services/property-details.service';
 import { ViewListingDialogComponent } from '../view-listing-dialog/view-listing-dialog.component';
+import { ListingService } from 'src/services/listing.service';
 
 @Component({
   selector: 'app-homepage',
@@ -14,6 +15,7 @@ import { ViewListingDialogComponent } from '../view-listing-dialog/view-listing-
   styleUrls: ['./homepage.component.css']
 })
 export class HomepageComponent implements OnInit {
+  allProperties: ReturnedListingDTO[] = [];
   properties: ReturnedListingDTO[] = [];
   recListings: ReturnedListingDTO[] = [];
   currentPage = 1;
@@ -23,12 +25,13 @@ export class HomepageComponent implements OnInit {
 
   loggedUser: any = {};
   role: any = {};
-
+  selectedRating: string = "1";
 
   constructor(private dialog: MatDialog, private propertyService: PropertyService, 
     private authService: AuthService, private snackBar: MatSnackBar,
     private router: Router,
-    private propertyDetailsService: PropertyDetailsService) { }
+    private propertyDetailsService: PropertyDetailsService,
+  private listingService: ListingService) { }
 
   ngOnInit(): void {
 
@@ -43,29 +46,23 @@ export class HomepageComponent implements OnInit {
     // console.log(this.loggedUser.role)
   }
 
-  loadItems(): void {
+  reset(): void {
+    this.loadItems();
+  }
 
-    // this.propertyService.getPaginatedProperties(this.currentPage, this.pageSize).subscribe({
-    //   next: (value) => {
-    //     console.log(value)
-    //     this.currentPage = value.pageIndex;
-    //     this.count = value.count;
-    //     this.properties = value.items;
-    //   }, 
-    //   error: (err) => {
-    //     console.log(err);
-    //   }
-    // });
+  loadItems(): void {
     
     if (this.role == "ROLE_TRAVELER") {
-      console.log(this.role)
-      this.propertyService.getRecsForUser(this.loggedUser.id).subscribe({
+      console.log(this.role);
+      console.log(this.authService.getId())
+      this.propertyService.getRecsForUser(this.authService.getId()).subscribe({
         next: (value: ListingRecsDTO) => {
               console.log("dobijeno za recs" + JSON.stringify(value, null, 2));
               // this.currentPage = value.pageIndex;
               // this.count = value.count;
               console.log(value.listings[0]);
               this.recListings = value.listings;
+              // this.allProperties = value;
             }, 
             error: (err) => {
               console.log(err);
@@ -76,6 +73,7 @@ export class HomepageComponent implements OnInit {
         next: (value) => {
               console.log("dobijeno za sve" + JSON.stringify(value, null, 2));
               this.properties = value;
+              this.allProperties = value;
             }, 
             error: (err) => {
               console.log(err);
@@ -113,6 +111,68 @@ export class HomepageComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       // this.loadItems();
     });
+  }
+
+  @ViewChild('locationInput', { static: true }) locationInput: ElementRef = {} as ElementRef;
+
+  onEnter(value: string): void {
+    console.log('Location value:', value);
+    this.listingService.getByLocation(value).subscribe({
+      next: (value) => {
+            console.log(value)
+            // this.currentPage = value.pageIndex;
+            // this.count = value.count;
+            this.properties = value;
+            console.log(this.properties[0]);
+          }, 
+          error: (err) => {
+            console.log(err);
+          }
+    })
+  }
+
+  onRatingChange(rating: string){
+    this.listingService.filterByRating(parseInt(this.selectedRating)).subscribe({
+      next: (value) => {
+        // this.options = ['Novi Sad, Serbia', 'Belgrade, Serbia']
+          let data = value;
+          let temp: ReturnedListingDTO[] = [];
+          console.log(data);
+          for (let dto of data){
+            for (let curr of this.allProperties){
+              if (dto.id == curr.id){
+                temp.push(dto);
+                break;
+              }
+            }
+          }
+          console.log(temp);
+          this.properties = temp;
+      },
+  });
+  }
+
+
+  onMaxPriceEnter(min: string, max: string){
+    console.log(min, max);
+    this.listingService.filterByMoney(parseFloat(min), parseFloat(max)).subscribe({
+      next: (value) => {
+        // this.options = ['Novi Sad, Serbia', 'Belgrade, Serbia']
+          let data = value;
+          let temp: ReturnedListingDTO[] = [];
+          console.log(data);
+          for (let dto of data){
+            for (let curr of this.allProperties){
+              if (dto.id == curr.id){
+                temp.push(dto);
+                break;
+              }
+            }
+          }
+          console.log(temp);
+          this.properties = temp;
+      },
+  });
   }
 
 

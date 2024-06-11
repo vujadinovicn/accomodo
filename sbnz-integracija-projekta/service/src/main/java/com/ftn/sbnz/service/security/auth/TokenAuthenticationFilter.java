@@ -42,19 +42,19 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 		String email;
 		System.out.println(request.getRequestURI());
 		String authToken = tokenUtils.getToken(request);
-		
+		String username;
 		try {
 	
 			if (authToken != null) {
 				
 				
-				if (!request.getRequestURI().contains("twofactor")) {
-					if (!tokenService.isValid(authToken))
-						throw new ExpiredJwtException(null, null, "Invalid token!");
-				}
-				email = tokenUtils.getUsernameFromToken(authToken);
-				if (email != null) {
-					UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+				if (authToken.charAt(0) == '\"')
+					authToken = authToken.substring(1, authToken.length() - 1);
+
+
+				username = tokenUtils.getUsernameFromToken(authToken);
+				if (username != null) {
+					UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 					
 					if (tokenUtils.validateToken(authToken, userDetails)) {
 						TokenBasedAuthentication authentication = new TokenBasedAuthentication(userDetails);
