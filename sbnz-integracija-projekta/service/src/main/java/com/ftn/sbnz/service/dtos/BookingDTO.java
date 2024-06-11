@@ -10,17 +10,19 @@ public class BookingDTO {
     private boolean reservation;
     private Long listingId;
     private Long travelerId;
+    private double pricePerNight;
 
     public BookingDTO() {}
 
     public BookingDTO(Date startDate, Date endDate, BookingStatus status, boolean reservation,
-            Long listingId, Long travelerId) {
+            Long listingId, Long travelerId, double pricePerNight) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.status = status;
         this.reservation = reservation;
         this.listingId = listingId;
         this.travelerId = travelerId;
+        this.pricePerNight = pricePerNight;
     }
 
     public Date getStartDate() {
@@ -64,7 +66,11 @@ public class BookingDTO {
         this.reservation = reservation;
     }
 
-    
+    public double getPricePerNight() {
+        return pricePerNight;
+    }
 
-    
+    public void setPricePerNight(double pricePerNight) {
+        this.pricePerNight = pricePerNight;
+    }
 }

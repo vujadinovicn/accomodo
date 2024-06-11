@@ -1,0 +1,40 @@
+template header
+oldLevel
+newLevel
+
+package rules;
+
+import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.enums.BookingStatus;
+import com.ftn.sbnz.model.events.BookingAcceptedEvent;
+import com.ftn.sbnz.model.events.ReservationAcceptedEvent;
+import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.enums.EmailNotificationType;
+import com.ftn.sbnz.model.events.ChronoCheckReservationEvent;
+import com.ftn.sbnz.model.models.Traveler;
+import com.ftn.sbnz.model.enums.TravelerLevel;
+import java.time.LocalDate;
+import java.util.List;
+
+declare DowngradeAppliedEvent
+    @role(event)
+    @expires(1m)
+    travelerId: Long
+end
+
+template "downgrade-user-levels-template"
+
+rule "Downgrade to @{newLevel}"
+    timer( cron: 0 0 0 1 * ? )
+no-loop true
+when
+    $traveler: Traveler(level == @{oldLevel}, $id : id)
+    not (DowngradeAppliedEvent(travelerId == $id))
+then
+    modify($traveler) {
+        setLevel(@{newLevel});
+    }
+    insert(new DowngradeAppliedEvent($id));
+end
+
+end template

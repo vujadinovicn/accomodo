@@ -1,4 +1,4 @@
-package cep;
+package cep_forward;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
@@ -31,6 +31,7 @@ import com.ftn.sbnz.model.events.ReservationEvent;
 import com.ftn.sbnz.model.events.BookingEvent;
 import com.ftn.sbnz.model.events.BookingEmailEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
+import com.ftn.sbnz.model.events.NewDiscountEvent;
 import com.ftn.sbnz.model.events.NegativeReviewEvent;
 import com.ftn.sbnz.model.events.ReservationCanceledEvent;
 import com.ftn.sbnz.model.events.CustomEmailEvent;
@@ -50,137 +51,14 @@ import org.kie.api.runtime.rule.QueryResultsRow;
 import com.ftn.sbnz.model.events.ChronoCheckReservationEvent;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
 
-import java.util.Date;
-
-global java.util.Date dateNow;
-// global java.util.List matchedListings;
-
-global IListingService listingService;
-
-declare MaliciousTravelerEvent
-    @role(event)
-    travelerId: Long
-end 
+// =========================================
+// RECOMMEND LISTINGS TO TRAVELER - COMPLEX FORWARD
 
 declare RecommendTrendingAccommodationEvent
     @role(event)
     @expires(1m)
     loginTimestamp: LocalDateTime
 end
-
-declare CheckPreviousReviewsEvent
-    @role(event)
-    @expires(1m)
-    travelerId: Long
-    listings: Set<Listing>
-end
-
-rule "Send email 10 days before reservation starts"
-    // timer( cron: 5 * * * * ? )
-no-loop true
-when
-    $event: ChronoCheckReservationEvent($id: bookingId)
-    $booking: Booking(id == $id, status == BookingStatus.PENDING, $listing: listing,
-                    $startDate: startDate, !($startDate after[10d] dateNow), $bTraveler: traveler)
-    $traveler: Traveler($email: email, id == $bTraveler.id)
-    eval($booking.isReservation())
-    eval(!$event.isSentEmail())
-then 
-    insert(new CustomEmailEvent($email, "You have 10 days before your reservation for " + $listing.getTitle() + "!"));
-    System.out.println("Send email to traveler");
-end
-
-rule "Handle reservation if less than 7 days"
-    // timer( cron: 5 * * * * ? )
-no-loop true
-when
-    $event: ChronoCheckReservationEvent($id: bookingId)
-    $booking: Booking(id == $id, status == BookingStatus.PENDING,
-                    $startDate: startDate, !($startDate after[7d] dateNow))
-    eval($booking.isReservation())
-then
-    delete($event);
-    modify($booking){
-        setStatus(BookingStatus.ACCEPTED)
-    }
-    // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
-    System.out.println("Reservation with id: " + $id + " has been changed to booking!");
-end
-
-
-// =========================================
-// FAVORITE LISTINGS - FORWARD
-
-rule "Add listing to favorite listings on view"
-when
-    $event: ListingViewedEvent($traveler: traveler, $listing: listing)
-    not (Traveler(favoriteListings contains $listing) from $traveler)
-then
-    modify($traveler) {
-        getFavoriteListings().add($listing)
-    }
-    System.out.println("Listing " + $listing.getTitle() + " added to favorites for traveler " + $traveler.getEmail());
-    delete($event);
-end
-
-
-rule "Notify traveler on favorite listing price drop"
-when
-    $discount: Discount($listing: listing)
-    Traveler($traveler: this, favoriteListings contains $listing)
-    // Traveler($traveler: this, id==1)
-then
-    String notificationMessage = "You're in luck! The booking you were checking out, " + $listing.getTitle() + ", is available at an even better price! Hurry to see the new offer, it ends " + $discount.getValidTo();
-    // sendNotification($traveler, notificationMessage);
-    System.out.println("Discount notification sent to traveler " + $traveler.getEmail() + " for listing " + $listing.getTitle());
-    insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
-end
-
-// =========================================
-// NEGATIVE REVIEWS AND MALICIOUS USER - CEP
-
-rule "Traveler gave negative review"
-when
-    $review: Review(rating < 4)
-    not NegativeReviewEvent(review.id == $review.id)
-then
-    insert(new NegativeReviewEvent($review));
-end
-
-
-rule "Assign malicious user flag"
-no-loop true
-when
-    $traveler: Traveler(isMalicious() == false)
-    $totalReviews: Number(intValue > 5) from accumulate(
-        $review: Review(traveler.id == $traveler.id),
-        count($review)
-    )
-    Number(intValue > (0.8 * $totalReviews.intValue())) from accumulate(
-        $negreview: NegativeReviewEvent(review.traveler.id == $traveler.id) over window:time(90d),
-        count($negreview)
-    )
-then
-    modify($traveler) {
-        setMalicious(true)
-    }
-    System.out.println("Traveler " + $traveler.getEmail() + " has been flagged as a malicious traveler.");
-end
-
-
-rule "Malicious traveler gave another negative review"
-no-loop true
-when
-    NegativeReviewEvent($traveler: review.traveler)
-    eval($traveler.isMalicious())
-then
-    insert(new CustomEmailEvent("vujadinovic01@gmail.com", "Malicious traveler, " + $traveler.getEmail() + ", is on it again!"));
-    System.out.println("Malicious traveler is on it again! Alert the admin to double check.");
-end
-
-
-// =========================================
-// RECOMMEND LISTINGS TO TRAVELER - COMPLEX FORWARD
 
 // query "listingsForTraveler" (Traveler $traveler)
 //     $listing : Listing() from $traveler.favoriteListings
@@ -202,7 +80,6 @@ then
         Listing listing = (Listing) obj;
         Long destinationId = listing.getLocation().getDestination().getId();
 
-        //dobaci ocenu za taj listing koju je ostavio korisnik
         double rating = listing.getRating();
         Review review = listingService.getReview(listing.getId(), $traveler.getId());
         System.out.println(review);
@@ -328,26 +205,6 @@ then
     
 end
 
-rule "Reward visited destinations"
-salience 10
-when
-    $listing : Listing($destinationId : location.destination.id, $rating : rating > 3)
-    $flag : DestinationFlag(destinationId == $destinationId, $timestamp: loginTimestamp)
-then
-    insert(new AccommodationPoints($listing, 10, $timestamp));
-    System.out.println("Rewarded visited destination for listing with id " + $listing.getId());
-end
-
-rule "Reward frequent destinations"
-salience 10
-when
-    $listing : Listing($destinationId : location.destination.id)
-    $flag : DestinationFlag(destinationId == $destinationId, $count : count > 3, $timestamp: loginTimestamp)
-then
-    insert(new AccommodationPoints($listing, 5, $timestamp));
-    System.out.println("Rewarded frequent destination for listing with id " + $listing.getId());
-end
-
 rule "Penalize nonvisited destinations"
 salience 10
 when
@@ -367,28 +224,6 @@ when
 then
     insert(new AccommodationPoints($listing, -10, $timestamp));
     System.out.println("Penalized poorly rated destination for listing with id " + $listing.getId());
-end
-
-rule "Reward desireble tags"
-salience 10
-when
-    $listing : Listing($listingId : id, $tags : tags)
-    $tag : Tag() from $tags
-    $flag : TagFlag(tagId == $tag.id, averageRating > 3, $timestamp: loginTimestamp)
-then
-    insert(new AccommodationPoints($listing, 10, $timestamp)); 
-    System.out.println("Rewarded desireble tag for listing with id " + $listing.getId());
-end
-
-rule "Reward frequent tags"
-salience 10
-when
-    $listing : Listing($listingId : id, $tags : tags)
-    $tag : Tag() from $tags
-    $flag : TagFlag(tagId == $tag.id, $count : count > 3, $timestamp: loginTimestamp)
-then
-    insert(new AccommodationPoints($listing, 5, $timestamp));
-    System.out.println("Rewarded frequent tag for listing with id " + $listing.getId());
 end
 
 rule "Penalize nondesireble tags"
@@ -501,53 +336,4 @@ then
 end
 
 
-rule "Block or unblock traveler"
-no-loop true
-salience 1
-when
-    $event: BlockingEvent($email: email, $block: block)
-    $traveler: Traveler(email == $email)
-then
-    modify($traveler){
-        setBlocked($block);
-    }
-end
 
-// =========================================
-// REVIEW LISTING - CEP
-
-rule "Listing can be reviewed by the traveler"
-when
-    $event: CollectReviewableListingsEvent($travelerId: travelerId)
-    $traveler: Traveler($travelerId == id)
-    $listings: List() from accumulate(
-        $booking: Booking(isReservation() == false, 
-                          $listing: listing, 
-                          status == BookingStatus.ACCEPTED, 
-                          endDate before LocalDateTime.now(),
-                          $travelerId == traveler.id),
-        collectList($listing)
-    )
-then
-    System.out.println("Listings: " + $listings.size());
-    Set<Listing> uniqueListings = new HashSet<>($listings);
-    insert(new CheckPreviousReviewsEvent($travelerId, uniqueListings));
-    delete($event)
-end
-
-rule "Listing was not reviewed before by the traveler"
-when
-    $event: CheckPreviousReviewsEvent($travelerId: travelerId, $listings: listings)
-    $reviewed: Set() from accumulate(
-        Review(traveler.id == $travelerId, $listing: listing),
-        collectSet($listing)
-    )
-then
-    Set<Listing> finalListings = new HashSet<>( $listings );
-    finalListings.removeAll($reviewed);
-    System.out.println("Traveler with id " + $travelerId + " can review " + finalListings.size() + " listings");
-    
-    insert(new ReviewableListings($travelerId, finalListings));
-
-    delete($event)
-end

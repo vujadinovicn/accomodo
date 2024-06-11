@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { PropertyDetailsService } from 'src/services/property-details.service';
 import { ViewListingDialogComponent } from '../view-listing-dialog/view-listing-dialog.component';
 import { ListingService } from 'src/services/listing.service';
+import { UserService } from 'src/services/user.service';
 
 @Component({
   selector: 'app-homepage',
@@ -22,6 +23,7 @@ export class HomepageComponent implements OnInit {
   enableClick: boolean =true;
   pageSize = 4;
   count = 0;
+  travelerDetails: TravelerDetailsDTO = {} as TravelerDetailsDTO;
 
   loggedUser: any = {};
   role: any = {};
@@ -30,6 +32,7 @@ export class HomepageComponent implements OnInit {
   constructor(private dialog: MatDialog, private propertyService: PropertyService, 
     private authService: AuthService, private snackBar: MatSnackBar,
     private router: Router,
+    private userService: UserService,
     private propertyDetailsService: PropertyDetailsService,
   private listingService: ListingService) { }
 
@@ -38,12 +41,19 @@ export class HomepageComponent implements OnInit {
     this.loggedUser = this.authService.getUser();
     // this.name = loggedUser? loggedUser.name: "";
     this.role = this.authService.getRole();
-
+    if (this.role == "ROLE_TRAVELER"){
+      this.userService.getTravelerDetails().subscribe({
+        next: (value: TravelerDetailsDTO) => {
+              console.log(value);
+              this.travelerDetails = value;
+            }, 
+            error: (err) => {
+              console.log(err);
+            }
+      });
+    }
     this.loadItems();
-
-    // this.loggedUser = loggedUser;
-    console.log("eee");
-    // console.log(this.loggedUser.role)
+    
   }
 
   reset(): void {
@@ -175,5 +185,19 @@ export class HomepageComponent implements OnInit {
   });
   }
 
-
+  mapToDiscount(): string {
+    if (this.travelerDetails.level == "BRONZE")
+      return "5%";
+    else if (this.travelerDetails.level == "BRONZE")
+      return "10%";
+    else 
+      return "20%";
+  }
 }
+
+export interface TravelerDetailsDTO {
+  email: string,
+  name: string,
+  lastname: string,
+  level: string
+  }

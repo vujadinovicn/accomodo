@@ -1,0 +1,24 @@
+template header
+ruleName
+ratingThreshold
+countThreshold
+awardPoints
+
+package rules;
+
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.DestinationFlag;
+import com.ftn.sbnz.model.models.AccommodationPoints;
+
+template "reward-destination"
+
+rule "Reward @{ruleName} destinations"
+    salience 10
+when
+    $listing : Listing($destinationId : location.destination.id, $rating : rating > @{ratingThreshold})
+    $flag : DestinationFlag(destinationId == $destinationId, $timestamp: loginTimestamp, $count : count > @{countThreshold})
+then
+    insert(new AccommodationPoints($listing,  @{awardPoints}, $timestamp));
+    System.out.println("Rewarded @{ruleName} destination for listing with id " + $listing.getId());
+end
+end template

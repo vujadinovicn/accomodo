@@ -15,7 +15,6 @@ import org.kie.api.runtime.rule.FactHandle;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,10 +23,10 @@ import com.ftn.sbnz.model.enums.UserRole;
 import com.ftn.sbnz.model.events.AddedListingEvent;
 import com.ftn.sbnz.model.events.DiscountEmailEvent;
 import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.NewDiscountEvent;
 import com.ftn.sbnz.model.models.Destination;
 import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
 import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
-import com.ftn.sbnz.model.models.Booking;
 import com.ftn.sbnz.model.models.Discount;
 import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.ListingAccumulator;
@@ -114,38 +113,28 @@ public class ListingService implements IListingService{
         allViewedListings.flush();
 		
 		cepKieSession.insert(viewedEvent);
-		// for (Object object : cepKieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
-        //     Traveler t = (Traveler) object;
-        //     if (t.getId() == traveler.getId()) {
-        //    		cepKieSession.delete(cepKieSession.getFactHandle(t));
-        //         break;
-        //     }
-        // }
+		
         int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
-		for (Object object : cepKieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
-            Traveler t = (Traveler) object;
-            if (t.getId() == traveler.getId()) {
-				allTravelers.save(t);
-				allTravelers.flush();
-                break;
-            }
-        }
+		if (n > 0) {
+			if (!traveler.getFavoriteListings().contains(listing)) {
+				traveler.getFavoriteListings().add(listing);
+			} else if (!traveler.getFavoriteDestinations().contains(listing.getLocation().getDestination())) {
+				traveler.getFavoriteDestinations().add(listing.getLocation().getDestination());
+			}
+		}
 
-		Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
-        for (Object event : newEvents) {
-            if (event instanceof DiscountEmailEvent) {
-                DiscountEmailEvent emailEvent = (DiscountEmailEvent) event;
-                mailService.sendDiscountEmail(emailEvent);
-            }
-        }
-		// System.out.println(traveler.getFavoriteListings().size());
-
-		// if (n >= 1) {
-		// 	allTravelers.save(traveler);
-		// 	allTravelers.flush();
-		// }
+		allTravelers.save(traveler);
+		allTravelers.flush();
+		
+		// Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
+        // for (Object event : newEvents) {
+        //     if (event instanceof DiscountEmailEvent) {
+        //         DiscountEmailEvent emailEvent = (DiscountEmailEvent) event;
+        //         mailService.sendDiscountEmail(emailEvent);
+        //     }
+        // }
 	}
 
 	@Override
@@ -218,11 +207,14 @@ public class ListingService implements IListingService{
 			throw new RuntimeException("Discount amount can't be higher than the listing price.");
 
 		Discount discount = new Discount(dto.getAmount(), dto.getValidTo(), listing);
-
 		allDiscounts.save(discount);
 		allDiscounts.flush();
 
+		NewDiscountEvent discEvent = new NewDiscountEvent(discount.getId());
+
+
 		cepKieSession.insert(discount);
+		cepKieSession.insert(discEvent);
 		int n = cepKieSession.fireAllRules();
         System.out.println("Number of rules fired: " + n);
 
@@ -233,6 +225,8 @@ public class ListingService implements IListingService{
                 mailService.sendDiscountEmail(emailEvent);
             }
         }
+
+		cepKieSession.delete(cepKieSession.getFactHandle(discEvent));
 
 		return new ReturnedDiscountDTO(discount.getId(), discount.getAmount(), discount.getValidTo());
 	}
@@ -366,7 +360,6 @@ public class ListingService implements IListingService{
 		FetchListingRecomendationEvent event = new FetchListingRecomendationEvent(traveler, LocalDateTime.now());		
 		
 		cepKieSession.insert(event);
-		// kieSession.insert(traveler);
         cepKieSession.setGlobal("listingService", this); 
 
         int n = cepKieSession.fireAllRules();

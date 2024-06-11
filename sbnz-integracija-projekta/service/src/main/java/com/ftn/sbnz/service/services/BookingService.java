@@ -10,14 +10,13 @@ import java.util.List;
 
 import org.drools.core.ClassObjectFilter;
 import org.kie.api.runtime.KieSession;
-import org.kie.api.runtime.rule.FactHandle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.ftn.sbnz.model.enums.BookingStatus;
-import com.ftn.sbnz.model.enums.EmailNotificationType;
+import com.ftn.sbnz.model.enums.TravelerLevel;
 import com.ftn.sbnz.model.events.BookingAcceptedEvent;
 import com.ftn.sbnz.model.events.BookingDeniedEvent;
 import com.ftn.sbnz.model.events.BookingEvent;
@@ -93,7 +92,8 @@ public class BookingService implements IBookingService{
         Listing listing = listingService.findById(dto.getListingId());
         Traveler traveler = travelerService.getById(dto.getTravelerId());
 
-        Booking booking = new Booking(dto.getStartDate(), dto.getEndDate(), BookingStatus.PENDING, dto.isReservation());
+        double pricePerNight = this.calculateBookingPrice(traveler, dto.getPricePerNight());
+        Booking booking = new Booking(dto.getStartDate(), dto.getEndDate(), BookingStatus.PENDING, dto.isReservation(), pricePerNight);
         booking.setTraveler(traveler);
         booking.setListing(listing);
         allBookings.save(booking);
@@ -125,6 +125,16 @@ public class BookingService implements IBookingService{
         this.sendEmails();
     }
 
+
+    private double calculateBookingPrice(Traveler traveler, double pricePerNight) {
+        if (traveler.getLevel() == TravelerLevel.NONE)
+            return pricePerNight;
+        if (traveler.getLevel() == TravelerLevel.BRONZE)
+            return 0.95*pricePerNight;
+        if (traveler.getLevel() == TravelerLevel.SILVER)
+            return 0.9*pricePerNight;
+        return 0.8*pricePerNight;
+    }
 
     @Override
     public void acceptBooking(Long id) {

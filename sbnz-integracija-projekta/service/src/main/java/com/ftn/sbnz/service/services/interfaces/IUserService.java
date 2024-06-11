@@ -2,11 +2,10 @@ package com.ftn.sbnz.service.services.interfaces;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
-
 import com.ftn.sbnz.model.models.Listing;
 import com.ftn.sbnz.model.models.User;
 import com.ftn.sbnz.service.dtos.AdminUsersDTO;
+import com.ftn.sbnz.service.dtos.TravelerDetailsDTO;
 
 public interface IUserService {
 
@@ -16,4 +15,5 @@ public interface IUserService {
     List<AdminUsersDTO> getForAdmin();
     void unblock(String email);
     void block(String email);
+    TravelerDetailsDTO getDetails();
 }

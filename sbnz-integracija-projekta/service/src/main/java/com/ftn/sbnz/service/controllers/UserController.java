@@ -25,6 +25,7 @@ import com.ftn.sbnz.model.models.User;
 import com.ftn.sbnz.service.dtos.AdminUsersDTO;
 import com.ftn.sbnz.service.dtos.CredentialsDTO;
 import com.ftn.sbnz.service.dtos.TokenDTO;
+import com.ftn.sbnz.service.dtos.TravelerDetailsDTO;
 import com.ftn.sbnz.service.security.jwt.IJWTTokenService;
 import com.ftn.sbnz.service.security.jwt.TokenUtils;
 import com.ftn.sbnz.service.services.interfaces.IUserService;
@@ -89,5 +90,10 @@ public class UserController {
 	@PutMapping(value = "/unblock") 
 	public void unblock(@RequestParam String email){
 		this.userService.unblock(email);
+	}
+
+	@GetMapping(value = "/details")
+	public TravelerDetailsDTO getDetails(){
+		return this.userService.getDetails();
 	}
 }

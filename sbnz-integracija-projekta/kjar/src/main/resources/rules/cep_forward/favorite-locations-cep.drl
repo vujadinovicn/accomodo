@@ -1,4 +1,4 @@
-package cep;
+package cep_forward;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.List;
@@ -38,22 +38,33 @@ import com.ftn.sbnz.model.events.ChronoCheckReservationEvent;
 
 
 rule "Add location to favorite locations on view"
+salience 9
 no-loop true
 when
-    $event: ListingViewedEvent($traveler: traveler, $destination: listing.location.destination)
-    not ((Traveler(favoriteDestinations contains $destination) from $traveler))
+    $event: ListingViewedEvent($travelerId: traveler.id, $destination: listing.location.destination)
+    $traveler: Traveler($travelerId == id, favoriteDestinations not contains $destination)
     $totalViews: Number(intValue >= 2) from accumulate(
         $viewEvent: ListingViewedEvent(
             this != $event,
-            traveler.id == $traveler.id,
+            traveler.id == $travelerId,
             listing.location.destination.id == $destination.id
         ) over window:time(3d),
         count($viewEvent)
     )
 then
-    modify($traveler) {
-        getFavoriteDestinations().add($destination)
+    boolean isIn = false;
+    for (Destination d : $traveler.getFavoriteDestinations()){
+        if (d.getId() == $destination.getId()){
+            isIn = true;
+            break;
+        }
     }
+    if (!isIn) {
+        modify($traveler) {
+            getFavoriteDestinations().add($destination)
+        }
+    }
+    delete($event);
     System.out.println("Destination " + $destination.getName() + " added to favorites for traveler " + $traveler.getEmail());
 end
 

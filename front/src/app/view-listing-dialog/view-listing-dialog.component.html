@@ -2,13 +2,13 @@
     <!-- <app-property-card [property]="property" [enableClick]="true" (click)="openPropertyDetails(i)" (rejectionCompleted)="processRejection($event)"></app-property-card>
     <p>{{ property.title }}</p> -->
     <div>
-        <h1 style="text-align: center;" [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{ listing.title }}</h1>
+        <h2 style="text-align: center;" [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{ listing.title }}</h2>
     </div>
     <div class="basic-container" style="padding: 0;" id="card-container" [ngClass]="{'transition': enableClick}">
         <div style=" display: flex;">
             
             <div style="width: 50%;" [ngClass]="enableClick ? 'image-container' : 'image-container-details'">
-                <img src="../../assets/logIn.svg" style="width: 100%; height: 100%; border-radius: 20px 0px 0px 20px; object-fit: cover;"/>
+                <img src="../../assets/device-default.jpg" style="width: 100%; height: 100%; border-radius: 10px 0px 0px 10px; object-fit: cover;"/>
             </div>
     
             <div id="info-container" style="padding-top: 15px;">

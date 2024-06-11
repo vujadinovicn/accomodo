@@ -21,7 +21,7 @@ public class Traveler extends User {
     private TravelerLevel level;
     private Date dateOfIrresponsible;
 
-    @ManyToMany(cascade = {}, fetch = FetchType.LAZY)
+    @ManyToMany(cascade = {}, fetch = FetchType.EAGER)
     private Collection<Listing> favoriteListings = new ArrayList<Listing>();
     @ManyToMany(cascade = {}, fetch = FetchType.LAZY)
     private Collection<Destination> favoriteDestinations = new ArrayList<Destination>();
@@ -34,7 +34,7 @@ public class Traveler extends User {
         this.isIressponsible = false;
         this.isMalicious = false;
         this.ageGroup = TravelerAgeGroup.YOUNG_ADULT;
-        this.level = TravelerLevel.BRONZE;
+        this.level = TravelerLevel.NONE;
     }
 
     public Traveler(String email, String password, String name, String lastname, UserRole role, boolean isIressponsible,
