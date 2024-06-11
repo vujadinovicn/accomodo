@@ -10,6 +10,7 @@ import com.ftn.sbnz.model.enums.BookingStatus;
 import com.ftn.sbnz.model.events.BookingAcceptedEvent;
 import com.ftn.sbnz.model.events.ReservationAcceptedEvent;
 import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.events.CustomEmailEvent;
 import com.ftn.sbnz.model.enums.EmailNotificationType;
 import com.ftn.sbnz.model.events.ChronoCheckReservationEvent;
 
@@ -28,6 +29,7 @@ then
     modify($booking){
         setStatus(BookingStatus.ACCEPTED)
     }
+    insert(new CustomEmailEvent($traveler.getEmail(), "Listing" + $listing.getTitle() + " has been accepted!"));
     insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_ACCEPTED, ""));
     System.out.println("@{message}");
 end

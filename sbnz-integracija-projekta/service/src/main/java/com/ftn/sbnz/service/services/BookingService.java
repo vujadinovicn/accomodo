@@ -102,12 +102,15 @@ public class BookingService implements IBookingService{
         kieSession.setGlobal("dateNow", new Date());
         kieSession.insert(booking);
 
+        String emailTo = listing.getOwner().getEmail();
+        String message = traveler.isIressponsible() ? "Traveler is not responsible!" : "We recommend you this traveler";
+
         if (dto.isReservation()){
             System.out.println("jeste reyervacija");
-            ReservationEvent revent = new ReservationEvent(booking.getId());
+            ReservationEvent revent = new ReservationEvent(booking.getId(), emailTo, message);
             kieSession.insert(revent);
         } else {
-            BookingEvent bevent = new BookingEvent(booking.getId());
+            BookingEvent bevent = new BookingEvent(booking.getId(), emailTo, message);
             kieSession.insert(bevent);
         }
 
@@ -305,7 +308,7 @@ public class BookingService implements IBookingService{
                 if (event instanceof BookingEmailEvent) {
                     BookingEmailEvent emailEvent = (BookingEmailEvent) event;
                     mailService.sendBookingEmail(emailEvent);
-                    System.out.println("Email has been sent!");
+                    // System.out.println("Email has been sent!");
                 }
             }
 
@@ -314,7 +317,7 @@ public class BookingService implements IBookingService{
                 if (event instanceof CustomEmailEvent) {
                     CustomEmailEvent emailEvent = (CustomEmailEvent) event;
                     mailService.sendCustomEmail(emailEvent);
-                    System.out.println("Email has been sent!");
+                    // System.out.println("Email has been sent!");
                 }
             }
         } catch (Exception e) {

@@ -30,6 +30,7 @@ export class ViewListingDialogComponent implements OnInit {
   listing: any;
   role: any;
   reviews: ReturnedReviewDTO[] = [];
+  today: Date = new Date();
 
   bookingForm = new FormGroup({
     endDate: new FormControl('', [Validators.required]),
@@ -61,6 +62,9 @@ export class ViewListingDialogComponent implements OnInit {
   }
 
   book(isBooking: boolean){
+    let pricePerN = this.listing.price;
+    if (this.listing.discount)
+      pricePerN = pricePerN - this.listing.discount.amount;
     let dto : MakeBookingDTO = {
       startDate: this.parseDateString(this.bookingForm.get('startDate')?.value!),
       endDate: this.parseDateString(this.bookingForm.get('endDate')?.value!),
@@ -68,7 +72,7 @@ export class ViewListingDialogComponent implements OnInit {
       reservation: !isBooking,
       listingId: this.listing.id,
       travelerId: this.authService.getId(),
-      pricePerNight: this.listing.price - this.listing.discount.amount
+      pricePerNight: pricePerN
        //treba nam traveler id
     }
 

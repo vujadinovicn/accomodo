@@ -59,6 +59,7 @@ public class MailService implements IMailService {
 			req.setEndpoint("mail/send");
 			req.setBody(mail.build());
 			Response res = this.sendGrid.api(req);
+			System.out.println("MAILLLLLLLLLLLL");
 			System.out.println(res.getStatusCode());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -83,7 +84,8 @@ public class MailService implements IMailService {
 
 	    personalization.addDynamicTemplateData("body", body);
 	    mail.addPersonalization(personalization);
-		mail.setTemplateId("d-");
+		  mail.setTemplateId("d-");
+
 		
 		Request req = new Request();
 		try {
@@ -91,6 +93,7 @@ public class MailService implements IMailService {
 			req.setEndpoint("mail/send");
 			req.setBody(mail.build());
 			Response res = this.sendGrid.api(req);
+			System.out.println("MAILLLLLLLLLLLL");
 			System.out.println(res.getStatusCode());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -102,6 +105,7 @@ public class MailService implements IMailService {
 		Email from = new Email("vujadinovic01@gmail.com", "Accomodo");
 		String subject = "Hello";
 		String toRecieve = emailNotificationEvent.getEmailTo();
+		toRecieve = "vujadinovic01@gmail.com";
 		Email to = new Email(toRecieve);
 		Content c = new Content("text/plain", "message");
 		Mail mail = new Mail(from, subject, to, c);
@@ -113,7 +117,7 @@ public class MailService implements IMailService {
 		String body = emailNotificationEvent.getBody();
 	    personalization.addDynamicTemplateData("body", body);
 	    mail.addPersonalization(personalization);
-		mail.setTemplateId("d");
+		mail.setTemplateId("");
 		
 		Request req = new Request();
 		try {
@@ -121,6 +125,7 @@ public class MailService implements IMailService {
 			req.setEndpoint("mail/send");
 			req.setBody(mail.build());
 			Response res = this.sendGrid.api(req);
+			System.out.println("MAILLLLLLLLLLLL");
 			System.out.println(res.getStatusCode());
 		} catch (Exception e) {
 			e.printStackTrace();

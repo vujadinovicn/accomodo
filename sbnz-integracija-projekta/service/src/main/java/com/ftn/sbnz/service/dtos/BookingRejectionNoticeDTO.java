@@ -7,6 +7,8 @@ public class BookingRejectionNoticeDTO {
     private LocalDateTime date;
     public Long bookingId;
 
+    public BookingRejectionNoticeDTO(){}
+
     public BookingRejectionNoticeDTO(Long bookingId, String reason) {
         this.reason = reason;
         this.bookingId = bookingId;

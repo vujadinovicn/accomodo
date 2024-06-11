@@ -87,6 +87,7 @@ public class WebSecurityConfig {
 			.requestMatchers(myRequestMatcher("api/certificate/validate-upload")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/user/rotatePassword")).permitAll()
 			.requestMatchers(myRequestMatcher("/api/user/**")).permitAll()
+			.requestMatchers(myRequestMatcher("/api/register")).permitAll()
 			// .requestMatchers(myRequestMatcher("/api/**")).permitAll()
 			.anyRequest().authenticated().and()
 			.cors().and()

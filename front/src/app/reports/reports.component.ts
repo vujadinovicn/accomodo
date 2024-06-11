@@ -56,6 +56,9 @@ export class ReportsComponent implements OnInit {
         let value = data[key];
         this.topTravelersKey.push(key);
         this.topTravelersValue.push(value);
+
+        this.topTravelersKey.reverse();
+        this.topTravelersValue.reverse();
         console.log(value);
       }
     });
@@ -68,6 +71,9 @@ export class ReportsComponent implements OnInit {
         let value = data[key];
         this.topOwnersKey.push(key);
         this.topOwnersValue.push(value);
+
+        this.topOwnersKey.reverse();
+        this.topOwnersValue.reverse();
         console.log(value);
       }
     });
