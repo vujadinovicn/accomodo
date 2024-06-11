@@ -61,7 +61,7 @@
                         <div class="form-section" style="display: flex; vertical-align: middle; justify-content: space-between; align-items: baseline;">
                             <mat-form-field style="margin-bottom: 20px;">
                                 <mat-label>Choose a start date</mat-label>
-                                <input matInput [matDatepicker]="picker1" formControlName="startDate">
+                                <input matInput [matDatepicker]="picker1" formControlName="startDate" [min]="today">
                                 <!-- <mat-hint>MM/DD/YYYY</mat-hint> -->
                                 <mat-datepicker-toggle matIconSuffix [for]="picker1"></mat-datepicker-toggle>
                                 <mat-datepicker #picker1></mat-datepicker>

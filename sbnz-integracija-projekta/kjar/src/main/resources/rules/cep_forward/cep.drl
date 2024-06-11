@@ -74,7 +74,7 @@ end
 // CRON JOBS
 
 rule "Send email 10 days before reservation starts"
-    // timer( cron: 5 * * * * ? )
+    // timer( cron: 2 * * * * ? )
 no-loop true
 when
     $event: ChronoCheckReservationEvent($id: bookingId)
@@ -89,7 +89,7 @@ then
 end
 
 rule "Handle reservation if less than 7 days"
-    // timer( cron: 5 * * * * ? )
+    // timer( cron: 2 * * * * ? )
 no-loop true
 when
     $event: ChronoCheckReservationEvent($id: bookingId)
@@ -100,6 +100,9 @@ then
     delete($event);
     modify($booking){
         setStatus(BookingStatus.ACCEPTED)
+    }
+    modify($booking){
+        setReservation(false)
     }
     // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
     System.out.println("Reservation with id: " + $id + " has been changed to booking!");

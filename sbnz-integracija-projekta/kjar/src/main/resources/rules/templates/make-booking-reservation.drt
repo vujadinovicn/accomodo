@@ -16,6 +16,7 @@ import com.ftn.sbnz.model.events.ReservationDeniedEvent;
 import com.ftn.sbnz.model.events.BookingEmailEvent;
 import com.ftn.sbnz.model.enums.EmailNotificationType;
 import com.ftn.sbnz.model.events.ChronoCheckReservationEvent;
+import com.ftn.sbnz.model.events.CustomEmailEvent;
 
 template "send-notification-after-booking"
 
@@ -27,7 +28,7 @@ when
     not @{deniedEventType}(bookingId == $bookingId)
 then
     insert(new ChronoCheckReservationEvent($bookingId, false));
-    insert(new BookingEmailEvent(null, null, @{notificationType}, ""));
+    insert(new CustomEmailEvent("vujadinovic01@gmail.com", "Booking has been made!"));
     System.out.println("@{message}");
 end
 end template

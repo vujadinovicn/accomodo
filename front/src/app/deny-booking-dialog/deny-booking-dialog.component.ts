@@ -39,20 +39,23 @@ export class DenyBookingComponent implements OnInit {
       let reason: BookingRejectionNoticeDTO = {
         reason: this.rejectionReasonForm.value.reason!,
         bookingId: this.data.bookingId,
-        date: Date()
+        // date: Date()
       }
-      // this.bookingService.denyBooking(reason).subscribe({
-      //   next: (value) => {
-      //     console.log(value);
-      //     this.dialogRef.close();
-      //   },
-      //   error: (err) => {
-      //     console.log(err)
-      //     this.snackBar.open("An error occured while submiting rejection!", "", {
-      //       duration: 2700, panelClass: ['snack-bar-server-error']
-      //    });
-      //   }
-      // });
+      this.bookingService.denyBooking(reason).subscribe({
+        next: (value) => {
+          console.log(value);
+          this.dialogRef.close();
+          this.snackBar.open("You have successfully rejected the booking!", "", {
+            duration: 2700, panelClass: ['snack-bar-success']
+         });
+        },
+        error: (err) => {
+          console.log(err)
+          this.snackBar.open("An error occured while submiting rejection!", "", {
+            duration: 2700, panelClass: ['snack-bar-server-error']
+         });
+        }
+      });
     }
   }
 
@@ -60,6 +63,6 @@ export class DenyBookingComponent implements OnInit {
 
 export interface BookingRejectionNoticeDTO {
   reason: string,
-  date: string,
+  // date: string,
   bookingId: number
 }

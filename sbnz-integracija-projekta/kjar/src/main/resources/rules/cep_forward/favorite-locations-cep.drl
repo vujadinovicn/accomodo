@@ -34,7 +34,7 @@ import com.ftn.sbnz.model.models.Destination;
 import com.ftn.sbnz.model.models.ListingAccumulator;
 import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
 import com.ftn.sbnz.model.events.ChronoCheckReservationEvent;
-
+import com.ftn.sbnz.model.events.CustomEmailEvent;
 
 
 rule "Add location to favorite locations on view"
@@ -72,9 +72,13 @@ rule "Send notification to traveler when listing with favorite location is added
 no-loop true
 when
     $event: AddedListingEvent($listing: listing)
-    Traveler($traveler: this, favoriteDestinations contains $listing.location.destination)
+    Traveler($traveler: this, $favoriteDestinations: favoriteDestinations)
+    $count: Number(intValue >= 1) from accumulate(
+        $destination: Destination(id == $listing.location.destination.id) from $favoriteDestinations,
+        count($destination)
+    )
 then
     String notificationMessage = "New listing, " + $listing.getTitle() + ", has arrived in one on of your favorite destinations!";
-    insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
+    insert(new CustomEmailEvent("vujadinovic01@gmail.com", "New listing, " + $listing.getTitle() + ", has arrived in one on of your favorite destinations!"));
     System.out.println("New listing notification sent to traveler " + $traveler.getEmail() + " for " + $listing.getTitle());
 end

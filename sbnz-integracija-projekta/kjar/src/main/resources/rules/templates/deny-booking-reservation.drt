@@ -10,7 +10,9 @@ import com.ftn.sbnz.model.enums.BookingStatus;
 import com.ftn.sbnz.model.events.BookingDeniedEvent;
 import com.ftn.sbnz.model.events.ReservationDeniedEvent;
 import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.events.CustomEmailEvent;
 import com.ftn.sbnz.model.enums.EmailNotificationType;
+
 
 template "booking-denial-template"
 
@@ -27,6 +29,7 @@ then
     modify($booking){
         setStatus(BookingStatus.DENIED)
     }
+    insert(new CustomEmailEvent($traveler.getEmail(), "Listing" + $listing.getTitle() + " has been denied because of " + $reason + "!"));
     insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED, $reason));
     System.out.println("@{message} " + $reason);
 end

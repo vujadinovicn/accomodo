@@ -45,6 +45,7 @@ import com.ftn.sbnz.service.dtos.ListingLocationDTO;
 import com.ftn.sbnz.service.dtos.ReturnedDiscountDTO;
 import com.ftn.sbnz.service.dtos.ReturnedListingDTO;
 import com.ftn.sbnz.service.dtos.ReturnedReviewDTO;
+import com.ftn.sbnz.service.helper.SessionBuilder;
 import com.ftn.sbnz.service.mail.IMailService;
 import com.ftn.sbnz.service.repositories.DestinationRepository;
 import com.ftn.sbnz.service.repositories.DiscountRepository;
@@ -91,6 +92,7 @@ public class ListingService implements IListingService{
 	private IGoogleMapsService googleMapsService;
 	@Autowired
 	private IUserService userService;
+	private KieSession bwSession;
 
     @Override
 	public Listing getById(GetListingDTO dto) {
@@ -152,13 +154,28 @@ public class ListingService implements IListingService{
 		cepKieSession.insert( new LocationBackward(streetNo, street));
 
 		Destination destination = new Destination(dto.getDestination().getName(), "21000");
-		List<Destination> destinations = allDestinations.findAll();
-		for (Destination d : destinations) {
-			if (d.getName() == dto.getDestination().getName()){
-				destination = d;
-				break;
-			}
-		}
+		// List<Destination> destinations = allDestinations.findAll();
+		// for (Destination d : destinations) {
+		// 	if (d.getName() == dto.getDestination().getName()){
+		// 		System.out.println(d.getName());
+		// 		System.out.println(dto.getDestination().getName());
+		// 		destination = d;
+		// 		break;
+		// 	}
+		// }
+		Collection<?> destinations = cepKieSession.getObjects(new ClassObjectFilter(Destination.class));
+        for (Object d : destinations) {
+            if (d instanceof Destination) {
+                Destination dd = (Destination) d;
+				System.out.println(dd.getName());
+				System.out.println(dto.getDestination().getName());
+				if (dd.getName().equals(dto.getDestination().getName())){
+					destination = dd;
+					System.out.println("USPEH");
+					break;
+				}
+            }
+        }
 		Location location = new Location(dto.getLocation().getLat(), dto.getLocation().getLng(),
 								streetNo, destination);
 		// Owner owner = allOwners.findById(userService.getCurrentUser().getId()).get();
@@ -304,16 +321,34 @@ public class ListingService implements IListingService{
 		allListings.save(listing);
 		allListings.flush();
 	}
-
+	
 	@Override
 	public List<ReturnedListingDTO> backward(String location){
-		System.out.println(location);
-		cepKieSession.setGlobal("backwardLocation", location);
+		if (bwSession == null){
+			bwSession = cepKieSession;
+		} else {
+			SessionBuilder sessionBuilder = new SessionBuilder();
+			sessionBuilder.addRules("/rules/backward/backward.drl");
+			bwSession = sessionBuilder.build();
+			for (Listing listing : allListings.findAll()) {
+				Map<String, String> hierarchy = this.googleMapsService.reverseGeocode(listing.getLocation().getLat(), listing.getLocation().getLng());
+				String county = hierarchy.get("county");
+				String city = hierarchy.get("city");
+				String street = hierarchy.get("street");
+				String streetNo = hierarchy.get("streetno");
+				
+				bwSession.insert( new LocationBackward(city, county));
+				bwSession.insert( new LocationBackward(street, city));
+				bwSession.insert( new LocationBackward(streetNo, street));
+				bwSession.insert(listing);
+			}
+		}
+
+		bwSession.setGlobal("backwardLocation", location);
 		ListingAccumulator accumulator = new ListingAccumulator();
-        cepKieSession.insert(accumulator);
+        bwSession.insert(accumulator);
 		
-        // cepKieSession.insert("go4");
-        int n = cepKieSession.fireAllRules();
+        int n = bwSession.fireAllRules();
 		System.out.println(n);
 
         Set<Long> matchedListings = accumulator.getListings();
@@ -326,15 +361,7 @@ public class ListingService implements IListingService{
 		}
 
 		dtos = parseListingToDto(listings);
-		cepKieSession.delete(cepKieSession.getFactHandle(accumulator));
-		// Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(LocationBackward.class));
-        // for (Object event : newEvents) {
-        //     if (event instanceof LocationBackward) {
-        //         LocationBackward lb = (LocationBackward) event;
-		// 		// cepKieSession.delete(cepKieSession.getFactHandle(lb));
-		// 		cepKieSession.insert(lb);
-        //     }
-        // }
+		bwSession.delete(bwSession.getFactHandle(accumulator));
 		return dtos;
 	}
 

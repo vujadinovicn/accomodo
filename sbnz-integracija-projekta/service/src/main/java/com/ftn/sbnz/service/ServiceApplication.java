@@ -57,8 +57,8 @@ public class ServiceApplication  {
 		});
 
 		DataProvider bookingDenialProvider = new ArrayDataProvider(new String [][]{
-			new String[] {"Booking", "BookingDeniedEvent", "Posalji notifikaciju traveleru da je booking prihvacen!"},
-			new String[] {"Reservation", "ReservationDeniedEvent", "Posalji notifikaciju traveleru da je rezervacija prihvacena!"}
+			new String[] {"Booking", "BookingDeniedEvent", "Posalji notifikaciju traveleru da je booking odbijen!"},
+			new String[] {"Reservation", "ReservationDeniedEvent", "Posalji notifikaciju traveleru da je rezervacija odbijen!"}
 		});
 
 		DataProvider updateLevelsProvider = new ArrayDataProvider(new String [][]{
@@ -86,7 +86,7 @@ public class ServiceApplication  {
 
 		sessionBuilder.addRules("/rules/cep_forward/cep.drl");
 		sessionBuilder.addRules("/rules/cep_forward/overlapping-bookings.drl");
-		// sessionBuilder.addRules("/rules/cep/flag-checker.drl");
+		// sessionBuilder.addRules("/rules/cep_forward/flag-checker.drl");
 		sessionBuilder.addRules("/rules/cep_forward/favorite-locations-cep.drl");
 		sessionBuilder.addRules("/rules/cep_forward/irresponsible-traveler-cep.drl");
 		sessionBuilder.addRules("/rules/queries/admin-reports.drl");
