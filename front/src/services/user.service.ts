@@ -10,6 +10,14 @@ export class UserService {
 
   constructor(private http: HttpClient) { }
 
+  public getTravelerDetails(): Observable<any> {
+    const options: any = {
+      responseType: 'json',
+    //   withCredentials: true
+    };
+    return this.http.get<any>(environment.apiHost + "/user/details", options);
+  }
+
   public getAdminUsers(): Observable<any> {
     const options: any = {
       responseType: 'json',

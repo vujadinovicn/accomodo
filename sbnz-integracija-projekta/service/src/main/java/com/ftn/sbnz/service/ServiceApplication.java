@@ -75,6 +75,19 @@ public class ServiceApplication  {
 			new String[] {"Reservation", "ReservationDeniedEvent", "Posalji notifikaciju traveleru da je rezervacija prihvacena!"}
 		});
 
+		DataProvider updateLevelsProvider = new ArrayDataProvider(new String [][]{
+			new String[] {"TravelerLevel.BRONZE", "3", "0.0", "90", "33"},
+			new String[] {"TravelerLevel.SILVER", "5", "500.0", "90", "23"},
+			new String[] {"TravelerLevel.GOLD", "10", "1000.0", "90", "13"},
+		});
+
+		DataProvider downgradeLevelsProvider = new ArrayDataProvider(new String [][]{
+			new String[] {"TravelerLevel.BRONZE", "TravelerLevel.NONE"},
+			new String[] {"TravelerLevel.SILVER", "TravelerLevel.BRONZE"},
+			new String[] {"TravelerLevel.GOLD", "TravelerLevel.SILVER"},
+		});
+
+
 		sessionBuilder.addRules("/rules/cep/cep.drl");
 		sessionBuilder.addRules("/rules/cep/overlapping-bookings.drl");
 		// sessionBuilder.addRules("/rules/cep/flag-checker.drl");
@@ -89,6 +102,8 @@ public class ServiceApplication  {
         sessionBuilder.addTemplate("/rules/templates/make-booking-reservation.drt", makeBookingProvider);
         sessionBuilder.addTemplate("/rules/templates/accept-booking-reservation.drt",bookingAcceptenceProvider);
         sessionBuilder.addTemplate("/rules/templates/deny-booking-reservation.drt",bookingDenialProvider);
+        sessionBuilder.addTemplate("/rules/templates/update-user-levels.drt",updateLevelsProvider);
+        sessionBuilder.addTemplate("/rules/templates/downgrade-user-levels.drt",downgradeLevelsProvider);
 
         return sessionBuilder.build();
     }

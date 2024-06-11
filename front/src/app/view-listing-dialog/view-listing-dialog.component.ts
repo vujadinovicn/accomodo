@@ -67,7 +67,9 @@ export class ViewListingDialogComponent implements OnInit {
       status: 0,
       reservation: !isBooking,
       listingId: this.listing.id,
-      travelerId: 1 //treba nam traveler id
+      travelerId: this.authService.getId(),
+      pricePerNight: this.listing.price - this.listing.discount.amount
+       //treba nam traveler id
     }
 
 
@@ -164,5 +166,6 @@ export interface MakeBookingDTO{
   status: number,
   reservation: boolean,
   listingId: number,
-  travelerId: number
+  travelerId: number,
+  pricePerNight: number
 }

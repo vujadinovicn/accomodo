@@ -4,6 +4,7 @@ package com.ftn.sbnz.service.services;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -120,21 +121,15 @@ public class ListingService implements IListingService{
         System.out.println("Number of rules fired: " + n);
 
 		if (n > 0) {
-			// for (Object object : cepKieSession.getObjects(new ClassObjectFilter(Traveler.class))) {
-			// 	Traveler t = (Traveler) object;
-			// 	if (t.getId() == traveler.getId()) {
-			// 		allTravelers.save(t);
-			// 		allTravelers.flush();
-			// 		break;
-			// 	}
-			// }
-
 			if (!traveler.getFavoriteListings().contains(listing)) {
 				traveler.getFavoriteListings().add(listing);
-				allTravelers.save(traveler);
-				allTravelers.flush();
+			} else if (!traveler.getFavoriteDestinations().contains(listing.getLocation().getDestination())) {
+				traveler.getFavoriteDestinations().add(listing.getLocation().getDestination());
 			}
 		}
+
+		allTravelers.save(traveler);
+		allTravelers.flush();
 		
 		// Collection<?> newEvents = cepKieSession.getObjects(new ClassObjectFilter(DiscountEmailEvent.class));
         // for (Object event : newEvents) {

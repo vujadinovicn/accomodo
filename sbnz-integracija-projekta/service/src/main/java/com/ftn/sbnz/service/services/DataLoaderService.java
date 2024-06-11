@@ -1,5 +1,6 @@
 package com.ftn.sbnz.service.services;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -117,6 +118,7 @@ public class DataLoaderService {
 
         for (Traveler traveler : travelers) {
             // Hibernate.initialize(traveler.getFavoriteListings());
+            traveler.setFavoriteDestinations(new ArrayList<Destination>());
             kieSession.insert(traveler);
         }
 

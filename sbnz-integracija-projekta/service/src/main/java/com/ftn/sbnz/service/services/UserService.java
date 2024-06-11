@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.ftn.sbnz.service.dtos.AdminUsersDTO;
+import com.ftn.sbnz.service.dtos.TravelerDetailsDTO;
 import com.ftn.sbnz.service.repositories.TravelerRepository;
 import com.ftn.sbnz.service.repositories.UserRepository;
 import com.ftn.sbnz.service.services.interfaces.IListingService;
@@ -145,4 +146,10 @@ public class UserService implements IUserService, UserDetailsService{
             }
         }
     }    
+
+    public TravelerDetailsDTO getDetails(){
+        Traveler traveler = allTravelers.findById(getCurrentUser().getId()).get();
+        TravelerDetailsDTO dto = new TravelerDetailsDTO(traveler.getEmail(), traveler.getName(), traveler.getLastname(), traveler.getLevel());
+        return dto;
+    }
 }

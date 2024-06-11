@@ -34,7 +34,7 @@ public class Traveler extends User {
         this.isIressponsible = false;
         this.isMalicious = false;
         this.ageGroup = TravelerAgeGroup.YOUNG_ADULT;
-        this.level = TravelerLevel.BRONZE;
+        this.level = TravelerLevel.NONE;
     }
 
     public Traveler(String email, String password, String name, String lastname, UserRole role, boolean isIressponsible,

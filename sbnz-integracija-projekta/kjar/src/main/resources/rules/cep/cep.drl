@@ -76,6 +76,7 @@ declare CheckPreviousReviewsEvent
     listings: Set<Listing>
 end
 
+
 rule "Send email 10 days before reservation starts"
     // timer( cron: 5 * * * * ? )
 no-loop true

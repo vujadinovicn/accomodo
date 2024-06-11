@@ -16,31 +16,31 @@ end
 query "Spent For Traveler" (Long travelerId)
     $spentAllTime: Number() from accumulate (
         $booking: Booking(traveler.id == travelerId, $listing : listing, status == BookingStatus.ACCEPTED) ,
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+        sum($booking.getPricePerNight() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
     )
     $spent7days: Number() from accumulate (
         $booking: Booking(traveler.id == travelerId, $listing : listing, status == BookingStatus.ACCEPTED,
              $startDate: startDate) and eval(daysBetween($booking.getStartDate(), dateNow) <= 7),
         // over window:time(7d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+        sum($booking.getPricePerNight() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
     )
     $spentMonth: Number() from accumulate (
         $booking: Booking(traveler.id == travelerId, $listing : listing, status == BookingStatus.ACCEPTED,
             $startDate: startDate) and eval(daysBetween($booking.getStartDate(), dateNow) <= 30),
         // over window:time(30d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+        sum($booking.getPricePerNight() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
     )
     $spentSixMonths: Number() from accumulate (
         $booking: Booking(traveler.id == travelerId, $listing : listing, status == BookingStatus.ACCEPTED,
             $startDate: startDate) and eval(daysBetween($booking.getStartDate(), dateNow) <= 180),
         // over window:time(180d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+        sum($booking.getPricePerNight() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
     )
     $spentYear: Number() from accumulate (
         $booking: Booking(traveler.id == travelerId, $listing : listing, status == BookingStatus.ACCEPTED,
             $startDate: startDate) and eval(daysBetween($booking.getStartDate(), dateNow) <= 365),
         // over window:time(365d),
-        sum($listing.getPrice() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
+        sum($booking.getPricePerNight() * daysBetween($booking.getStartDate(), $booking.getEndDate()))
     )
 end
 

@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { PropertyDetailsService } from 'src/services/property-details.service';
 import { ViewListingDialogComponent } from '../view-listing-dialog/view-listing-dialog.component';
 import { ListingService } from 'src/services/listing.service';
+import { UserService } from 'src/services/user.service';
 
 @Component({
   selector: 'app-homepage',
@@ -22,6 +23,7 @@ export class HomepageComponent implements OnInit {
   enableClick: boolean =true;
   pageSize = 4;
   count = 0;
+  travelerDetails: any;
 
   loggedUser: any = {};
   role: any = {};
@@ -30,6 +32,7 @@ export class HomepageComponent implements OnInit {
   constructor(private dialog: MatDialog, private propertyService: PropertyService, 
     private authService: AuthService, private snackBar: MatSnackBar,
     private router: Router,
+    private userService: UserService,
     private propertyDetailsService: PropertyDetailsService,
   private listingService: ListingService) { }
 
@@ -38,12 +41,18 @@ export class HomepageComponent implements OnInit {
     this.loggedUser = this.authService.getUser();
     // this.name = loggedUser? loggedUser.name: "";
     this.role = this.authService.getRole();
-
     this.loadItems();
-
-    // this.loggedUser = loggedUser;
-    console.log("eee");
-    // console.log(this.loggedUser.role)
+    if (this.role == "ROLE_TRAVELER"){
+      this.userService.getTravelerDetails().subscribe({
+        next: (value: any) => {
+              console.log(value);
+              this.travelerDetails = value;
+            }, 
+            error: (err) => {
+              console.log(err);
+            }
+      });
+    }
   }
 
   reset(): void {

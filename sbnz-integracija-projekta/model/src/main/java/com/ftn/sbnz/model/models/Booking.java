@@ -22,6 +22,7 @@ public class Booking implements Serializable {
     private BookingStatus status;
     private boolean isReservation;
     private Date createdAt;
+    private double pricePerNight;
 
     @ManyToOne
     private Listing listing;
@@ -31,12 +32,13 @@ public class Booking implements Serializable {
     public Booking(){
         this.status = BookingStatus.PENDING;
     }
-    public Booking(Date startDate, Date endDate, BookingStatus status, boolean isReservation) {
+    public Booking(Date startDate, Date endDate, BookingStatus status, boolean isReservation, double pricePerNight) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.status = status;
         this.isReservation = isReservation;
         this.createdAt = new Date();
+        this.pricePerNight = pricePerNight;
     }
 
     public Date getStartDate() {
@@ -104,11 +106,17 @@ public class Booking implements Serializable {
         this.traveler = traveler;
     }
 
+    public double getPricePerNight() {
+        return pricePerNight;
+    }
+    public void setPricePerNight(double pricePerNight) {
+        this.pricePerNight = pricePerNight;
+    }
+
     @Override
     public String toString() {
         return "Booking [id=" + id + ", startDate=" + startDate + ", endDate=" + endDate + ", status=" + status
                 + ", isReservation=" + isReservation + ", createdAt=" + createdAt + ", listing=" + listing
                 + ", traveler=" + traveler + "]";
     }
-
 }
