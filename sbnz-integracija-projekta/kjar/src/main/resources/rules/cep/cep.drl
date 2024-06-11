@@ -113,11 +113,12 @@ end
 // FAVORITE LISTINGS - FORWARD
 
 rule "Add listing to favorite listings on view"
+salience 10
+no-loop true
 when
     $event: ListingViewedEvent($travelerId: traveler.id, $listing: listing)
     $traveler: Traveler($travelerId == id, favoriteListings not contains $listing)
 then
-    delete($event);
     modify($traveler) {
         getFavoriteListings().add($listing)
     }
@@ -130,7 +131,6 @@ when
     $discount: Discount($listing: listing)
     $event: NewDiscountEvent($discount.id == discountId)
     Traveler($traveler: this, favoriteListings contains $listing)
-    // Traveler($traveler: this, id==1)
 then
     String notificationMessage = "You're in luck! The booking you were checking out, " + $listing.getTitle() + ", is available at an even better price! Hurry to see the new offer, it ends " + $discount.getValidTo();
     // sendNotification($traveler, notificationMessage);
