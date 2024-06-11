@@ -1,0 +1,25 @@
+#login-container1{
+    display: grid;
+    /* grid-template-columns: 1fr 1fr; */
+    grid-row: 1fr;
+    /* position: absolute; */
+    /* left: 50%; */
+    /* top: 50%; */
+    /* transform: translate(-50%, -50%); */
+    width: 55%;
+    height: -moz-fit-content;
+    height: fit-content;
+    margin: auto;
+    margin-top: 25px;
+    border-radius: 10px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background-color: white;
+    border: 1px solid #E6E6E6;
+    text-align: center
+}
+
+#form-container{
+    border-right: none !important;
+}

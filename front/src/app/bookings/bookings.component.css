@@ -1,0 +1,57 @@
+.homepage-container {
+    width: 100% !important;
+}
+
+
+.status {
+    bottom: 14px !important;
+    left: 34px !important;
+}
+.active-button {
+    right: auto !important;
+    left: 34px !important;
+}
+
+#stars {
+    position: absolute;
+    top: 65px;
+    left: -15px;
+    width: 163px;
+}
+
+
+::ng-deep label.star {
+    padding: 0 5px !important;
+    font-size: 20px !important;
+}
+
+.info-card-first {
+    margin-top: 10px !important;
+}
+
+#card-container {
+    display: inline-block;
+    height: 170px;
+
+}
+
+.info-card {
+    margin-bottom: 5px;
+}
+
+/* CONTAINERS */
+.basic-container {
+    background-color: white;
+    border: 1px solid #dedede;
+    border-radius: 20px;
+    color: #A6A6A6;
+    padding: 20px;
+    /* padding: 15px; */
+    /* box-shadow: 0 4px 8px 0 rgba(141, 141, 141, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19); */
+    position: relative;
+}
+
+.card-cont {
+    display: flex;
+    width: 100%;
+}

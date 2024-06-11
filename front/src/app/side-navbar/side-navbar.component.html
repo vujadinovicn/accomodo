@@ -1,0 +1,53 @@
+<nav class="navbar back-white" id="navbar-smaller">
+    <div class="container">
+        <div class="navbar-header">
+            <div class="logo-container-mini">
+                <img class="logo-img" src="../../assets/logo.png" alt="La Casa De Smart">
+            </div>
+            <button class="navbar-toggler" data-toggle="side-navbar-container">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+            </button>
+        </div>  
+    </div>
+</nav>
+<div id="side-navbar-container">
+    <div id="close-btn" (click)="close()">
+        <i class="fa fa-plus"></i>
+    </div>
+    <div class="logo-container">
+        <img class="logo-img" src="../../assets/logo.png" alt="La Casa De Smart">
+    </div>
+    <div (click)="changeUrl('/home')" class="nav-item" *ngIf="role != 'ROLE_ADMIN'" [routerLink]="['/home']" [ngClass]="url == '/home' ? 'selected-option': ''">
+        <i class="fa-solid fa-home" style="cursor: pointer"></i>
+        <p>Listings</p>
+    </div>
+    <div (click)="changeUrl('/bookings')" class="nav-item" *ngIf="role != 'ROLE_ADMIN'" [routerLink]="['/bookings']" [ngClass]="url == '/bookings' ? 'selected-option': ''">
+        <i class="fa-solid fa-home" style="cursor: pointer"></i>
+        <p>Bookings</p>
+    </div>
+    <div (click)="changeUrl('/users')" class="nav-item" *ngIf="role == 'ROLE_ADMIN'" [routerLink]="['/users']" [ngClass]="url == '/users' ? 'selected-option': ''">
+        <i class="fa-solid fa-home" style="cursor: pointer"></i>
+        <p>Users</p>
+    </div>
+    <div (click)="changeUrl('/register-owner')" *ngIf="role == 'ROLE_ADMIN'" class="nav-item" [routerLink]="['/register-owner']" [ngClass]="url == '/register-owner' ? 'selected-option': ''">
+        <i class="fa-solid fa-home" style="cursor: pointer"></i>
+        <p>Register owner</p>
+    </div>
+    <div (click)="changeUrl('/reports')"  class="nav-item" [routerLink]="['/reports']" [ngClass]="url == '/reports' ? 'selected-option': ''">
+        <i class="fa-solid fa-home" style="cursor: pointer"></i>
+        <p>Reports</p>
+    </div>
+    <!-- <div (click)="changeUrl('/registerAdmin')" class="nav-item" *ngIf="role == 'ROLE_ADMIN'" [routerLink]="['/registerAdmin']" [ngClass]="url == '/registerAdmin' ? 'selected-option': ''">
+        <i class="fa-solid fa-home" style="cursor: pointer"></i>
+        <p>Register admin</p>
+    </div> -->
+    <!-- <div class="nav-item" [routerLink]="['/xyz']" [ngClass]="url == '/xyz' ? 'selected-option': ''">
+        <i class="fa-solid fa-home" style="cursor: pointer"></i>
+        <p>test</p>
+    </div> -->
+    <div id="logout-container">
+        <button id="logout-btn" class="outline-btn" (click)="logout()">Logout</button>
+    </div>
+</div>

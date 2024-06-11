@@ -1,0 +1,135 @@
+<!-- <button class="conf-button add-prop-btn back-light-blue" (click)="openAddPropertyDialog()"><i class="fa fa-circle-plus"></i>Request a new property</button> -->
+<!-- <button class="conf-button add-prop-btn back-light-blue" (click)="openChooseDeviceTypeDialog()"><i class="fa fa-circle-plus"></i>Add new device</button> -->
+<div class="homepage-container">
+    
+    <div id="recs-container" *ngIf="role == 'ROLE_TRAVELER'">
+        <div class="title-container">
+            <div class="title-topper">
+                <p class="title">Recommended for you</p>
+                <div *ngIf="this.travelerDetails.level != 'NONE'" style="display: flex; justify-content: end; align-items: center;
+                    border-radius: 15px; color: white; padding: 10px 20px; font-weight: 600;" [ngClass]="'level-' + this.travelerDetails.level.toLowerCase()" >
+                    {{this.travelerDetails.level + " " + mapToDiscount() + " off"}}
+                </div>
+            </div>
+            <hr>
+        </div>
+        <div class="card-holder">
+            <div *ngFor="let listing of recListings; let i = index">
+                <!-- <app-property-card [property]="property" [enableClick]="true" (click)="openPropertyDetails(i)" (rejectionCompleted)="processRejection($event)"></app-property-card>
+                <p>{{ property.title }}</p> -->
+                <div class="basic-container" id="card-hp-container" (click)="openListingDetails(listing)" [ngClass]="{'transition': enableClick}">
+                    <div [ngClass]="enableClick ? 'image-container' : 'image-container-details'">
+                        <img src="../../assets/device-default.jpg" class="card-img"/>
+                    </div>
+                    <div id="info-container">
+                        <div>
+                            <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: self-end;">
+                                <h2 [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{ listing.title }}</h2>
+                            </div>
+                            <div id="stars">
+                                <ngx-star-rating [ngModel]="getRoundedRating(listing)" [disabled]="true"></ngx-star-rating>
+                            </div>
+                            <div class="info-card info-card-first">
+                                <i [ngClass]="enableClick ? 'fa-solid fa-location-dot red' : 'custom-font fa-solid fa-location-dot red'"></i>
+                                <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.location.address }}</span>
+                            </div>
+                            <div class="info-card">
+                                <i [ngClass]="enableClick ? 'fa-solid fa-earth-americas green' : 'custom-font fa-solid fa-earth-americas green'"></i>
+                                <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.destination.name }}</span>
+                            </div>
+                            <div *ngIf="listing.discount" class="discount-card">
+                                <div style="font-size: 0.8em; text-decoration: line-through;">{{ listing.price }}e per night</div>
+                                <div class="price-dis-card back-light-blue">{{ listing.price - listing.discount.amount }}e <span style="font-size: 0.8em;">per night</span></div>
+                            </div>
+                            <div class="price-card back-light-blue" *ngIf="!listing.discount">
+                                <!-- <i [ngClass]="enableClick ? 'fa-solid fa-money-bill' : 'custom-font fa-solid fa-money-bill'"></i> -->
+                                <span >{{ listing.price }}e <span style="font-size: 0.8em;">per night</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="title-container" style="margin-top: 20px;">
+        <div class="title-topper">
+            <p class="title" *ngIf="role == 'ROLE_OWNER'">Your listings</p>
+            <p class="title" *ngIf="role == 'ROLE_TRAVELER'">Browse all listings</p>
+            <div style="display: flex;
+            justify-content: end;
+            align-items: center;">
+             <button style="margin-right: 5px; margin-top: 3px !important;" class="conf-button add-prop-btn back-light-blue" (click)="reset()">Reset</button>
+                <mat-form-field style="    width: 100px;
+                /* float: right; */
+                margin-right: 10px;
+                margin-top: 0;">
+                    <mat-label>Rating</mat-label>
+                    <select matNativeControl required [(ngModel)]="selectedRating" (ngModelChange)="onRatingChange($event)" name="car">
+                    <option value="one">1</option>
+                    <option value="two">2</option>
+                    <option value="three">3</option>
+                    <option value="four">4</option>
+                    <option value="five">5</option>
+                    </select>
+                </mat-form-field>
+                <mat-form-field style="margin-top: 0; width:100px; margin-right: 10px;">
+                    <mat-label>Min price</mat-label>
+                    <input matInput #minPriceInput type="number"/>
+                </mat-form-field>
+                <mat-form-field style="margin-top: 0; width:100px; margin-right: 10px;">
+                    <mat-label>Max price</mat-label>
+                    <input matInput #maxPriceInput type="number" (keydown.enter)="onMaxPriceEnter(minPriceInput.value, maxPriceInput.value)" />
+                </mat-form-field>
+                <mat-form-field style="margin-top: 0; width:100px; margin-right: 10px;">
+                    <mat-label>Location</mat-label>
+                    <input matInput #locationInput type="text" (keydown.enter)="onEnter(locationInput.value)" />
+                </mat-form-field>
+                <button style="width: 240px;" *ngIf="role == 'ROLE_OWNER'" class="conf-button add-prop-btn back-light-blue" (click)="openAddPropertyDialog()"><i class="fa fa-circle-plus"></i>Create new listing</button>
+            </div>
+
+            <!-- <button *ngIf="role == 'ROLE_OWNER'" class="conf-button add-prop-btn back-light-blue" (click)="openAddPropertyDialog()"><i class="fa fa-circle-plus"></i>Create new listing</button> -->
+        </div>
+        <hr>
+    </div>
+    
+    <div class="card-holder">
+        <div *ngFor="let listing of properties; let i = index">
+            <!-- <app-property-card [property]="property" [enableClick]="true" (click)="openPropertyDetails(i)" (rejectionCompleted)="processRejection($event)"></app-property-card>
+            <p>{{ property.title }}</p> -->
+            <div class="basic-container" id="card-hp-container" (click)="openListingDetails(listing)" [ngClass]="{'transition': enableClick}">
+                <div [ngClass]="enableClick ? 'image-container' : 'image-container-details'">
+                    <img src="../../assets/device-default.jpg" class="card-img"/>
+                </div>
+                <div id="info-container">
+                    <div>
+                        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: self-end;">
+                            <h2 [ngClass]="enableClick ? 'light-blue' : 'h2-bigger-font light-blue'">{{ listing.title }}</h2>
+                        </div>
+                        <div id="stars">
+                            <ngx-star-rating [ngModel]="getRoundedRating(listing)" [disabled]="true"></ngx-star-rating>
+                        </div>
+                        <div class="info-card info-card-first">
+                            <i [ngClass]="enableClick ? 'fa-solid fa-location-dot red' : 'custom-font fa-solid fa-location-dot red'"></i>
+                            <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.location.address }}</span>
+                        </div>
+                        <div class="info-card">
+                            <i [ngClass]="enableClick ? 'fa-solid fa-earth-americas green' : 'custom-font fa-solid fa-earth-americas green'"></i>
+                            <span [ngClass]="enableClick ? 'black' : 'custom-font black'">{{ listing.destination.name }}</span>
+                        </div>
+                        <div *ngIf="listing.discount" class="discount-card">
+                            <div style="font-size: 0.8em; text-decoration: line-through;">{{ listing.price }}e per night</div>
+                            <div class="price-dis-card back-light-blue">{{ listing.price - listing.discount.amount }}e <span style="font-size: 0.8em;">per night</span></div>
+                        </div>
+                        <div class="price-card back-light-blue" *ngIf="!listing.discount">
+                            <!-- <i [ngClass]="enableClick ? 'fa-solid fa-money-bill' : 'custom-font fa-solid fa-money-bill'"></i> -->
+                            <span >{{ listing.price }}e <span style="font-size: 0.8em;">per night</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- <mat-paginator [length]="count" [pageSize]="pageSize" [pageSizeOptions]="[4]" (page)="onPageChange($event)"> -->
+</div>

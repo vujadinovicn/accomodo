@@ -1,0 +1,21 @@
+package queries;
+import com.ftn.sbnz.model.models.Owner;
+import com.ftn.sbnz.model.models.Traveler;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Booking;
+
+query "Listings with specific rating" (int r)
+    $listing: Listing(rating == r)
+end
+
+query "Listings with min price" (double p)
+    $listing: Listing(price >= p)
+end
+
+query "Listings with max price" (double p)
+    $listing: Listing(price <= p)
+end
+
+query "Listings with min max price" (double min, double max)
+    $listing: Listing(price <= max, price >= min)
+end

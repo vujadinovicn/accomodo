@@ -1,0 +1,36 @@
+template header
+ruleName
+eventType
+message
+
+package rules;
+
+import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.enums.BookingStatus;
+import com.ftn.sbnz.model.events.BookingDeniedEvent;
+import com.ftn.sbnz.model.events.ReservationDeniedEvent;
+import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.events.CustomEmailEvent;
+import com.ftn.sbnz.model.enums.EmailNotificationType;
+
+
+template "booking-denial-template"
+
+rule "@{ruleName} denied by owner"
+    no-loop true
+when
+    $event: @{eventType}($bookingId: bookingId, $reason: reason)
+    $booking: Booking(id == $bookingId, 
+        status == BookingStatus.PENDING,
+        $listing: listing,
+        $traveler: traveler
+    )
+then
+    modify($booking){
+        setStatus(BookingStatus.DENIED)
+    }
+    insert(new CustomEmailEvent($traveler.getEmail(), "Listing" + $listing.getTitle() + " has been denied because of " + $reason + "!"));
+    insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED, $reason));
+    System.out.println("@{message} " + $reason);
+end
+end template

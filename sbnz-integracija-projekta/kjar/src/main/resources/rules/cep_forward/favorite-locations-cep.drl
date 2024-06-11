@@ -1,0 +1,84 @@
+package cep_forward;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.models.Traveler;
+import com.ftn.sbnz.model.models.Discount;
+import com.ftn.sbnz.model.models.Review;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.DestinationFlag;
+import com.ftn.sbnz.model.enums.BookingStatus;
+import com.ftn.sbnz.model.enums.EmailNotificationType;
+import com.ftn.sbnz.model.events.BookingAcceptedEvent;
+import com.ftn.sbnz.model.events.BookingDeniedEvent;
+import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.BlockingEvent;
+import com.ftn.sbnz.model.events.ReservationEvent;
+import com.ftn.sbnz.model.events.BookingEvent;
+import com.ftn.sbnz.model.events.DiscountEmailEvent;
+import com.ftn.sbnz.model.events.NegativeReviewEvent;
+import com.ftn.sbnz.model.events.ReservationCanceledEvent;
+import com.ftn.sbnz.model.events.ReservationDeniedEvent;
+import com.ftn.sbnz.model.events.ReservationAcceptedEvent;
+import com.ftn.sbnz.model.events.AddedListingEvent;
+import com.ftn.sbnz.model.models.LocationBackward;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Owner;
+import com.ftn.sbnz.model.models.Destination;
+import com.ftn.sbnz.model.models.ListingAccumulator;
+import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
+import com.ftn.sbnz.model.events.ChronoCheckReservationEvent;
+import com.ftn.sbnz.model.events.CustomEmailEvent;
+
+
+rule "Add location to favorite locations on view"
+salience 9
+no-loop true
+when
+    $event: ListingViewedEvent($travelerId: traveler.id, $destination: listing.location.destination)
+    $traveler: Traveler($travelerId == id, favoriteDestinations not contains $destination)
+    $totalViews: Number(intValue >= 2) from accumulate(
+        $viewEvent: ListingViewedEvent(
+            this != $event,
+            traveler.id == $travelerId,
+            listing.location.destination.id == $destination.id
+        ) over window:time(3d),
+        count($viewEvent)
+    )
+then
+    boolean isIn = false;
+    for (Destination d : $traveler.getFavoriteDestinations()){
+        if (d.getId() == $destination.getId()){
+            isIn = true;
+            break;
+        }
+    }
+    if (!isIn) {
+        modify($traveler) {
+            getFavoriteDestinations().add($destination)
+        }
+    }
+    delete($event);
+    System.out.println("Destination " + $destination.getName() + " added to favorites for traveler " + $traveler.getEmail());
+end
+
+rule "Send notification to traveler when listing with favorite location is added"
+no-loop true
+when
+    $event: AddedListingEvent($listing: listing)
+    Traveler($traveler: this, $favoriteDestinations: favoriteDestinations)
+    $count: Number(intValue >= 1) from accumulate(
+        $destination: Destination(id == $listing.location.destination.id) from $favoriteDestinations,
+        count($destination)
+    )
+then
+    String notificationMessage = "New listing, " + $listing.getTitle() + ", has arrived in one on of your favorite destinations!";
+    insert(new CustomEmailEvent("vujadinovic01@gmail.com", "New listing, " + $listing.getTitle() + ", has arrived in one on of your favorite destinations!"));
+    System.out.println("New listing notification sent to traveler " + $traveler.getEmail() + " for " + $listing.getTitle());
+end

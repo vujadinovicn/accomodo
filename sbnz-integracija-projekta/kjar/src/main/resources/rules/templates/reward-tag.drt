@@ -1,0 +1,26 @@
+template header
+ruleName
+ratingThreshold
+countThreshold
+awardPoints
+
+package rules;
+
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Tag;
+import com.ftn.sbnz.model.models.TagFlag;
+import com.ftn.sbnz.model.models.AccommodationPoints;
+
+template "reward-tag"
+
+rule "Reward @{ruleName} tags"
+    salience 10
+when
+    $listing : Listing($listingId : id, $tags : tags)
+    $tag : Tag() from $tags
+    $flag : TagFlag(tagId == $tag.id, averageRating > @{ratingThreshold}, $count : count > @{countThreshold}, $timestamp: loginTimestamp)
+then
+    insert(new AccommodationPoints($listing, @{awardPoints}, $timestamp));
+    System.out.println("Rewarded @{ruleName} tag for listing with id " + $listing.getId());
+end
+end template

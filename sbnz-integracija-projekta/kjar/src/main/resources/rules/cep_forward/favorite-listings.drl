@@ -1,0 +1,82 @@
+package cep_forward;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.models.ReviewableListings;
+import com.ftn.sbnz.model.models.Traveler;
+import com.ftn.sbnz.model.models.Discount;
+import com.ftn.sbnz.model.models.Review;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.DestinationFlag;
+import com.ftn.sbnz.model.models.TagFlag;
+import com.ftn.sbnz.model.models.Tag;
+import com.ftn.sbnz.model.models.AccommodationPoints;
+import com.ftn.sbnz.model.models.AccommodationRecommendation;
+import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
+import com.ftn.sbnz.model.enums.BookingStatus;
+import com.ftn.sbnz.model.enums.EmailNotificationType;
+import com.ftn.sbnz.model.events.BookingAcceptedEvent;
+import com.ftn.sbnz.model.events.BookingDeniedEvent;
+import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.BlockingEvent;
+import com.ftn.sbnz.model.events.ReservationEvent;
+import com.ftn.sbnz.model.events.BookingEvent;
+import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.events.DiscountEmailEvent;
+import com.ftn.sbnz.model.events.NewDiscountEvent;
+import com.ftn.sbnz.model.events.NegativeReviewEvent;
+import com.ftn.sbnz.model.events.ReservationCanceledEvent;
+import com.ftn.sbnz.model.events.CustomEmailEvent;
+import com.ftn.sbnz.model.events.ReservationDeniedEvent;
+import com.ftn.sbnz.model.events.ReservationAcceptedEvent;
+import com.ftn.sbnz.model.events.AddedListingEvent;
+import com.ftn.sbnz.model.models.LocationBackward;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Owner;
+import com.ftn.sbnz.model.models.Destination;
+import com.ftn.sbnz.model.models.ListingAccumulator;
+import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
+import com.ftn.sbnz.model.events.CollectReviewableListingsEvent;
+
+import org.kie.api.runtime.rule.QueryResults;
+import org.kie.api.runtime.rule.QueryResultsRow;
+import com.ftn.sbnz.model.events.ChronoCheckReservationEvent;
+import com.ftn.sbnz.service.services.interfaces.IListingService;
+
+// =========================================
+// FAVORITE LISTINGS - FORWARD
+
+rule "Add listing to favorite listings on view"
+salience 10
+no-loop true
+when
+    $event: ListingViewedEvent($travelerId: traveler.id, $listing: listing)
+    $traveler: Traveler($travelerId == id, favoriteListings not contains $listing)
+then
+    modify($traveler) {
+        getFavoriteListings().add($listing)
+    }
+    System.out.println("Listing " + $listing.getTitle() + " added to favorites for traveler " + $traveler.getEmail());
+end
+
+
+rule "Notify traveler on favorite listing price drop"
+when
+    $discount: Discount($listing: listing)
+    $event: NewDiscountEvent($discount.id == discountId)
+    Traveler($traveler: this, favoriteListings contains $listing)
+then
+    String notificationMessage = "You're in luck! The booking you were checking out, " + $listing.getTitle() + ", is available at an even better price! Hurry to see the new offer, it ends " + $discount.getValidTo();
+    // sendNotification($traveler, notificationMessage);
+    System.out.println("Discount notification sent to traveler " + $traveler.getEmail() + " for listing " + $listing.getTitle());
+    
+    insert(new DiscountEmailEvent($traveler.getEmail(), $listing.getTitle(), notificationMessage));
+end
