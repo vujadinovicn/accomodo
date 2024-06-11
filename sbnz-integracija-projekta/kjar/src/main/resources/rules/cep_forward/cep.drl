@@ -1,0 +1,199 @@
+package cep_forward;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.models.ReviewableListings;
+import com.ftn.sbnz.model.models.Traveler;
+import com.ftn.sbnz.model.models.Discount;
+import com.ftn.sbnz.model.models.Review;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.DestinationFlag;
+import com.ftn.sbnz.model.models.TagFlag;
+import com.ftn.sbnz.model.models.Tag;
+import com.ftn.sbnz.model.models.AccommodationPoints;
+import com.ftn.sbnz.model.models.AccommodationRecommendation;
+import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
+import com.ftn.sbnz.model.enums.BookingStatus;
+import com.ftn.sbnz.model.enums.EmailNotificationType;
+import com.ftn.sbnz.model.events.BookingAcceptedEvent;
+import com.ftn.sbnz.model.events.BookingDeniedEvent;
+import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.BlockingEvent;
+import com.ftn.sbnz.model.events.ReservationEvent;
+import com.ftn.sbnz.model.events.BookingEvent;
+import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.events.DiscountEmailEvent;
+import com.ftn.sbnz.model.events.NewDiscountEvent;
+import com.ftn.sbnz.model.events.NegativeReviewEvent;
+import com.ftn.sbnz.model.events.ReservationCanceledEvent;
+import com.ftn.sbnz.model.events.CustomEmailEvent;
+import com.ftn.sbnz.model.events.ReservationDeniedEvent;
+import com.ftn.sbnz.model.events.ReservationAcceptedEvent;
+import com.ftn.sbnz.model.events.AddedListingEvent;
+import com.ftn.sbnz.model.models.LocationBackward;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Owner;
+import com.ftn.sbnz.model.models.Destination;
+import com.ftn.sbnz.model.models.ListingAccumulator;
+import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
+import com.ftn.sbnz.model.events.CollectReviewableListingsEvent;
+
+import org.kie.api.runtime.rule.QueryResults;
+import org.kie.api.runtime.rule.QueryResultsRow;
+import com.ftn.sbnz.model.events.ChronoCheckReservationEvent;
+import com.ftn.sbnz.service.services.interfaces.IListingService;
+
+import java.util.Date;
+
+global java.util.Date dateNow;
+// global java.util.List matchedListings;
+
+global IListingService listingService;
+
+declare MaliciousTravelerEvent
+    @role(event)
+    travelerId: Long
+end 
+
+declare CheckPreviousReviewsEvent
+    @role(event)
+    @expires(1m)
+    travelerId: Long
+    listings: Set<Listing>
+end
+
+// =========================================
+// CRON JOBS
+
+rule "Send email 10 days before reservation starts"
+    // timer( cron: 5 * * * * ? )
+no-loop true
+when
+    $event: ChronoCheckReservationEvent($id: bookingId)
+    $booking: Booking(id == $id, status == BookingStatus.PENDING, $listing: listing,
+                    $startDate: startDate, !($startDate after[10d] dateNow), $bTraveler: traveler)
+    $traveler: Traveler($email: email, id == $bTraveler.id)
+    eval($booking.isReservation())
+    eval(!$event.isSentEmail())
+then 
+    insert(new CustomEmailEvent($email, "You have 10 days before your reservation for " + $listing.getTitle() + "!"));
+    System.out.println("Send email to traveler");
+end
+
+rule "Handle reservation if less than 7 days"
+    // timer( cron: 5 * * * * ? )
+no-loop true
+when
+    $event: ChronoCheckReservationEvent($id: bookingId)
+    $booking: Booking(id == $id, status == BookingStatus.PENDING,
+                    $startDate: startDate, !($startDate after[7d] dateNow))
+    eval($booking.isReservation())
+then
+    delete($event);
+    modify($booking){
+        setStatus(BookingStatus.ACCEPTED)
+    }
+    // insert(new BookingEmailEvent($traveler.getEmail(), $listing.getTitle(), EmailNotificationType.BOOKING_DENIED));
+    System.out.println("Reservation with id: " + $id + " has been changed to booking!");
+end
+
+// =========================================
+// NEGATIVE REVIEWS AND MALICIOUS USER - CEP
+
+rule "Traveler gave negative review"
+when
+    $review: Review(rating < 4)
+    not NegativeReviewEvent(review.id == $review.id)
+then
+    insert(new NegativeReviewEvent($review));
+end
+
+
+rule "Assign malicious user flag"
+no-loop true
+when
+    $traveler: Traveler(isMalicious() == false)
+    $totalReviews: Number(intValue > 5) from accumulate(
+        $review: Review(traveler.id == $traveler.id),
+        count($review)
+    )
+    Number(intValue > (0.8 * $totalReviews.intValue())) from accumulate(
+        $negreview: NegativeReviewEvent(review.traveler.id == $traveler.id) over window:time(90d),
+        count($negreview)
+    )
+then
+    modify($traveler) {
+        setMalicious(true)
+    }
+    System.out.println("Traveler " + $traveler.getEmail() + " has been flagged as a malicious traveler.");
+end
+
+
+rule "Malicious traveler gave another negative review"
+no-loop true
+when
+    NegativeReviewEvent($traveler: review.traveler)
+    eval($traveler.isMalicious())
+then
+    insert(new CustomEmailEvent("vujadinovic01@gmail.com", "Malicious traveler, " + $traveler.getEmail() + ", is on it again!"));
+    System.out.println("Malicious traveler is on it again! Alert the admin to double check.");
+end
+
+rule "Block or unblock traveler"
+no-loop true
+salience 1
+when
+    $event: BlockingEvent($email: email, $block: block)
+    $traveler: Traveler(email == $email)
+then
+    modify($traveler){
+        setBlocked($block);
+    }
+end
+
+// =========================================
+// REVIEW LISTING - CEP
+
+rule "Listing can be reviewed by the traveler"
+when
+    $event: CollectReviewableListingsEvent($travelerId: travelerId)
+    $traveler: Traveler($travelerId == id)
+    $listings: List() from accumulate(
+        $booking: Booking(isReservation() == false, 
+                          $listing: listing, 
+                          status == BookingStatus.ACCEPTED, 
+                          endDate before LocalDateTime.now(),
+                          $travelerId == traveler.id),
+        collectList($listing)
+    )
+then
+    System.out.println("Listings: " + $listings.size());
+    Set<Listing> uniqueListings = new HashSet<>($listings);
+    insert(new CheckPreviousReviewsEvent($travelerId, uniqueListings));
+    delete($event)
+end
+
+rule "Listing was not reviewed before by the traveler"
+when
+    $event: CheckPreviousReviewsEvent($travelerId: travelerId, $listings: listings)
+    $reviewed: Set() from accumulate(
+        Review(traveler.id == $travelerId, $listing: listing),
+        collectSet($listing)
+    )
+then
+    Set<Listing> finalListings = new HashSet<>( $listings );
+    finalListings.removeAll($reviewed);
+    System.out.println("Traveler with id " + $travelerId + " can review " + finalListings.size() + " listings");
+    
+    insert(new ReviewableListings($travelerId, finalListings));
+
+    delete($event)
+end

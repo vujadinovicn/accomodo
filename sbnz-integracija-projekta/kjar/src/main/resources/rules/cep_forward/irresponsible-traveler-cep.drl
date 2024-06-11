@@ -1,0 +1,98 @@
+package cep_forward;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import com.ftn.sbnz.model.models.Booking;
+import com.ftn.sbnz.model.models.Traveler;
+import com.ftn.sbnz.model.models.Discount;
+import com.ftn.sbnz.model.models.Review;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.DestinationFlag;
+import com.ftn.sbnz.model.models.TagFlag;
+import com.ftn.sbnz.model.models.Tag;
+import com.ftn.sbnz.model.models.AccommodationPoints;
+import com.ftn.sbnz.model.models.AccommodationRecommendation;
+import com.ftn.sbnz.model.models.AccommodationRecommendationResult;
+import com.ftn.sbnz.model.enums.BookingStatus;
+import com.ftn.sbnz.model.enums.EmailNotificationType;
+import com.ftn.sbnz.model.events.BookingAcceptedEvent;
+import com.ftn.sbnz.model.events.BookingDeniedEvent;
+import com.ftn.sbnz.model.events.ListingViewedEvent;
+import com.ftn.sbnz.model.events.CustomEmailEvent;
+import com.ftn.sbnz.model.events.BlockingEvent;
+import com.ftn.sbnz.model.events.ReservationEvent;
+import com.ftn.sbnz.model.events.BookingEvent;
+import com.ftn.sbnz.model.events.BookingEmailEvent;
+import com.ftn.sbnz.model.events.DiscountEmailEvent;
+import com.ftn.sbnz.model.events.NegativeReviewEvent;
+import com.ftn.sbnz.model.events.ReservationCanceledEvent;
+import com.ftn.sbnz.model.events.ReservationDeniedEvent;
+import com.ftn.sbnz.model.events.ReservationAcceptedEvent;
+import com.ftn.sbnz.model.events.AddedListingEvent;
+import com.ftn.sbnz.model.models.LocationBackward;
+import com.ftn.sbnz.model.models.Listing;
+import com.ftn.sbnz.model.models.Owner;
+import com.ftn.sbnz.model.models.Destination;
+import com.ftn.sbnz.model.models.ListingAccumulator;
+import com.ftn.sbnz.model.events.FetchListingRecomendationEvent;
+
+salience 10
+rule "Delete cancelation event if there is already one"
+no-loop true
+when
+    $event: ReservationCanceledEvent($bookingId: booking.id)
+    ReservationCanceledEvent(booking.id == $bookingId, this != $event)
+then
+    delete($event)
+    System.out.println("You can't cancel already canceled booking!");
+end
+
+
+rule "Cancel booking for traveler request"
+no-loop true
+when
+    ReservationCanceledEvent($canceledBooking: booking)
+    $booking: Booking(this == $canceledBooking, (status == BookingStatus.ACCEPTED || status == BookingStatus.PENDING))
+then
+    modify($booking){
+        setStatus(BookingStatus.CANCELED)
+    }
+    System.out.println("Traveler canceled the booking!");
+end
+
+
+rule "Flag irresponsible traveler"
+no-loop true
+when
+    $traveler: Traveler(isIressponsible() == false)
+    Number(intValue >= 2) from accumulate(
+        $event: ReservationCanceledEvent(booking.traveler.id == $traveler.id) over window:time(15s),
+        count($event)
+    )
+then
+    modify($traveler){
+        setIressponsible(true);
+    }
+     modify($traveler){
+        setDateOfIrresponsible(new Date());
+    }
+    System.out.println("Traveler has been flagged as an irresponsible one!");
+end
+
+
+rule "Notify admin after irresponsible canceled more bookings"
+when
+    $traveler: Traveler(isIressponsible() == true, $dateOfIrresponsable: dateOfIrresponsible)
+    Number(intValue >= 1) from accumulate(
+        $event: ReservationCanceledEvent(booking.traveler.id == $traveler.id, this after[5s] $dateOfIrresponsable),
+        count($event)
+    )
+then
+    insert(new CustomEmailEvent("vujadinovic01@gmail.com", "Irresponsible traveler, " + $traveler.getEmail() + ", is on it again!"));
+    System.out.println("Administrator notified about irresponsible traveler's additional cancellation!");
+end
